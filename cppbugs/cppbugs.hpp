@@ -114,9 +114,6 @@ namespace cppbugs {
   class Deterministic : public MCMCSpecialized<T> {
   public:
     Deterministic(const T& value): MCMCSpecialized<T>(value) {}
-    // deterministics only derive their logp from their parents
-    //double logp() const { return 0; }
-    // do nothing, object must be updated after all other objects are jumped
     void jump(RngBase& rng) {}
     bool isDeterministc() const { return true; }
     bool isStochastic() const { return false; }
@@ -138,8 +135,13 @@ namespace cppbugs {
   class Stochastic : public MCMCSpecialized<T> {
   protected:
     bool observed_;
+    Mat accepted_;
+    Mat rejected_;
+    Mat scale_;
   public:
-    Stochastic(const T& value, const bool observed): MCMCSpecialized<T>(value), observed_(observed) {}
+    Stochastic(const T& value, const bool observed): MCMCSpecialized<T>(value), observed_(observed),
+						     accepted_(conv_to<mat>::from(T)), rejected_(conv_to<mat>::from(T)),
+						     scale_(T.ones()) {}
     // deterministics only derive their logp from their parents
     //double logp() const { return 0; }
     // do nothing, object must be updated after all other objects are jumped
@@ -150,6 +152,24 @@ namespace cppbugs {
         return;
       } else {
         stochastic_jump(MCMCSpecialized<T>::value,rng);
+      }
+    }
+    void component_jump(RngBase& rng, MCModel& m) {
+      if(observed_) {
+        return;
+      } else {
+	for(size_t i = 0; i < value.n_elem; i++) {
+	  double old_logp = m.logp();
+	  old_value[i] = value[i];
+	  value[i] += rng.normal() * scale[i];
+	  m.update();
+	  if(reject(m.logp(), old_logp_value)) {
+	    value[i] = old_value[i];
+	    rejected_[i] += 1;
+	  } else {
+	    accepted_[i] += 1;
+	  }
+	}
       }
     }
   };
