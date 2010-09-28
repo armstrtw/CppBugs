@@ -52,7 +52,7 @@ int main() {
   vec coefs;
   solve(coefs, X, y);
   vec err = y - X*coefs;
-  cout << "lm coefs" << endl << coefs;  
+  cout << "lm coefs" << endl << coefs;
   cout << "err sd: " << stddev(err,0) << endl;;
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;
 

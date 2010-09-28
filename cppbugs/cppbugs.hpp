@@ -25,33 +25,11 @@
 #include <armadillo>
 #include <boost/random.hpp>
 #include <boost/math/special_functions/gamma.hpp>
+#include <cppbugs/mcmc.rng.hpp>
+#include <cppbugs/mcmc.object.hpp>
+#include <cppbugs/mcmc.model.hpp>
 
 namespace cppbugs {
-
-  class RngBase {
-  public:
-    RngBase() {}
-    virtual double normal() = 0;
-    virtual double uniform() = 0;
-    //virtual int poisson(n) = 0;
-    // etc...
-  };
-
-  template<typename T>
-  class SpecializedRng : public RngBase {
-    T generator_;
-    boost::normal_distribution<double> normal_rng_dist_;
-    boost::uniform_real<double> uniform_rng_dist_;
-    boost::variate_generator<T&, boost::normal_distribution<double> > normal_rng_;
-    boost::variate_generator<T&, boost::uniform_real<double> > uniform_rng_;
-  public:
-    SpecializedRng(): RngBase(),
-                      normal_rng_dist_(0, 1), uniform_rng_dist_(0, 1),
-                      normal_rng_(generator_, normal_rng_dist_),
-                      uniform_rng_(generator_, uniform_rng_dist_) {}
-    double normal() { return normal_rng_(); }
-    double uniform() { return uniform_rng_(); }
-  };
 
   double factln_single(int n) {
     if(n > 100) {
@@ -66,7 +44,7 @@ namespace cppbugs {
 
   double factln(const int i) {
     static std::map<int,double> factln_table;
-    
+
     if(i < 0) {
       return -std::numeric_limits<double>::infinity();
     }
@@ -88,18 +66,6 @@ namespace cppbugs {
     return ans;
   }
 
-  class MCMCObject {
-  public:
-    ~MCMCObject() {}
-    MCMCObject() {}
-    virtual void jump(RngBase& rng) = 0;// stocastics will jump values, determinsitics do nothing
-    virtual void preserve() = 0;        // in mcmc.specialized
-    virtual void revert() = 0;          // in mcmc.specialized
-    virtual void tally() = 0;           // in mcmc.specialized
-    virtual void print() const = 0;     // in mcmc.specialized
-    virtual bool isDeterministc() const = 0;
-    virtual bool isStochastic() const = 0;
-  };
 
   template<typename T>
   class MCMCSpecialized : public MCMCObject {
@@ -284,7 +250,7 @@ namespace cppbugs {
       }
     }
   };
-  
+
   template<typename T>
   class Binomial : public Stochastic<T> {
   public:
@@ -305,66 +271,5 @@ namespace cppbugs {
       //return accu( (n-Stochastic<T>::value) % log(1-p) );
     }
   };
-  
-
-  class MCModel {
-  private:
-    SpecializedRng<boost::minstd_rand> rng_;
-    std::vector<MCMCObject*> mcmcObjects, stochastics, deterministics;
-    void jump_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->jump(rng_); } }
-    void preserve_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->preserve(); } }
-    void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
-    void tally_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(); } }
-    void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
-  public:
-    ~MCModel() {} // potentially destory objects
-    MCModel() {}
-    virtual void update() = 0;
-    virtual double logp() const = 0;
-
-    void add(MCMCObject& p) {
-      mcmcObjects.push_back(&p);
-      if(p.isStochastic()) {
-        stochastics.push_back(&p);
-      }
-      if(p.isDeterministc()) {
-        deterministics.push_back(&p);
-      }
-    }
-    
-    void print() {
-      print_all(mcmcObjects);
-    }
-
-    void sample(int iterations, int burn, int thin) {
-
-      double logp_value,old_logp_value;
-      double accepted(0);
-      double rejected(0);
-
-      logp_value  = -std::numeric_limits<double>::infinity();
-      old_logp_value = -std::numeric_limits<double>::infinity();
-      for(int i = 0; i < iterations; i++) {
-        old_logp_value = logp_value;
-        preserve_all(mcmcObjects);
-        jump_all(stochastics);
-        update();
-        logp_value = logp();
-        if(isnan(logp_value) || logp_value == -std::numeric_limits<double>::infinity() || log(rng_.uniform()) > logp_value - old_logp_value) {
-          revert_all(mcmcObjects);
-          logp_value = old_logp_value;
-          rejected += 1;
-        } else {
-          accepted += 1;
-        }
-        if(i > burn && (i % thin == 0)) {
-          accepted = 0;
-          rejected = 0;
-          tally_all(mcmcObjects);
-        }
-      }
-    }
-  };
-
 } // namespace cppbugs
 #endif // CPPBUGS_HPP
