@@ -1,0 +1,9 @@
+\#*\#
+*~
+*.d
+*.rc
+*.o
+*.so
+a.out
+*.csv
+out.txt

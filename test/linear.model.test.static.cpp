@@ -1,0 +1,62 @@
+#include <iostream>
+#include <vector>
+#include <armadillo>
+#include <boost/random.hpp>
+#include <cppbugs/cppbugs.hpp>
+
+using namespace arma;
+using namespace cppbugs;
+using std::cout;
+using std::endl;
+
+class TestModel: public MCModel {
+public:
+  const mat& y; // given
+  const mat& X; // given
+
+  NormalStatic<vec> b;
+  UniformStatic<double> tau_y;
+  Deterministic<mat> y_hat;
+  Normal<mat> likelihood;
+
+  TestModel(const mat& y_,const mat& X_): y(y_), X(X_),
+                                          b(randn<vec>(X_.n_cols),0.0, 0.0001),
+                                          tau_y(1,0,100),
+                                          y_hat(X*b.value),likelihood(y_,true)
+  {
+    add(b);
+    add(tau_y);
+    add(y_hat);
+    add(likelihood);
+  }
+
+  void update() {
+    y_hat.value = X*b.value;
+  }
+  double logp() const {
+    return b.logp() + tau_y.logp() + likelihood.logp(y_hat.value,tau_y.value);
+  }
+};
+
+int main() {
+  const int NR = 1e2;
+  const int NC = 2;
+  const mat y = randn<mat>(NR,1) + 10;
+  mat X = mat(NR,NC);
+  X.col(0).fill(1);
+  X.col(1) = y + randn<mat>(NR,1)/2 - 10;
+
+  vec coefs;
+  solve(coefs, X, y);
+  cout << "lm coefs" << endl << coefs;
+  cout << "y sd:" << stddev(y,0);
+  cout << "y tau:" << 1/pow(stddev(y,0),2.0);
+
+  TestModel m(y,X);
+  int iterations = 1e5;
+  m.sample(iterations, 1e4, 10);
+  cout << "samples: " << m.b.history.size() << endl;
+  cout << "b: " << endl << m.b.mean();
+  cout << "tau_y: " << m.tau_y.mean() << endl;
+  return 0;
+};
