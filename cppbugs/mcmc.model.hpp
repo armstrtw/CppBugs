@@ -37,6 +37,7 @@ namespace cppbugs {
     void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
     void tally_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(); } }
     void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
+    bool bad_logp(const double value) const { return isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     ~MCModel() {} // potentially destory objects
     MCModel() {}
@@ -57,6 +58,10 @@ namespace cppbugs {
       print_all(mcmcObjects);
     }
 
+    bool reject(const double value, const double old_logp) {
+      return bad_logp(value) || log(rng_.uniform()) > value - old_logp ? true : false;
+    }
+
     void sample(int iterations, int burn, int thin) {
 
       double logp_value,old_logp_value;
@@ -71,7 +76,7 @@ namespace cppbugs {
         jump_all(stochastics);
         update();
         logp_value = logp();
-        if(isnan(logp_value) || logp_value == -std::numeric_limits<double>::infinity() || log(rng_.uniform()) > logp_value - old_logp_value) {
+        if(reject(logp_value, old_logp_value)) {
           revert_all(mcmcObjects);
           logp_value = old_logp_value;
           rejected += 1;
