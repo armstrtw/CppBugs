@@ -44,9 +44,9 @@ public:
 int main() {
 
   // setup data
-  double ageraw[] = {13, 14, 14,12, 9, 15, 10, 14, 9, 14, 13, 12, 9, 10, 15, 11, 15, 11, 7, 
+  double ageraw[] = {13, 14, 14,12, 9, 15, 10, 14, 9, 14, 13, 12, 9, 10, 15, 11, 15, 11, 7,
                      13, 13, 10, 9, 6, 11, 15, 13, 10, 9, 9, 15, 14, 14, 10, 14, 11, 13, 14, 10};
-  double priceraw[] = {2950, 2300, 3900, 2800, 5000, 2999, 3950, 2995, 4500, 2800, 1990, 3500, 5100, 3900, 2900, 
+  double priceraw[] = {2950, 2300, 3900, 2800, 5000, 2999, 3950, 2995, 4500, 2800, 1990, 3500, 5100, 3900, 2900,
                        4950, 2000, 3400, 8999, 4000, 2950, 3250, 3950, 4600, 4500, 1600, 3900, 4200, 6500, 3500, 2999, 2600, 3250, 2500, 2400, 3990, 4600, 450,4700};
   const int NR = 39;
   const mat age(ageraw,39,1);
@@ -58,9 +58,10 @@ int main() {
   const mat X = join_rows(icept,age);
   vec coefs;
   solve(coefs, X, price);
+  vec err = price - X*coefs;
   cout << "lm coefs" << endl << coefs;
-  cout << "y sd:" << stddev(price,0);
-  cout << "y tau:" << 1/pow(stddev(price,0),2.0);
+  cout << "err sd: " << stddev(err,0) << endl;;
+  cout << "err tau: " << pow(stddev(err,0),-2) << endl;
 
   TestModel m(age,price);
   int iterations = 1e5;
@@ -71,4 +72,3 @@ int main() {
   cout << "tau: " << m.tau.mean() << endl;
   return 0;
 };
-
