@@ -135,16 +135,18 @@ namespace cppbugs {
   class Stochastic : public MCMCSpecialized<T> {
   protected:
     bool observed_;
-    Mat accepted_;
-    Mat rejected_;
-    Mat scale_;
+    T accepted_;
+    T rejected_;
+    T scale_;
   public:
     Stochastic(const T& value, const bool observed): MCMCSpecialized<T>(value), observed_(observed),
-						     accepted_(conv_to<mat>::from(T)), rejected_(conv_to<mat>::from(T)),
-						     scale_(T.ones()) {}
-    // deterministics only derive their logp from their parents
-    //double logp() const { return 0; }
-    // do nothing, object must be updated after all other objects are jumped
+						     accepted_(value), rejected_(value),
+						     scale_(value)
+    {
+      accepted_ = 0;
+      rejected_ = 0;
+      scale_ = 1;
+    }
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     void jump(RngBase& rng) {
@@ -158,13 +160,133 @@ namespace cppbugs {
       if(observed_) {
         return;
       } else {
-	for(size_t i = 0; i < value.n_elem; i++) {
+	for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
 	  double old_logp = m.logp();
-	  old_value[i] = value[i];
-	  value[i] += rng.normal() * scale[i];
+	  MCMCSpecialized<T>::old_value[i] = MCMCSpecialized<T>::value[i];
+	  MCMCSpecialized<T>::value[i] += rng.normal() * scale_[i];
 	  m.update();
-	  if(reject(m.logp(), old_logp_value)) {
-	    value[i] = old_value[i];
+	  if(m.reject(m.logp(), old_logp)) {
+	    MCMCSpecialized<T>::value[i] = MCMCSpecialized<T>::old_value[i];
+	    rejected_[i] += 1;
+	  } else {
+	    accepted_[i] += 1;
+	  }
+	}
+      }
+    }
+  };
+
+  template<>
+  class Stochastic<double> : public MCMCSpecialized<double> {
+  protected:
+    bool observed_;
+    double accepted_,rejected_,scale_;
+  public:
+    Stochastic(const double& value, const bool observed): MCMCSpecialized<double>(value), observed_(observed),
+						     accepted_(0), rejected_(0),
+						     scale_(1.0) {}
+    bool isDeterministc() const { return false; }
+    bool isStochastic() const { return true; }
+    void jump(RngBase& rng) {
+      if(observed_) {
+        return;
+      } else {
+        stochastic_jump(MCMCSpecialized<double>::value,rng);
+      }
+    }
+    void component_jump(RngBase& rng, MCModel& m) {
+      if(observed_) {
+        return;
+      } else {
+	double old_logp = m.logp();
+	MCMCSpecialized<double>::old_value = MCMCSpecialized<double>::value;
+	MCMCSpecialized<double>::value += rng.normal() * scale_;
+	m.update();
+	if(m.reject(m.logp(), old_logp)) {
+	  MCMCSpecialized<double>::value = MCMCSpecialized<double>::old_value;
+	  rejected_ += 1;
+	} else {
+	  accepted_ += 1;
+	}
+      }
+    }
+  };
+
+  template<>
+  class Stochastic<arma::vec> : public MCMCSpecialized<arma::vec> {
+  protected:
+    bool observed_;
+    arma::vec accepted_,rejected_,scale_;
+  public:
+    Stochastic(const arma::vec& value, const bool observed): MCMCSpecialized<arma::vec>(value), observed_(observed),
+						     accepted_(value), rejected_(value),
+						     scale_(value) {
+      accepted_.fill(0);
+      rejected_.fill(0);
+      scale_.fill(1);
+    }
+    bool isDeterministc() const { return false; }
+    bool isStochastic() const { return true; }
+    void jump(RngBase& rng) {
+      if(observed_) {
+        return;
+      } else {
+        stochastic_jump(MCMCSpecialized<arma::vec>::value,rng);
+      }
+    }
+    void component_jump(RngBase& rng, MCModel& m) {
+      if(observed_) {
+        return;
+      } else {
+	for(size_t i = 0; i < MCMCSpecialized<arma::vec>::value.n_elem; i++) {
+	  double old_logp = m.logp();
+	  MCMCSpecialized<arma::vec>::old_value[i] = MCMCSpecialized<arma::vec>::value[i];
+	  MCMCSpecialized<arma::vec>::value[i] += rng.normal() * scale_[i];
+	  m.update();
+	  if(m.reject(m.logp(), old_logp)) {
+	    MCMCSpecialized<arma::vec>::value[i] = MCMCSpecialized<arma::vec>::old_value[i];
+	    rejected_[i] += 1;
+	  } else {
+	    accepted_[i] += 1;
+	  }
+	}
+      }
+    }
+  };
+
+  template<>
+  class Stochastic<arma::mat> : public MCMCSpecialized<arma::mat> {
+  protected:
+    bool observed_;
+    arma::mat accepted_,rejected_,scale_;
+  public:
+    Stochastic(const arma::mat& value, const bool observed): MCMCSpecialized<arma::mat>(value), observed_(observed),
+						     accepted_(value), rejected_(value),
+						     scale_(value) {
+      accepted_.fill(0);
+      rejected_.fill(0);
+      scale_.fill(1);
+    }
+    bool isDeterministc() const { return false; }
+    bool isStochastic() const { return true; }
+    void jump(RngBase& rng) {
+      if(observed_) {
+        return;
+      } else {
+        stochastic_jump(MCMCSpecialized<arma::mat>::value,rng);
+      }
+    }
+    void component_jump(RngBase& rng, MCModel& m) {
+      if(observed_) {
+        return;
+      } else {
+	for(size_t i = 0; i < MCMCSpecialized<arma::mat>::value.n_elem; i++) {
+	  double old_logp = m.logp();
+	  MCMCSpecialized<arma::mat>::old_value[i] = MCMCSpecialized<arma::mat>::value[i];
+	  MCMCSpecialized<arma::mat>::value[i] += rng.normal() * scale_[i];
+	  m.update();
+	  if(m.reject(m.logp(), old_logp)) {
+	    MCMCSpecialized<arma::mat>::value[i] = MCMCSpecialized<arma::mat>::old_value[i];
 	    rejected_[i] += 1;
 	  } else {
 	    accepted_[i] += 1;
