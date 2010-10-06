@@ -64,45 +64,48 @@ The update method is implemented as a matrix multiplication::
         sigma_b_herd.value = 1/sqrt(tau_b_herd.value);
       }
 
+
 and the all of the bugs likelihood statements are consolidated into one logp function::
- double logp() const {
-    return b0.logp() + b_period2.logp() + b_period3.logp() + b_period4.logp() + tau_overdisp.logp() + tau_b_herd.logp() + b_herd.logp(0, tau_b_herd.value) +
-      overdisp.logp(0,tau_overdisp.value) + likelihood.logp(size,phi.value);
-  }
+
+    double logp() const {
+       return b0.logp() + b_period2.logp() + b_period3.logp() + b_period4.logp() + tau_overdisp.logp() + tau_b_herd.logp() + b_herd.logp(0, tau_b_herd.value) +
+         overdisp.logp(0,tau_overdisp.value) + likelihood.logp(size,phi.value);
+     }
+
 
 That's it.  The model can be compiled and run as follows::
 
-int main() {
-  int incidence_raw[] = {2,3,4,0,3,1,1,8,2,0,2,2,0,2,0,5,0,0,1,3,0,0,1,8,1,3,0,12,2,0,0,0,1,1,0,2,0,5,3,1,2,1,0,0,1,2,0,0,11,0,0,0,1,1,1,0};
-  int size_raw[] = {14,12,9,5,22,18,21,22,16,16,20,10,10,9,6,18,25,24,4,17,17,18,20,16,10,9,5,34,9,6,8,6,22,22,18,22,25,27,22,22,10,8,6,5,21,24,19,23,19,2,3,2,19,15,15,15};
-  int herd_raw[] = {1,1,1,1,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,8,9,9,9,9,10,10,10,10,11,11,11,11,12,12,12,12,13,13,13,13,14,14,14,14,15,15,15,15};
-  double period2_raw[] = {0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0};
-  double period3_raw[] = {0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0};
-  double period4_raw[] = {0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1};
+     int main() {
+       int incidence_raw[] = {2,3,4,0,3,1,1,8,2,0,2,2,0,2,0,5,0,0,1,3,0,0,1,8,1,3,0,12,2,0,0,0,1,1,0,2,0,5,3,1,2,1,0,0,1,2,0,0,11,0,0,0,1,1,1,0};
+       int size_raw[] = {14,12,9,5,22,18,21,22,16,16,20,10,10,9,6,18,25,24,4,17,17,18,20,16,10,9,5,34,9,6,8,6,22,22,18,22,25,27,22,22,10,8,6,5,21,24,19,23,19,2,3,2,19,15,15,15};
+       int herd_raw[] = {1,1,1,1,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,8,9,9,9,9,10,10,10,10,11,11,11,11,12,12,12,12,13,13,13,13,14,14,14,14,15,15,15,15};
+       double period2_raw[] = {0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0};
+       double period3_raw[] = {0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0};
+       double period4_raw[] = {0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1};
 
-  int N = 56;
-  int N_herd = 15;
+       int N = 56;
+       int N_herd = 15;
 
-  ivec incidence(incidence_raw,N);
-  ivec size(size_raw,N);
-  ivec herd(herd_raw,N); herd -= 1;
-  vec period2(period2_raw,N);
-  vec period3(period3_raw,N);
-  vec period4(period4_raw,N);
-  HerdModel m(incidence,size,herd,period2,period3,period4,N,N_herd);
-  m.sample(1e6,1e5,50);
+       ivec incidence(incidence_raw,N);
+       ivec size(size_raw,N);
+       ivec herd(herd_raw,N); herd -= 1;
+       vec period2(period2_raw,N);
+       vec period3(period3_raw,N);
+       vec period4(period4_raw,N);
+       HerdModel m(incidence,size,herd,period2,period3,period4,N,N_herd);
+       m.sample(1e6,1e5,50);
 
-  cout << "samples: " << m.b0.history.size() << endl;
-  cout << "b0: " << m.b0.mean() << endl;
-  cout << "b_period2: " << m.b_period2.mean() << endl;
-  cout << "b_period3: " << m.b_period3.mean() << endl;
-  cout << "b_period4: " << m.b_period4.mean() << endl;
-  cout << "tau_overdisp: " << m.tau_overdisp.mean() << endl;
-  cout << "tau_b_herd: " << m.tau_b_herd.mean() << endl;
-  cout << "sigma_overdisp: " << m.sigma_overdisp.mean() << endl;
-  cout << "sigma_b_herd: " << m.sigma_b_herd.mean() << endl;
-  cout << "b_herd: " << endl << m.b_herd.mean() << endl;
+       cout << "samples: " << m.b0.history.size() << endl;
+       cout << "b0: " << m.b0.mean() << endl;
+       cout << "b_period2: " << m.b_period2.mean() << endl;
+       cout << "b_period3: " << m.b_period3.mean() << endl;
+       cout << "b_period4: " << m.b_period4.mean() << endl;
+       cout << "tau_overdisp: " << m.tau_overdisp.mean() << endl;
+       cout << "tau_b_herd: " << m.tau_b_herd.mean() << endl;
+       cout << "sigma_overdisp: " << m.sigma_overdisp.mean() << endl;
+       cout << "sigma_b_herd: " << m.sigma_b_herd.mean() << endl;
+       cout << "b_herd: " << endl << m.b_herd.mean() << endl;
 
-  return 0;
-}
+       return 0;
+     }
 
