@@ -48,9 +48,10 @@ int main() {
 
   vec coefs;
   solve(coefs, X, y);
+  vec err = y - X*coefs;
   cout << "lm coefs" << endl << coefs;
-  cout << "y sd:" << stddev(y,0);
-  cout << "y tau:" << 1/pow(stddev(y,0),2.0);
+  cout << "err sd: " << stddev(err,0) << endl;;
+  cout << "err tau: " << pow(stddev(err,0),-2) << endl;
 
   TestModel m(y,X);
   int iterations = 1e5;

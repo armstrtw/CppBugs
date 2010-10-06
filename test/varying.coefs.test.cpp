@@ -28,7 +28,7 @@ public:
                                                                       y_hat(sum(X % (permutation_matrix * b.value),1)),
                                                                       likelihood(y_,true)
   {
-    
+
     permutation_matrix.fill(0.0);
     for(uint i = 0; i < groups.n_elem; i++) {
       permutation_matrix(i,groups[i]) = 1.0;
@@ -79,9 +79,10 @@ int main() {
 
   vec coefs;
   solve(coefs, X, y);
+  vec err = y - X*coefs;
   cout << "lm coefs" << endl << coefs;
-  cout << "y sd:" << stddev(y,0);
-  cout << "y tau:" << 1/pow(stddev(y,0),2.0);
+  cout << "err sd: " << stddev(err,0) << endl;;
+  cout << "err tau: " << pow(stddev(err,0),-2) << endl;
 
   TestModel m(y,X,groups,J);
   int iterations = 1e5;
