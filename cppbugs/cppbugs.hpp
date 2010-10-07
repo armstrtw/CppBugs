@@ -27,9 +27,24 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <cppbugs/mcmc.rng.hpp>
 #include <cppbugs/mcmc.object.hpp>
-#include <cppbugs/mcmc.model.hpp>
+#include <cppbugs/mcmc.model.base.hpp>
 
 namespace cppbugs {
+  double tune_scale(const double acceptance_ratio) {
+    const double univariate_target_ar = 0.40;
+    //const double thresh = 0.10;
+    const double dilution = 0.5;
+    double diff = acceptance_ratio - univariate_target_ar;
+    //return abs(diff) < thresh ? 1.0 : 1.0 + diff / dilution;
+    return 1.0 + diff / dilution;
+    // if(acceptance_ratio > .50) {
+    //   return 1.1;
+    // } else if (acceptance_ratio < .30) {
+    //   return 0.9;
+    // } else {
+    // 	return 1.0;
+    // }
+  }
 
   double factln_single(int n) {
     if(n > 100) {
@@ -114,7 +129,6 @@ namespace cppbugs {
   class Deterministic : public MCMCSpecialized<T> {
   public:
     Deterministic(const T& value): MCMCSpecialized<T>(value) {}
-    void jump(RngBase& rng) {}
     bool isDeterministc() const { return true; }
     bool isStochastic() const { return false; }
   };
@@ -156,7 +170,8 @@ namespace cppbugs {
         stochastic_jump(MCMCSpecialized<T>::value,rng);
       }
     }
-    void component_jump(RngBase& rng, MCModel& m) {
+
+    void component_jump(RngBase& rng, MCModelBase& m) {
       if(observed_) {
         return;
       } else {
@@ -173,6 +188,20 @@ namespace cppbugs {
 	  }
 	}
       }
+    }
+    void tune() {
+      if(observed_) {
+        return;
+      }
+
+      T ar_ratio = accepted_ / (accepted_ + rejected_);
+      for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
+	std::cout << "[" << i << "]" << ar_ratio[i] << "|" << scale_[i] << "|";
+	scale_[i] *= tune_scale(ar_ratio[i]);
+	std::cout << scale_[i] << "|" << tune_scale(ar_ratio[i]) << std::endl;
+      }
+      accepted_.fill(0);
+      rejected_.fill(0);
     }
   };
 
@@ -194,7 +223,7 @@ namespace cppbugs {
         stochastic_jump(MCMCSpecialized<double>::value,rng);
       }
     }
-    void component_jump(RngBase& rng, MCModel& m) {
+    void component_jump(RngBase& rng, MCModelBase& m) {
       if(observed_) {
         return;
       } else {
@@ -210,6 +239,18 @@ namespace cppbugs {
 	}
       }
     }
+    void tune() {
+      if(observed_) {
+        return;
+      }
+
+      double ar_ratio = accepted_ / (accepted_ + rejected_);
+      std::cout << "[]" << ar_ratio << "|" << scale_ << "|";
+      scale_ *= tune_scale(ar_ratio);
+      std::cout << scale_ << "|" << tune_scale(ar_ratio) << std::endl;
+      accepted_ = 0;
+      rejected_ = 0;
+    }
   };
 
   template<>
@@ -223,7 +264,7 @@ namespace cppbugs {
 						     scale_(value) {
       accepted_.fill(0);
       rejected_.fill(0);
-      scale_.fill(1);
+      scale_.fill(0.5);
     }
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
@@ -234,7 +275,7 @@ namespace cppbugs {
         stochastic_jump(MCMCSpecialized<arma::vec>::value,rng);
       }
     }
-    void component_jump(RngBase& rng, MCModel& m) {
+    void component_jump(RngBase& rng, MCModelBase& m) {
       if(observed_) {
         return;
       } else {
@@ -252,6 +293,20 @@ namespace cppbugs {
 	}
       }
     }
+    void tune() {
+      if(observed_) {
+        return;
+      }
+
+      arma::vec ar_ratio = accepted_ / (accepted_ + rejected_);
+      for(size_t i = 0; i < MCMCSpecialized<arma::vec>::value.n_elem; i++) {
+	std::cout << "[" << i << "]" << ar_ratio[i] << "|" << scale_[i] << "|";
+	scale_[i] *= tune_scale(ar_ratio[i]);
+	std::cout << scale_[i] << "|" << tune_scale(ar_ratio[i]) << std::endl;
+      }
+      accepted_.fill(0);
+      rejected_.fill(0);
+    }
   };
 
   template<>
@@ -265,7 +320,7 @@ namespace cppbugs {
 						     scale_(value) {
       accepted_.fill(0);
       rejected_.fill(0);
-      scale_.fill(1);
+      scale_.fill(0.5);
     }
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
@@ -276,7 +331,7 @@ namespace cppbugs {
         stochastic_jump(MCMCSpecialized<arma::mat>::value,rng);
       }
     }
-    void component_jump(RngBase& rng, MCModel& m) {
+    void component_jump(RngBase& rng, MCModelBase& m) {
       if(observed_) {
         return;
       } else {
@@ -294,6 +349,21 @@ namespace cppbugs {
 	}
       }
     }
+    void tune() {
+      if(observed_) {
+        return;
+      }
+
+      arma::mat ar_ratio = accepted_ / (accepted_ + rejected_);
+      for(size_t i = 0; i < MCMCSpecialized<arma::mat>::value.n_elem; i++) {
+	std::cout << "[" << i << "]" << ar_ratio[i] << "|" << scale_[i] << "|";
+	scale_[i] *= tune_scale(ar_ratio[i]);
+	std::cout << scale_[i] << "|" << tune_scale(ar_ratio[i]) << std::endl;
+      }
+      accepted_.fill(0);
+      rejected_.fill(0);
+    }
+
   };
 
   double accu(const double x) {

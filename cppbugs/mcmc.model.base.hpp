@@ -15,26 +15,28 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_OBJECT_HPP
-#define MCMC_OBJECT_HPP
+#ifndef MCMC_MODEL_BASE_HPP
+#define MCMC_MODEL_BASE_HPP
 
-#include <cppbugs/mcmc.model.base.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+#include <boost/random.hpp>
+#include <cppbugs/mcmc.rng.hpp>
 
 namespace cppbugs {
 
-  class MCMCObject {
+  class MCModelBase {
+  private:
+    SpecializedRng<boost::minstd_rand> rng_;
+    bool bad_logp(const double value) const { return isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCMCObject() {}
-    virtual void jump(RngBase& rng) {}
-    virtual void component_jump(RngBase& rng, MCModelBase& m) {}
-    virtual void tune() {}
-    virtual void preserve() = 0;        // in mcmc.specialized
-    virtual void revert() = 0;          // in mcmc.specialized
-    virtual void tally() = 0;           // in mcmc.specialized
-    virtual void print() const = 0;     // in mcmc.specialized
-    virtual bool isDeterministc() const = 0;
-    virtual bool isStochastic() const = 0;
+    MCModelBase() {}
+    virtual void update() = 0;
+    virtual double logp() const = 0;
+    bool reject(const double value, const double old_logp) {
+      return bad_logp(value) || log(rng_.uniform()) > value - old_logp ? true : false;
+    }
   };
-
 } // namespace cppbugs
-#endif // MCMC_OBJECT_HPP
+#endif // MCMC_MODEL_BASE_HPP

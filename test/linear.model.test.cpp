@@ -3,6 +3,7 @@
 #include <armadillo>
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.model.hpp>
 
 using namespace arma;
 using namespace cppbugs;
@@ -52,15 +53,16 @@ int main() {
   vec coefs;
   solve(coefs, X, y);
   vec err = y - X*coefs;
-  cout << "lm coefs" << endl << coefs;
-  cout << "err sd: " << stddev(err,0) << endl;;
-  cout << "err tau: " << pow(stddev(err,0),-2) << endl;
 
   TestModel m(y,X);
   int iterations = 1e5;
   m.sample(iterations, 1e4, 10);
-  cout << "samples: " << m.b.history.size() << endl;
+
+  cout << "lm coefs" << endl << coefs;
+  cout << "err sd: " << stddev(err,0) << endl;;
+  cout << "err tau: " << pow(stddev(err,0),-2) << endl;
   cout << "b: " << endl << m.b.mean();
   cout << "tau_y: " << m.tau_y.mean() << endl;
+  cout << "samples: " << m.b.history.size() << endl;
   return 0;
 };

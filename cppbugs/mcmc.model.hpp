@@ -23,12 +23,13 @@
 #include <vector>
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.hpp>
+#include <cppbugs/mcmc.model.base.hpp>
 #include <cppbugs/mcmc.object.hpp>
 #include <cppbugs/cppbugs.hpp>
 
 namespace cppbugs {
 
-  class MCModel {
+  class MCModel : public MCModelBase {
   private:
     SpecializedRng<boost::minstd_rand> rng_;
     std::vector<MCMCObject*> mcmcObjects, stochastics, deterministics;
@@ -39,8 +40,7 @@ namespace cppbugs {
     void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
     bool bad_logp(const double value) const { return isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    ~MCModel() {} // potentially destory objects
-    MCModel() {}
+    MCModel(): MCModelBase() {}
     virtual void update() = 0;
     virtual double logp() const = 0;
 
@@ -62,8 +62,21 @@ namespace cppbugs {
       return bad_logp(value) || log(rng_.uniform()) > value - old_logp ? true : false;
     }
 
-    void sample(int iterations, int burn, int thin) {
+    void tune(int iterations, int tuning_step) {
+      for(int i = 0; i < iterations; i++) {
+	for(std::vector<MCMCObject*>::iterator it = stochastics.begin(); it != stochastics.end(); it++) {
+	  (*it)->component_jump(rng_,*this);
+	}
+	if(i % tuning_step == 0) {
+	  for(std::vector<MCMCObject*>::iterator it = stochastics.begin(); it != stochastics.end(); it++) {
+	    (*it)->tune();
+	  }
+	}
+      }
+    }
 
+    void sample(int iterations, int burn, int thin) {
+      tune(burn,100);
       double logp_value,old_logp_value;
       double accepted(0);
       double rejected(0);
