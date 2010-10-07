@@ -31,6 +31,8 @@ namespace cppbugs {
 
   class MCModel : public MCModelBase {
   private:
+    double accepted_;
+    double rejected_;
     SpecializedRng<boost::minstd_rand> rng_;
     std::vector<MCMCObject*> mcmcObjects, stochastics, deterministics;
     void jump_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->jump(rng_); } }
@@ -46,12 +48,16 @@ namespace cppbugs {
 
     void add(MCMCObject& p) {
       mcmcObjects.push_back(&p);
-      if(p.isStochastic()) {
+      if(p.isStochastic() && !p.isObserved()) {
         stochastics.push_back(&p);
       }
       if(p.isDeterministc()) {
         deterministics.push_back(&p);
       }
+    }
+
+    double acceptance_ratio() const {
+      return accepted_ / (accepted_ + rejected_);
     }
 
     void print() {
@@ -63,11 +69,12 @@ namespace cppbugs {
     }
 
     void tune(int iterations, int tuning_step) {
-      for(int i = 0; i < iterations; i++) {
+      for(int i = 1; i <= iterations; i++) {
 	for(std::vector<MCMCObject*>::iterator it = stochastics.begin(); it != stochastics.end(); it++) {
 	  (*it)->component_jump(rng_,*this);
 	}
 	if(i % tuning_step == 0) {
+          std::cout << "tuning at step: " << i << std::endl;
 	  for(std::vector<MCMCObject*>::iterator it = stochastics.begin(); it != stochastics.end(); it++) {
 	    (*it)->tune();
 	  }
@@ -78,8 +85,6 @@ namespace cppbugs {
     void sample(int iterations, int burn, int thin) {
       tune(burn,100);
       double logp_value,old_logp_value;
-      double accepted(0);
-      double rejected(0);
 
       logp_value  = -std::numeric_limits<double>::infinity();
       old_logp_value = -std::numeric_limits<double>::infinity();
@@ -89,16 +94,15 @@ namespace cppbugs {
         jump_all(stochastics);
         update();
         logp_value = logp();
+        std::cout << "new|old: " << logp_value << "|" << old_logp_value << std::endl;
         if(reject(logp_value, old_logp_value)) {
           revert_all(mcmcObjects);
           logp_value = old_logp_value;
-          rejected += 1;
+          rejected_ += 1;
         } else {
-          accepted += 1;
+          accepted_ += 1;
         }
         if(i > burn && (i % thin == 0)) {
-          accepted = 0;
-          rejected = 0;
           tally_all(mcmcObjects);
         }
       }

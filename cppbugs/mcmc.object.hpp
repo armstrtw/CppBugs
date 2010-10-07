@@ -34,6 +34,7 @@ namespace cppbugs {
     virtual void print() const = 0;     // in mcmc.specialized
     virtual bool isDeterministc() const = 0;
     virtual bool isStochastic() const = 0;
+    virtual bool isObserved() const = 0;
   };
 
 } // namespace cppbugs

@@ -31,18 +31,18 @@
 
 namespace cppbugs {
   double tune_scale(const double acceptance_ratio) {
-    const double univariate_target_ar = 0.40;
+    const double univariate_target_ar = 0.4;
     //const double thresh = 0.10;
-    const double dilution = 0.5;
+    const double dilution = 0.2;
     double diff = acceptance_ratio - univariate_target_ar;
-    //return abs(diff) < thresh ? 1.0 : 1.0 + diff / dilution;
-    return 1.0 + diff / dilution;
+    return 1.0 + diff * dilution;
+
     // if(acceptance_ratio > .50) {
     //   return 1.1;
     // } else if (acceptance_ratio < .30) {
     //   return 0.9;
     // } else {
-    // 	return 1.0;
+    //   return 1.0;
     // }
   }
 
@@ -131,18 +131,19 @@ namespace cppbugs {
     Deterministic(const T& value): MCMCSpecialized<T>(value) {}
     bool isDeterministc() const { return true; }
     bool isStochastic() const { return false; }
+    bool isObserved() const { return true; }
   };
 
-  template<typename T, typename U>
-  void stochastic_jump(T& value, U& rng) {
+  template<typename T, typename U, typename V>
+  void stochastic_jump(T& value, U& rng, V& scale) {
     for(size_t i = 0; i < value.n_elem; i++) {
-      value[i] += rng.normal();
+      value[i] += rng.normal() * scale[i];
     }
   }
 
-  template<typename U>
-  void stochastic_jump(double& value, U& rng) {
-    value += rng.normal();
+  template<typename T>
+  void stochastic_jump(double& value, T& rng, double scale) {
+    value += rng.normal() * scale;
   }
 
   template<typename T>
@@ -157,17 +158,18 @@ namespace cppbugs {
 						     accepted_(value), rejected_(value),
 						     scale_(value)
     {
-      accepted_ = 0;
-      rejected_ = 0;
-      scale_ = 1;
+      accepted_.fill(0);
+      rejected_.fill(0);
+      scale_.fill(1);
     }
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
+    bool isObserved() const { return observed_; }
     void jump(RngBase& rng) {
       if(observed_) {
         return;
       } else {
-        stochastic_jump(MCMCSpecialized<T>::value,rng);
+        stochastic_jump(MCMCSpecialized<T>::value,rng,scale_);
       }
     }
 
@@ -177,10 +179,19 @@ namespace cppbugs {
       } else {
 	for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
 	  double old_logp = m.logp();
+
+          //preserve
 	  MCMCSpecialized<T>::old_value[i] = MCMCSpecialized<T>::value[i];
+
+          // jump
 	  MCMCSpecialized<T>::value[i] += rng.normal() * scale_[i];
+
+          // update
 	  m.update();
+
+          // test
 	  if(m.reject(m.logp(), old_logp)) {
+            // revert
 	    MCMCSpecialized<T>::value[i] = MCMCSpecialized<T>::old_value[i];
 	    rejected_[i] += 1;
 	  } else {
@@ -196,10 +207,12 @@ namespace cppbugs {
 
       T ar_ratio = accepted_ / (accepted_ + rejected_);
       for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
-	std::cout << "[" << i << "]" << ar_ratio[i] << "|" << scale_[i] << "|";
+	//std::cout << "[" << i << "]" << ar_ratio[i] << "|" << scale_[i] << "|";
 	scale_[i] *= tune_scale(ar_ratio[i]);
-	std::cout << scale_[i] << "|" << tune_scale(ar_ratio[i]) << std::endl;
+	//std::cout << scale_[i] << "|" << tune_scale(ar_ratio[i]) << std::endl;
       }
+      std::cout << "ar_ratio:" << std::endl << ar_ratio;
+      std::cout << "scale" << std::endl << scale_;
       accepted_.fill(0);
       rejected_.fill(0);
     }
@@ -216,11 +229,12 @@ namespace cppbugs {
 						     scale_(1.0) {}
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
+    bool isObserved() const { return observed_; }
     void jump(RngBase& rng) {
       if(observed_) {
         return;
       } else {
-        stochastic_jump(MCMCSpecialized<double>::value,rng);
+        stochastic_jump(MCMCSpecialized<double>::value,rng,scale_);
       }
     }
     void component_jump(RngBase& rng, MCModelBase& m) {
@@ -245,125 +259,12 @@ namespace cppbugs {
       }
 
       double ar_ratio = accepted_ / (accepted_ + rejected_);
-      std::cout << "[]" << ar_ratio << "|" << scale_ << "|";
+      //std::cout << "[]" << ar_ratio << "|" << scale_ << "|";
       scale_ *= tune_scale(ar_ratio);
-      std::cout << scale_ << "|" << tune_scale(ar_ratio) << std::endl;
+      //std::cout << scale_ << "|" << tune_scale(ar_ratio) << std::endl;
       accepted_ = 0;
       rejected_ = 0;
     }
-  };
-
-  template<>
-  class Stochastic<arma::vec> : public MCMCSpecialized<arma::vec> {
-  protected:
-    bool observed_;
-    arma::vec accepted_,rejected_,scale_;
-  public:
-    Stochastic(const arma::vec& value, const bool observed): MCMCSpecialized<arma::vec>(value), observed_(observed),
-						     accepted_(value), rejected_(value),
-						     scale_(value) {
-      accepted_.fill(0);
-      rejected_.fill(0);
-      scale_.fill(0.5);
-    }
-    bool isDeterministc() const { return false; }
-    bool isStochastic() const { return true; }
-    void jump(RngBase& rng) {
-      if(observed_) {
-        return;
-      } else {
-        stochastic_jump(MCMCSpecialized<arma::vec>::value,rng);
-      }
-    }
-    void component_jump(RngBase& rng, MCModelBase& m) {
-      if(observed_) {
-        return;
-      } else {
-	for(size_t i = 0; i < MCMCSpecialized<arma::vec>::value.n_elem; i++) {
-	  double old_logp = m.logp();
-	  MCMCSpecialized<arma::vec>::old_value[i] = MCMCSpecialized<arma::vec>::value[i];
-	  MCMCSpecialized<arma::vec>::value[i] += rng.normal() * scale_[i];
-	  m.update();
-	  if(m.reject(m.logp(), old_logp)) {
-	    MCMCSpecialized<arma::vec>::value[i] = MCMCSpecialized<arma::vec>::old_value[i];
-	    rejected_[i] += 1;
-	  } else {
-	    accepted_[i] += 1;
-	  }
-	}
-      }
-    }
-    void tune() {
-      if(observed_) {
-        return;
-      }
-
-      arma::vec ar_ratio = accepted_ / (accepted_ + rejected_);
-      for(size_t i = 0; i < MCMCSpecialized<arma::vec>::value.n_elem; i++) {
-	std::cout << "[" << i << "]" << ar_ratio[i] << "|" << scale_[i] << "|";
-	scale_[i] *= tune_scale(ar_ratio[i]);
-	std::cout << scale_[i] << "|" << tune_scale(ar_ratio[i]) << std::endl;
-      }
-      accepted_.fill(0);
-      rejected_.fill(0);
-    }
-  };
-
-  template<>
-  class Stochastic<arma::mat> : public MCMCSpecialized<arma::mat> {
-  protected:
-    bool observed_;
-    arma::mat accepted_,rejected_,scale_;
-  public:
-    Stochastic(const arma::mat& value, const bool observed): MCMCSpecialized<arma::mat>(value), observed_(observed),
-						     accepted_(value), rejected_(value),
-						     scale_(value) {
-      accepted_.fill(0);
-      rejected_.fill(0);
-      scale_.fill(0.5);
-    }
-    bool isDeterministc() const { return false; }
-    bool isStochastic() const { return true; }
-    void jump(RngBase& rng) {
-      if(observed_) {
-        return;
-      } else {
-        stochastic_jump(MCMCSpecialized<arma::mat>::value,rng);
-      }
-    }
-    void component_jump(RngBase& rng, MCModelBase& m) {
-      if(observed_) {
-        return;
-      } else {
-	for(size_t i = 0; i < MCMCSpecialized<arma::mat>::value.n_elem; i++) {
-	  double old_logp = m.logp();
-	  MCMCSpecialized<arma::mat>::old_value[i] = MCMCSpecialized<arma::mat>::value[i];
-	  MCMCSpecialized<arma::mat>::value[i] += rng.normal() * scale_[i];
-	  m.update();
-	  if(m.reject(m.logp(), old_logp)) {
-	    MCMCSpecialized<arma::mat>::value[i] = MCMCSpecialized<arma::mat>::old_value[i];
-	    rejected_[i] += 1;
-	  } else {
-	    accepted_[i] += 1;
-	  }
-	}
-      }
-    }
-    void tune() {
-      if(observed_) {
-        return;
-      }
-
-      arma::mat ar_ratio = accepted_ / (accepted_ + rejected_);
-      for(size_t i = 0; i < MCMCSpecialized<arma::mat>::value.n_elem; i++) {
-	std::cout << "[" << i << "]" << ar_ratio[i] << "|" << scale_[i] << "|";
-	scale_[i] *= tune_scale(ar_ratio[i]);
-	std::cout << scale_[i] << "|" << tune_scale(ar_ratio[i]) << std::endl;
-      }
-      accepted_.fill(0);
-      rejected_.fill(0);
-    }
-
   };
 
   double accu(const double x) {
@@ -414,7 +315,7 @@ namespace cppbugs {
         return;
       } else {
         do {
-          Stochastic<T>::value = oldvalue + rng.normal();
+          Stochastic<T>::value = oldvalue + rng.normal() * Stochastic<T>::scale_;
         } while(Stochastic<T>::value < lower_ || Stochastic<T>::value > upper_);
       }
     }
@@ -434,7 +335,7 @@ namespace cppbugs {
         return;
       } else {
         do {
-          Stochastic<T>::value = oldvalue + rng.normal();
+          Stochastic<T>::value = oldvalue + rng.normal() * Stochastic<T>::scale_;
         } while(Stochastic<T>::value < 0);
       }
     }
@@ -457,7 +358,7 @@ namespace cppbugs {
         return;
       } else {
         do {
-          Stochastic<T>::value = oldvalue + rng.normal();
+          Stochastic<T>::value = oldvalue + rng.normal() * Stochastic<T>::scale_;
         } while(Stochastic<T>::value < 0);
       }
     }

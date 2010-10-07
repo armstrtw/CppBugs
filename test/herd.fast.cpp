@@ -3,6 +3,7 @@
 #include <armadillo>
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.model.hpp>
 
 using namespace arma;
 using namespace cppbugs;
