@@ -43,6 +43,7 @@ public:
 
   void update() {
     y_hat.value = sum(X % (permutation_matrix * b.value),1);
+    //cout << y_hat.value;
   }
   double logp() const {
     return b.logp(0.0, 0.0001) + tau_y.logp() + likelihood.logp(y_hat.value,tau_y.value);
@@ -51,7 +52,7 @@ public:
 
 int main() {
 
-  const uint NR = 100;
+  const uint NR = 1000;
   const uint NC = 2;
   const uint J = 3;
 

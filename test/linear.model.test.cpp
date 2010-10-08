@@ -64,5 +64,6 @@ int main() {
   cout << "b: " << endl << m.b.mean();
   cout << "tau_y: " << m.tau_y.mean() << endl;
   cout << "samples: " << m.b.history.size() << endl;
+  cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
 };

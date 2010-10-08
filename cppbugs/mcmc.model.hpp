@@ -43,8 +43,6 @@ namespace cppbugs {
     bool bad_logp(const double value) const { return isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModel(): MCModelBase() {}
-    virtual void update() = 0;
-    virtual double logp() const = 0;
 
     void add(MCMCObject& p) {
       mcmcObjects.push_back(&p);
@@ -83,18 +81,18 @@ namespace cppbugs {
     }
 
     void sample(int iterations, int burn, int thin) {
-      tune(burn,100);
+      tune(burn,50);
       double logp_value,old_logp_value;
 
       logp_value  = -std::numeric_limits<double>::infinity();
       old_logp_value = -std::numeric_limits<double>::infinity();
-      for(int i = 0; i < iterations; i++) {
+      for(int i = 1; i <= iterations; i++) {
         old_logp_value = logp_value;
         preserve_all(mcmcObjects);
         jump_all(stochastics);
         update();
         logp_value = logp();
-        std::cout << "new|old: " << logp_value << "|" << old_logp_value << std::endl;
+        //std::cout << "new|old: " << logp_value << "|" << old_logp_value << std::endl;
         if(reject(logp_value, old_logp_value)) {
           revert_all(mcmcObjects);
           logp_value = old_logp_value;
