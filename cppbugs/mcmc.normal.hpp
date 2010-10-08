@@ -15,13 +15,34 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef CPPBUGS_HPP
-#define CPPBUGS_HPP
+#ifndef MCMC_NORMAL_HPP
+#define MCMC_NORMAL_HPP
 
-#include <cppbugs/mcmc.deterministic.hpp>
-#include <cppbugs/mcmc.normal.hpp>
-#include <cppbugs/mcmc.uniform.hpp>
-#include <cppbugs/mcmc.gamma.hpp>
-#include <cppbugs/mcmc.model.hpp>
+#include <armadillo>
+#include <cppbugs/mcmc.stochastic.hpp>
 
-#endif // CPPBUGS_HPP
+namespace cppbugs {
+
+  template<typename T>
+  class Normal : public Stochastic<T> {
+  public:
+    Normal(const T& x, const bool observed = false): Stochastic<T>(x,observed) {}
+
+    template<typename U, typename V>
+    double logp(const U& mu, const V& tau) const {
+      return accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau * pow(Stochastic<T>::value - mu,2));
+    }
+  };
+
+  template<typename T>
+  class NormalStatic : public Stochastic<T> {
+    double mu_, tau_;
+  public:
+    NormalStatic(const T& x, const double mu, const double tau, const bool observed = false): Stochastic<T>(x,observed), mu_(mu), tau_(tau) {}
+    double logp() const {
+      return accu(0.5*log(0.5*tau_/arma::math::pi()) - 0.5 * tau_ * pow(Stochastic<T>::value - mu_,2));
+    }
+  };
+
+} // namespace cppbugs
+#endif //MCMC_NORMAL_HPP

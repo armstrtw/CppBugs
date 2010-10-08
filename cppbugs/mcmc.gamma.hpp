@@ -15,13 +15,35 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef CPPBUGS_HPP
-#define CPPBUGS_HPP
+#ifndef MCMC_GAMMA_HPP
+#define MCMC_GAMMA_HPP
 
-#include <cppbugs/mcmc.deterministic.hpp>
-#include <cppbugs/mcmc.normal.hpp>
-#include <cppbugs/mcmc.uniform.hpp>
-#include <cppbugs/mcmc.gamma.hpp>
-#include <cppbugs/mcmc.model.hpp>
+#include <cmath>
+#include <boost/math/special_functions/gamma.hpp>
+#include <armadillo>
+#include <cppbugs/mcmc.stochastic.hpp>
 
-#endif // CPPBUGS_HPP
+namespace cppbugs {
+
+  template<typename T>
+  class GammaStatic : public Stochastic<T> {
+    double alpha_, beta_;
+  public:
+    GammaStatic(const T& x, const double alpha, const double beta, const bool observed = false): Stochastic<T>(x,observed), alpha_(alpha), beta_(beta) {}
+    double logp() const {
+      return (Stochastic<T>::value < 0 ) ? -std::numeric_limits<double>::infinity() : accu( (alpha_ - 1.0) * log(Stochastic<T>::value) - beta_*Stochastic<T>::value - boost::math::lgamma(alpha_) + alpha_*log(beta_) );
+    }
+    void jump(RngBase& rng) {
+      const T oldvalue(Stochastic<T>::value);
+      if(Stochastic<T>::observed_) {
+        return;
+      } else {
+        do {
+          Stochastic<T>::value = oldvalue + rng.normal() * Stochastic<T>::scale_;
+        } while(Stochastic<T>::value < 0);
+      }
+    }
+  };
+
+} // namespace cppbugs
+#endif // MCMC_GAMMA_HPP
