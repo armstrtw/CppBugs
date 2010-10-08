@@ -52,7 +52,7 @@ public:
 
 int main() {
 
-  const uint NR = 1000;
+  const uint NR = 100;
   const uint NC = 2;
   const uint J = 3;
 
