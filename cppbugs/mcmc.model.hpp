@@ -72,7 +72,7 @@ namespace cppbugs {
 	  (*it)->component_jump(rng_,*this);
 	}
 	if(i % tuning_step == 0) {
-          std::cout << "tuning at step: " << i << std::endl;
+          //std::cout << "tuning at step: " << i << std::endl;
 	  for(std::vector<MCMCObject*>::iterator it = stochastics.begin(); it != stochastics.end(); it++) {
 	    (*it)->tune();
 	  }
