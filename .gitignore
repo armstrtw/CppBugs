@@ -7,3 +7,4 @@
 a.out
 *.csv
 out.txt
+callgrind.out.*
