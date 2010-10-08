@@ -92,8 +92,8 @@ int main() {
   fixed.col(3) = period4;
 
   HerdModel m(incidence,size,herd,fixed,N,N_herd);
-  m.sample(1e6,1e5,50);
-  //m.sample(1e5,1e4,10);
+  //m.sample(1e6,1e5,50);
+  m.sample(1e6,1e4,10);
 
   cout << "samples: " << m.b.history.size() << endl;
   cout << "b: " << endl << m.b.mean() << endl;
@@ -102,6 +102,7 @@ int main() {
   cout << "sigma_overdisp: " << m.sigma_overdisp.mean() << endl;
   cout << "sigma_b_herd: " << m.sigma_b_herd.mean() << endl;
   cout << "b_herd: " << endl << m.b_herd.mean() << endl;
+  cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   // cout << "overdisp" << m.overdisp.mean() << endl;
   // cout << "phi" << m.phi.mean() << endl;
   // cout << "phi2" << m.phi2.mean() << endl;

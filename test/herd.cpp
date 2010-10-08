@@ -118,7 +118,7 @@ int main() {
   vec period3(period3_raw,N);
   vec period4(period4_raw,N);
   HerdModel m(incidence,size,herd,period2,period3,period4,N,N_herd);
-  m.sample(1e6,1e5,50);
+  m.sample(1e6,1e5,100);
   //m.sample(1e5,1e4,10);
 
   cout << "samples: " << m.b0.history.size() << endl;
@@ -131,6 +131,7 @@ int main() {
   cout << "sigma_overdisp: " << m.sigma_overdisp.mean() << endl;
   cout << "sigma_b_herd: " << m.sigma_b_herd.mean() << endl;
   cout << "b_herd: " << endl << m.b_herd.mean() << endl;
+  cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   // cout << "overdisp" << m.overdisp.mean() << endl;
   // cout << "phi" << m.phi.mean() << endl;
   // cout << "phi2" << m.phi2.mean() << endl;
