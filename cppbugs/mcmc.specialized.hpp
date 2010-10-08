@@ -18,7 +18,6 @@
 #ifndef MCMC_SPECIALIZED_HPP
 #define MCMC_SPECIALIZED_HPP
 
-#include <iostream>
 #include <vector>
 #include <cppbugs/mcmc.object.hpp>
 

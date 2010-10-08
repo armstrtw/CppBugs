@@ -18,9 +18,7 @@
 #ifndef MCMC_DETERMINISTIC_HPP
 #define MCMC_DETERMINISTIC_HPP
 
-#include <iostream>
-#include <vector>
-#include <cppbugs/mcmc.object.hpp>
+#include <cppbugs/mcmc.specialized.hpp>
 
 namespace cppbugs {
 
