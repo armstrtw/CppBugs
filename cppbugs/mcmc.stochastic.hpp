@@ -26,7 +26,7 @@ namespace cppbugs {
   }
 
   double tune_factor(const double acceptance_ratio) {
-    const double univariate_target_ar = 0.7;
+    const double univariate_target_ar = 0.6;
     const double thresh = 0.1;
     const double dilution = 0.2;
     double diff = acceptance_ratio - univariate_target_ar;
@@ -63,31 +63,29 @@ namespace cppbugs {
     }
 
     void component_jump(RngBase& rng, MCModelBase& m) {
-      for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
-        double old_logp = m.logp();
+      double logp_value = m.logp();
+      double old_logp_value;
 
+      for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
         //preserve
+        old_logp_value = logp_value;
         MCMCSpecialized<T>::old_value[i] = MCMCSpecialized<T>::value[i];
-        //std::cout << "old:" << MCMCSpecialized<T>::old_value[i] << std::endl;
+
         // jump
         MCMCSpecialized<T>::value[i] += rng.normal() * scale_[i];
-        //std::cout << "new:" << MCMCSpecialized<T>::value[i] << std::endl;
 
         // update
         m.update();
 
-        //std::cout << "old logp:" << old_logp << std::endl;
-        //std::cout << "new logp:" << m.logp() << std::endl;
-
         // test
-        if(m.reject(m.logp(), old_logp)) {
+        logp_value = m.logp();
+        if(m.reject(logp_value, old_logp_value)) {
           // revert
           MCMCSpecialized<T>::value[i] = MCMCSpecialized<T>::old_value[i];
+          logp_value = old_logp_value;
           rejected_[i] += 1;
-          //std::cout << "rejected" << std::endl;
         } else {
           accepted_[i] += 1;
-          //std::cout << "accepted" << std::endl;
         }
       }
     }
