@@ -19,28 +19,30 @@ public:
   Uniform<double> tau_y;
   Deterministic<mat> y_hat;
   Normal<mat> likelihood;
+  Deterministic<double> rsq;
 
   TestModel(const mat& y_,const mat& X_): y(y_), X(X_),
                                           b(randn<vec>(X_.n_cols)),
                                           tau_y(1),
-                                          y_hat(X*b.value),likelihood(y_,true)
+                                          y_hat(X*b.value),
+                                          likelihood(y_,true),
+                                          rsq(0)
   {
     add(b);
     add(tau_y);
     add(y_hat);
     add(likelihood);
+    add(rsq);
   }
 
   void update() {
     y_hat.value = X*b.value;
+    rsq.value = as_scalar(1 - var(y - y_hat.value) / var(y));
   }
   double logp() const {
     return b.logp(0.0, 0.0001) + tau_y.logp(0,100) + likelihood.logp(y_hat.value,tau_y.value);
   }
 };
-
-// global rng generators
-//CppMCGeneratorT MCMCObject::generator_;
 
 int main() {
   const int NR = 1e2;
@@ -63,6 +65,7 @@ int main() {
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;
   cout << "b: " << endl << m.b.mean();
   cout << "tau_y: " << m.tau_y.mean() << endl;
+  cout << "R^2: " << m.rsq.mean() << endl;
   cout << "samples: " << m.b.history.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;

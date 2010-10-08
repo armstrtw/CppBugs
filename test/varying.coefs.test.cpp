@@ -21,13 +21,15 @@ public:
   UniformStatic<double> tau_y;
   Deterministic<mat> y_hat;
   Normal<mat> likelihood;
+  Deterministic<double> rsq;
 
   TestModel(const mat& y_,const mat& X_,const ivec& groups_, int NG): y(y_), X(X_), groups(groups_),
                                                                       permutation_matrix(X_.n_rows,NG),
                                                                       b(randn<mat>(NG,X_.n_cols)),
                                                                       tau_y(1,0,100),
                                                                       y_hat(sum(X % (permutation_matrix * b.value),1)),
-                                                                      likelihood(y_,true)
+                                                                      likelihood(y_,true),
+                                                                      rsq(0)
   {
 
     permutation_matrix.fill(0.0);
@@ -39,11 +41,12 @@ public:
     add(tau_y);
     add(y_hat);
     add(likelihood);
+    add(rsq);
   }
 
   void update() {
     y_hat.value = sum(X % (permutation_matrix * b.value),1);
-    //cout << y_hat.value;
+    rsq.value = as_scalar(1 - var(y - y_hat.value) / var(y));
   }
   double logp() const {
     return b.logp(0.0, 0.0001) + tau_y.logp() + likelihood.logp(y_hat.value,tau_y.value);
@@ -92,6 +95,7 @@ int main() {
 
   cout << "b: " << endl << m.b.mean();
   cout << "tau_y: " << m.tau_y.mean() << endl;
+  cout << "R^2: " << m.rsq.mean() << endl;
   cout << "samples: " << m.b.history.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
