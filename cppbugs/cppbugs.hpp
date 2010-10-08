@@ -33,7 +33,7 @@
 
 namespace cppbugs {
 
-  double tune_scale(const double acceptance_ratio) {
+  double tune_factor(const double acceptance_ratio) {
     const double univariate_target_ar = 0.7;
     const double thresh = 0.1;
     const double dilution = 0.2;
@@ -104,8 +104,8 @@ namespace cppbugs {
       T ar_ratio = accepted_ / (accepted_ + rejected_);
       for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
 	//std::cout << "[" << i << "]" << ar_ratio[i] << "|" << scale_[i] << "|";
-	scale_[i] *= tune_scale(ar_ratio[i]);
-	//std::cout << scale_[i] << "|" << tune_scale(ar_ratio[i]) << std::endl;
+	scale_[i] *= tune_factor(ar_ratio[i]);
+	//std::cout << scale_[i] << "|" << tune_factor(ar_ratio[i]) << std::endl;
       }
       std::cout << "ar_ratio:" << std::endl << ar_ratio;
       std::cout << "scale:" << std::endl << scale_;
@@ -143,7 +143,7 @@ namespace cppbugs {
     }
     void tune() {
       double ar_ratio = accepted_ / (accepted_ + rejected_);
-      scale_ *= tune_scale(ar_ratio);
+      scale_ *= tune_factor(ar_ratio);
       std::cout << "ar_ratio:" << ar_ratio << std::endl;
       std::cout << "scale:" << scale_ << std::endl;
       accepted_ = 0;
