@@ -63,7 +63,8 @@ namespace cppbugs {
     }
 
     bool reject(const double value, const double old_logp) {
-      return bad_logp(value) || log(rng_.uniform()) > value - old_logp ? true : false;
+      double r = exp(value - old_logp);
+      return bad_logp(value) || (rng_.uniform() > r && r < 1)  ? true : false;
     }
 
     void tune(int iterations, int tuning_step) {
@@ -81,7 +82,7 @@ namespace cppbugs {
     }
 
     void sample(int iterations, int burn, int thin) {
-      tune(burn,50);
+      tune(burn/5,10);
       double logp_value,old_logp_value;
 
       logp_value  = -std::numeric_limits<double>::infinity();
