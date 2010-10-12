@@ -6,10 +6,10 @@ ARMADILLO_LIBS = -llapack
 ##ARMADILLO_LIBS = -lgoto2 -lpthread -lgfortran
 LIBS = $(ARMADILLO_LIBS)
 
-all: linear.model.test linear.model.test.static varying.coefs.test price herd herd.fast
+all: linear.model.test linear.model.test.static varying.coefs.test price herd herd.fast radon1
 
 clean:
-	rm -f linear.model.test linear.model.test.static varying.coefs.test price herd herd.fast
+	rm -f linear.model.test linear.model.test.static varying.coefs.test price herd herd.fast radon1
 
 linear.model.test: linear.model.test.cpp
 	$(CC) $(CPPFLAGS) $(LIBS) linear.model.test.cpp -o linear.model.test
@@ -28,3 +28,6 @@ herd: herd.cpp
 
 herd.fast: herd.fast.cpp
 	$(CC) $(CPPFLAGS) $(LIBS) herd.fast.cpp -o herd.fast
+
+radon1: radon1.cpp
+	$(CC) $(CPPFLAGS) $(LIBS) radon1.cpp -o radon1
