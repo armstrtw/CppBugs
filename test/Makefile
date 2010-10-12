@@ -20,6 +20,9 @@ linear.model.test.static: linear.model.test.static.cpp
 varying.coefs.test: varying.coefs.test.cpp
 	$(CC) $(CPPFLAGS) $(LIBS) varying.coefs.test.cpp -o varying.coefs.test
 
+varying.coefs.global.prior: varying.coefs.global.prior.cpp
+	$(CC) $(CPPFLAGS) $(LIBS) varying.coefs.global.prior.cpp -o varying.coefs.global.prior
+
 price: price.cpp
 	$(CC) $(CPPFLAGS) $(LIBS) price.cpp -o price
 
