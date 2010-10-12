@@ -28,7 +28,7 @@ namespace cppbugs {
   double tune_factor(const double acceptance_ratio) {
     const double univariate_target_ar = 0.6;
     const double thresh = 0.1;
-    const double dilution = 0.2;
+    const double dilution = 1.0;
     double diff = acceptance_ratio - univariate_target_ar;
     return 1.0 + diff * dilution * static_cast<double>(fabs(diff) > thresh);
   }
@@ -37,18 +37,11 @@ namespace cppbugs {
   class Stochastic : public MCMCSpecialized<T> {
   protected:
     bool observed_;
-    T accepted_;
-    T rejected_;
-    T scale_;
+    double accepted_,rejected_,scale_;
   public:
     Stochastic(const T& value, const bool observed): MCMCSpecialized<T>(value), observed_(observed),
-						     accepted_(value), rejected_(value),
-						     scale_(value)
-    {
-      accepted_.fill(0);
-      rejected_.fill(0);
-      scale_.fill(0.25);
-    }
+						     accepted_(0), rejected_(0),
+						     scale_(1) {}
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     bool isObserved() const { return observed_; }
@@ -57,50 +50,17 @@ namespace cppbugs {
         return;
       } else {
         for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
-          MCMCSpecialized<T>::value[i] += rng.normal() * scale_[i];
+          MCMCSpecialized<T>::value[i] += rng.normal() * scale_;
         }
       }
     }
-
-    void component_jump(RngBase& rng, MCModelBase& m) {
-      double logp_value = m.logp();
-      double old_logp_value;
-
-      for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
-        //preserve
-        old_logp_value = logp_value;
-        MCMCSpecialized<T>::old_value[i] = MCMCSpecialized<T>::value[i];
-
-        // jump
-        MCMCSpecialized<T>::value[i] += rng.normal() * scale_[i];
-
-        // update
-        m.update();
-
-        // test
-        logp_value = m.logp();
-        if(m.reject(logp_value, old_logp_value)) {
-          // revert
-          MCMCSpecialized<T>::value[i] = MCMCSpecialized<T>::old_value[i];
-          logp_value = old_logp_value;
-          rejected_[i] += 1;
-        } else {
-          accepted_[i] += 1;
-        }
-      }
-    }
-
+    void accept() { accepted_ += 1; }
+    void reject() { rejected_ += 1; }
     void tune() {
-      T ar_ratio = accepted_ / (accepted_ + rejected_);
-      for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
-	//std::cout << "[" << i << "]" << ar_ratio[i] << "|" << scale_[i] << "|";
-	scale_[i] *= tune_factor(ar_ratio[i]);
-	//std::cout << scale_[i] << "|" << tune_factor(ar_ratio[i]) << std::endl;
-      }
-      //std::cout << "ar_ratio:" << std::endl << ar_ratio;
-      //std::cout << "scale:" << std::endl << scale_;
-      accepted_.fill(0);
-      rejected_.fill(0);
+      double ar_ratio = accepted_ / (accepted_ + rejected_);
+      scale_ *= tune_factor(ar_ratio);
+      accepted_ = 0;
+      rejected_ = 0;
     }
   };
 
@@ -111,31 +71,18 @@ namespace cppbugs {
     double accepted_,rejected_,scale_;
   public:
     Stochastic(const double& value, const bool observed): MCMCSpecialized<double>(value), observed_(observed),
-						     accepted_(0), rejected_(0),
-						     scale_(0.25) {}
+						     accepted_(0), rejected_(0),scale_(1) {}
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     bool isObserved() const { return observed_; }
     void jump(RngBase& rng) {
       MCMCSpecialized<double>::value += rng.normal() * scale_;
     }
-    void component_jump(RngBase& rng, MCModelBase& m) {
-      double old_logp = m.logp();
-      MCMCSpecialized<double>::old_value = MCMCSpecialized<double>::value;
-      MCMCSpecialized<double>::value += rng.normal() * scale_;
-      m.update();
-      if(m.reject(m.logp(), old_logp)) {
-        MCMCSpecialized<double>::value = MCMCSpecialized<double>::old_value;
-        rejected_ += 1;
-      } else {
-        accepted_ += 1;
-      }
-    }
+    void accept() { accepted_ += 1; }
+    void reject() { rejected_ += 1; }
     void tune() {
       double ar_ratio = accepted_ / (accepted_ + rejected_);
       scale_ *= tune_factor(ar_ratio);
-      //std::cout << "ar_ratio:" << ar_ratio << std::endl;
-      //std::cout << "scale:" << scale_ << std::endl;
       accepted_ = 0;
       rejected_ = 0;
     }

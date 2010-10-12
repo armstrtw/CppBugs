@@ -68,9 +68,24 @@ namespace cppbugs {
     }
 
     void tune(int iterations, int tuning_step) {
+      double logp_value,old_logp_value;
+      logp_value  = -std::numeric_limits<double>::infinity();
+      old_logp_value = -std::numeric_limits<double>::infinity();
+
       for(int i = 1; i <= iterations; i++) {
 	for(std::vector<MCMCObject*>::iterator it = stochastics.begin(); it != stochastics.end(); it++) {
-	  (*it)->component_jump(rng_,*this);
+          old_logp_value = logp_value;
+          (*it)->preserve();
+          (*it)->jump(rng_);
+          update();
+          logp_value = logp();
+          if(reject(logp_value, old_logp_value)) {
+            (*it)->revert();
+            logp_value = old_logp_value;
+            (*it)->reject();
+          } else {
+            (*it)->accept();
+          }
 	}
 	if(i % tuning_step == 0) {
           //std::cout << "tuning at step: " << i << std::endl;
@@ -82,7 +97,7 @@ namespace cppbugs {
     }
 
     void sample(int iterations, int burn, int thin) {
-      tune(burn/5,10);
+      tune(burn,50);
       double logp_value,old_logp_value;
 
       logp_value  = -std::numeric_limits<double>::infinity();

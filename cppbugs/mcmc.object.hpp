@@ -26,8 +26,9 @@ namespace cppbugs {
   public:
     MCMCObject() {}
     virtual void jump(RngBase& rng) {}
-    virtual void component_jump(RngBase& rng, MCModelBase& m) {}
     virtual void tune() {}
+    virtual void accept() {}
+    virtual void reject() {}
     virtual void preserve() = 0;        // in mcmc.specialized
     virtual void revert() = 0;          // in mcmc.specialized
     virtual void tally() = 0;           // in mcmc.specialized
