@@ -2,8 +2,11 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <cmath>
 #include <armadillo>
 #include <boost/random.hpp>
+#include <boost/algorithm/string.hpp>
 #include <cppbugs/cppbugs.hpp>
 
 using namespace arma;
@@ -12,81 +15,135 @@ using std::vector;
 using std::string;
 using std::cout;
 using std::endl;
+using std::ifstream;
 
-class TestModel: public MCModel {
+/*
+# Bugs code for multilevel model for radon
+# with bsmt as an individual predictor
+# varying-intercept model
+model {
+  for (i in 1:n){
+    y[i] ~ dnorm (y.hat[i], tau.y)
+    y.hat[i] <- a[county[i]] + b*x[i]
+  }
+  b ~ dnorm (0, .0001)
+  tau.y <- pow(sigma.y, -2)
+  sigma.y ~ dunif (0, 100)
+
+  for (j in 1:J){
+    a[j] ~ dnorm (mu.a, tau.a)
+  }
+  mu.a ~ dnorm (0, .0001)
+  tau.a <- pow(sigma.a, -2)
+  sigma.a ~ dunif (0, 100)
+}
+*/
+
+class RadonVaryingInterceptModel: public MCModel {
 public:
-  const mat& age; // given
-  const mat& price; // given
+  const vec& level;
+  const vec& basement;
+  const mat& group;
+  int J;
 
-  NormalStatic<double> a;
-  NormalStatic<double> b;
-  GammaStatic<double> tau;
+  Normal<vec> a;
+  Normal<double> b;
+  Deterministic<double> tau_y;
+  Uniform<double> sigma_y;
+  Normal<double> mu_a;
+  Deterministic<double> tau_a;
+  Uniform<double> sigma_a;
   Deterministic<mat> y_hat;
   Normal<mat> likelihood;
 
-  TestModel(const mat& age_,const mat& price_): age(age_), price(price_),
-                                                a(0, 0.0, 0.0001),
-                                                b(0, 0.0, 0.0001),
-                                                tau(.1, 0.1, 0.1),
-                                                y_hat(a.value + b.value * age),likelihood(price,true)
+  RadonVaryingInterceptModel(const vec& level_, const vec& basement_, const mat& group_):
+    level(level_),basement(basement_),group(group_),J(group_.n_cols),
+    a(randn<vec>(group_.n_cols)), b(0),
+    tau_y(1),sigma_y(1),mu_a(0),tau_a(0),sigma_a(0),
+    y_hat(randn<mat>(level_.n_rows,1)),likelihood(randn<mat>(level_.n_rows,1),true)
   {
     add(a);
     add(b);
-    add(tau);
+    add(tau_y);
+    add(sigma_y);
+    add(mu_a);
+    add(tau_a);
+    add(sigma_a);
     add(y_hat);
-    add(likelihood);
   }
 
   void update() {
-    y_hat.value = a.value + b.value * age;
+    y_hat.value = group * a.value + b.value * basement;
+    tau_y.value = pow(sigma_y.value, -2);
+    tau_a.value = pow(sigma_a.value, -2);
   }
   double logp() const {
-    return a.logp() + b.logp() + tau.logp() + likelihood.logp(y_hat.value,tau.value);
+    return likelihood.logp(y_hat.value,tau_y.value) + b.logp(0, .0001) + sigma_y.logp(0, 100) + a.logp(mu_a.value, tau_a.value) + mu_a.logp(0, .0001) + sigma_a.logp(0, 100);
   }
 };
 
-// global rng generators
-CppMCGeneratorT MCMCObject::generator_;
-
-void read_radon(string fname, vector<string>& county, mat& level, mat& basement) {
+void read_csv(string fname, vector< vector<string> >& rows) {
   ifstream fin;
-  vector<string> lines;
+  string buf;
+  vector<string> splitbuf;
+  typedef vector< boost::iterator_range<string::iterator> > find_vector_type;
   fin.open(fname.c_str());
-  if(fin.is_open()) {
-    while (!fin.eof()) {
-      string buf;
-      while(getline(fin, buf))
 
+  if(!fin.is_open()) {
+    return;
+  }
+
+  while(getline(fin, buf)) {
+    boost::split(splitbuf, buf, boost::is_any_of(string(",")));
+    rows.push_back(splitbuf);
+  }
+
+  fin.close();
+}
+
+mat county_to_groups(vector<string>& county) {
+  vector<string> unique_counties(county);
+  vector<string>::iterator unique_counties_end = unique(unique_counties.begin(), unique_counties.end());
+  mat ans(county.size(),std::distance(unique_counties.begin(),unique_counties_end)); ans.fill(0);
+  for(size_t i = 0; i < county.size(); i++) {
+    ans(i,std::distance(unique_counties.begin(),find(unique_counties.begin(),unique_counties_end,county[i]))) = 1.0;
+  }
+  return ans;
+}
+
+void fixlog(vec& level) {
+  uvec ltz = find(level <= 0);
+  for(size_t i = 0; i < ltz.n_elem; i++) {
+    level[ ltz[i] ] = 0.1;
+  }
+  level = log(level);
 }
 
 int main() {
+string file("/home/warmstrong/dvl/scripts/mcmc/radon/srrs.csv");
+  vector< vector<string> > rows;
+  read_csv(file,rows);
 
-  // setup data
-  double ageraw[] = {13, 14, 14,12, 9, 15, 10, 14, 9, 14, 13, 12, 9, 10, 15, 11, 15, 11, 7, 
-                     13, 13, 10, 9, 6, 11, 15, 13, 10, 9, 9, 15, 14, 14, 10, 14, 11, 13, 14, 10};
-  double priceraw[] = {2950, 2300, 3900, 2800, 5000, 2999, 3950, 2995, 4500, 2800, 1990, 3500, 5100, 3900, 2900, 
-                       4950, 2000, 3400, 8999, 4000, 2950, 3250, 3950, 4600, 4500, 1600, 3900, 4200, 6500, 3500, 2999, 2600, 3250, 2500, 2400, 3990, 4600, 450,4700};
-  const int NR = 39;
-  const mat age(ageraw,39,1);
-  mat price(priceraw,39,1);
-  price /= 1000.0;
+  vec level(rows.size(),1);
+  vec basement(rows.size(),1);
+  vector<string> county(rows.size());
 
-  // fit linear model
-  mat icept(NR,1); icept.fill(1);
-  const mat X = join_rows(icept,age);
-  vec coefs;
-  solve(coefs, X, price);
-  cout << "lm coefs" << endl << coefs;
-  cout << "y sd:" << stddev(price,0);
-  cout << "y tau:" << 1/pow(stddev(price,0),2.0);
+  for(size_t i = 0; i < rows.size(); i++) {
+    county[i] = rows[i][0];
+    level[i] = atof(rows[i][1].c_str());
+    basement[i] = atof(rows[i][2].c_str());
+  }
 
-  TestModel m(age,price);
+  fixlog(level);
+  mat group(county_to_groups(county));
+
+  RadonVaryingInterceptModel m(level,basement,group);
   int iterations = 1e5;
   m.sample(iterations, 1e4, 5);
   cout << "samples: " << m.b.history.size() << endl;
   cout << "a: " << m.a.mean() << endl;
   cout << "b: " << m.b.mean() << endl;
-  cout << "tau: " << m.tau.mean() << endl;
+  cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
 };
 
