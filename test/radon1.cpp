@@ -59,8 +59,8 @@ public:
   RadonVaryingInterceptModel(const vec& level_, const vec& basement_, const mat& group_):
     level(level_),basement(basement_),group(group_),J(group_.n_cols),
     a(randn<vec>(group_.n_cols)), b(0),
-    tau_y(1),sigma_y(1),mu_a(0),tau_a(0),sigma_a(0),
-    y_hat(randn<mat>(level_.n_rows,1)),likelihood(randn<mat>(level_.n_rows,1),true)
+    tau_y(1),sigma_y(1),mu_a(0),tau_a(1),sigma_a(1),
+    y_hat(randn<mat>(level_.n_rows,1)),likelihood(level_,true)
   {
     add(a);
     add(b);
@@ -74,8 +74,8 @@ public:
 
   void update() {
     y_hat.value = group * a.value + b.value * basement;
-    tau_y.value = pow(sigma_y.value, -2);
-    tau_a.value = pow(sigma_a.value, -2);
+    tau_y.value = pow(sigma_y.value, -2.0);
+    tau_a.value = pow(sigma_a.value, -2.0);
   }
   double logp() const {
     return likelihood.logp(y_hat.value,tau_y.value) + b.logp(0, .0001) + sigma_y.logp(0, 100) + a.logp(mu_a.value, tau_a.value) + mu_a.logp(0, .0001) + sigma_a.logp(0, 100);
@@ -138,10 +138,9 @@ string file("/home/warmstrong/dvl/scripts/mcmc/radon/srrs.csv");
   mat group(county_to_groups(county));
 
   RadonVaryingInterceptModel m(level,basement,group);
-  int iterations = 1e5;
-  m.sample(iterations, 1e4, 5);
+  m.sample(50e3, 10e3, 5);
   cout << "samples: " << m.b.history.size() << endl;
-  cout << "a: " << m.a.mean() << endl;
+  cout << "a: " << endl << m.a.mean() << endl;
   cout << "b: " << m.b.mean() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
