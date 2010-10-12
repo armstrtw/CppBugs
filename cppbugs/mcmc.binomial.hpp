@@ -18,7 +18,7 @@
 #ifndef MCMC_BINOMIAL_HPP
 #define MCMC_BINOMIAL_HPP
 
-#include <map>
+#include <vector>
 #include <armadillo>
 #include <cppbugs/mcmc.stochastic.hpp>
 
@@ -36,19 +36,19 @@ namespace cppbugs {
   }
 
   double factln(const int i) {
-    static std::map<int,double> factln_table;
+    static std::vector<double> factln_table;
 
     if(i < 0) {
       return -std::numeric_limits<double>::infinity();
     }
-    std::map<int,double>::iterator it = factln_table.find(i);
-    if(it == factln_table.end()) {
-      double ans = factln_single(i);
-      factln_table[i] = ans;
-      return ans;
-    } else {
-      return it->second;
+
+    if(factln_table.size() < static_cast<size_t>(i+1)) {
+      for(int j = factln_table.size(); j < (i+1); j++) {
+        factln_table.push_back(factln_single(j));
+      }
     }
+    //return factln_table[i];
+    return factln_table.at(i);
   }
 
   arma::mat factln(const arma::imat& x) {
