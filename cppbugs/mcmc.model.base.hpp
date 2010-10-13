@@ -33,7 +33,6 @@ namespace cppbugs {
   public:
     MCModelBase() {}
     virtual void update() = 0;
-    virtual double logp() const = 0;
     bool reject(const double value, const double old_logp) {
       return bad_logp(value) || log(rng_.uniform()) > value - old_logp ? true : false;
     }

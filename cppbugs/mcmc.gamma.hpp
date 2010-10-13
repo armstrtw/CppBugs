@@ -30,18 +30,14 @@ namespace cppbugs {
     double alpha_, beta_;
   public:
     GammaStatic(const T& x, const double alpha, const double beta, const bool observed = false): Stochastic<T>(x,observed), alpha_(alpha), beta_(beta) {}
-    double logp() const {
-      return (Stochastic<T>::value < 0 ) ? -std::numeric_limits<double>::infinity() : accu( (alpha_ - 1.0) * log(Stochastic<T>::value) - beta_*Stochastic<T>::value - boost::math::lgamma(alpha_) + alpha_*log(beta_) );
+    void logp() {
+      Stochastic<T>::logp_ = (Stochastic<T>::value < 0 ) ? -std::numeric_limits<double>::infinity() : accu( (alpha_ - 1.0) * log(Stochastic<T>::value) - beta_*Stochastic<T>::value - boost::math::lgamma(alpha_) + alpha_*log(beta_) );
     }
     void jump(RngBase& rng) {
       const T oldvalue(Stochastic<T>::value);
-      if(Stochastic<T>::observed_) {
-        return;
-      } else {
-        do {
-          Stochastic<T>::value = oldvalue + rng.normal() * Stochastic<T>::scale_;
-        } while(Stochastic<T>::value < 0);
-      }
+      do {
+        Stochastic<T>::value = oldvalue + rng.normal() * Stochastic<T>::scale_;
+      } while(Stochastic<T>::value < 0);
     }
   };
 

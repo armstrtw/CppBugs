@@ -65,19 +65,19 @@ namespace cppbugs {
     Binomial(const T& x, const bool observed = false): Stochastic<T>(x,observed) {}
 
     template<typename U, typename V>
-    double logp(const U& n, const V& p) const {
+    void logp(const U& n, const V& p) {
       arma::uvec less_than_zero = find(Stochastic<T>::value < 0,1);
       arma::uvec greater_than_n = find(Stochastic<T>::value > n,1);
 
       if(less_than_zero.n_elem) {
-        return -std::numeric_limits<double>::infinity();
+        Stochastic<T>::logp_ = -std::numeric_limits<double>::infinity();
       }
       
       if(greater_than_n.n_elem) {
-        return -std::numeric_limits<double>::infinity();
+        Stochastic<T>::logp_ = -std::numeric_limits<double>::infinity();
       }
 
-      return accu(Stochastic<T>::value % log(p) + (n-Stochastic<T>::value) % log(1-p) + factln(n)-factln(Stochastic<T>::value)-factln(n-Stochastic<T>::value));
+      Stochastic<T>::logp_ = accu(Stochastic<T>::value % log(p) + (n-Stochastic<T>::value) % log(1-p) + factln(n)-factln(Stochastic<T>::value)-factln(n-Stochastic<T>::value));
     }
   };
 

@@ -47,9 +47,9 @@ public:
   void update() {
     y_hat.value = sum(X % (permutation_matrix * b.value),1);
     rsq.value = as_scalar(1 - var(y - y_hat.value) / var(y));
-  }
-  double logp() const {
-    return b.logp(0.0, 0.0001) + tau_y.logp() + likelihood.logp(y_hat.value,tau_y.value);
+    b.logp(0.0, 0.0001);
+    tau_y.logp();
+    likelihood.logp(y_hat.value,tau_y.value);
   }
 };
 

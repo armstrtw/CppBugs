@@ -34,7 +34,8 @@ namespace cppbugs {
     double accepted_;
     double rejected_;
     SpecializedRng<boost::minstd_rand> rng_;
-    std::vector<MCMCObject*> mcmcObjects, stochastics, deterministics;
+    std::vector<MCMCObject*> mcmcObjects, jumping_stochastics, deterministics;
+    std::vector<const double*> logps;
     void jump_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->jump(rng_); } }
     void preserve_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->preserve(); } }
     void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
@@ -42,13 +43,20 @@ namespace cppbugs {
     void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
     bool bad_logp(const double value) const { return isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCModel(): MCModelBase() {}
+    MCModel(): MCModelBase(), accepted_(0), rejected_(0) {}
 
     void add(MCMCObject& p) {
       mcmcObjects.push_back(&p);
-      if(p.isStochastic() && !p.isObserved()) {
-        stochastics.push_back(&p);
+
+      if(p.isStochastic()) {
+        //std::cout << *p.getLogp() << std::endl;
+        logps.push_back(p.getLogp());
       }
+
+      if(p.isStochastic() && !p.isObserved()) {
+        jumping_stochastics.push_back(&p);
+      }
+
       if(p.isDeterministc()) {
         deterministics.push_back(&p);
       }
@@ -67,13 +75,21 @@ namespace cppbugs {
       return bad_logp(value) || (rng_.uniform() > r && r < 1)  ? true : false;
     }
 
+    double logp() const {
+      double ans(0);
+      for(size_t i = 0; i < logps.size(); i++) {
+        ans += *logps[i];
+      }
+      return ans;
+    }
+
     void tune(int iterations, int tuning_step) {
       double logp_value,old_logp_value;
       logp_value  = -std::numeric_limits<double>::infinity();
       old_logp_value = -std::numeric_limits<double>::infinity();
 
       for(int i = 1; i <= iterations; i++) {
-	for(std::vector<MCMCObject*>::iterator it = stochastics.begin(); it != stochastics.end(); it++) {
+	for(std::vector<MCMCObject*>::iterator it = jumping_stochastics.begin(); it != jumping_stochastics.end(); it++) {
           old_logp_value = logp_value;
           (*it)->preserve();
           (*it)->jump(rng_);
@@ -89,7 +105,7 @@ namespace cppbugs {
 	}
 	if(i % tuning_step == 0) {
           //std::cout << "tuning at step: " << i << std::endl;
-	  for(std::vector<MCMCObject*>::iterator it = stochastics.begin(); it != stochastics.end(); it++) {
+	  for(std::vector<MCMCObject*>::iterator it = jumping_stochastics.begin(); it != jumping_stochastics.end(); it++) {
 	    (*it)->tune();
 	  }
 	}
@@ -97,7 +113,7 @@ namespace cppbugs {
     }
 
     void sample(int iterations, int burn, int thin) {
-      tune(burn,50);
+      tune(burn,10);
       double logp_value,old_logp_value;
 
       logp_value  = -std::numeric_limits<double>::infinity();
@@ -105,10 +121,9 @@ namespace cppbugs {
       for(int i = 1; i <= iterations; i++) {
         old_logp_value = logp_value;
         preserve_all(mcmcObjects);
-        jump_all(stochastics);
+        jump_all(jumping_stochastics);
         update();
         logp_value = logp();
-        //std::cout << "new|old: " << logp_value << "|" << old_logp_value << std::endl;
         if(reject(logp_value, old_logp_value)) {
           revert_all(mcmcObjects);
           logp_value = old_logp_value;

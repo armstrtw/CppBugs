@@ -27,8 +27,8 @@ namespace cppbugs {
   class Uniform : public Stochastic<T> {
   public:
     Uniform(const T& x, const bool observed = false): Stochastic<T>(x,observed) {}
-    double logp(const double lower, const double upper) const {
-      return (Stochastic<T>::value < lower || Stochastic<T>::value > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
+    void logp(const double lower, const double upper) {
+      Stochastic<T>::logp_ = (Stochastic<T>::value < lower || Stochastic<T>::value > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
     }
   };
 
@@ -37,18 +37,14 @@ namespace cppbugs {
     double lower_, upper_;
   public:
     UniformStatic(const T& x, const double lower, const double upper, const bool observed = false): Stochastic<T>(x,observed),lower_(lower),upper_(upper) {}
-    double logp() const {
-      return (Stochastic<T>::value < lower_ || Stochastic<T>::value > upper_) ? -std::numeric_limits<double>::infinity() : -log(upper_ - lower_);
+    void logp() {
+      Stochastic<T>::logp_ = (Stochastic<T>::value < lower_ || Stochastic<T>::value > upper_) ? -std::numeric_limits<double>::infinity() : -log(upper_ - lower_);
     }
     void jump(RngBase& rng) {
       const T oldvalue(Stochastic<T>::value);
-      if(Stochastic<T>::observed_) {
-        return;
-      } else {
-        do {
-          Stochastic<T>::value = oldvalue + rng.normal() * Stochastic<T>::scale_;
-        } while(Stochastic<T>::value < lower_ || Stochastic<T>::value > upper_);
-      }
+      do {
+        Stochastic<T>::value = oldvalue + rng.normal() * Stochastic<T>::scale_;
+      } while(Stochastic<T>::value < lower_ || Stochastic<T>::value > upper_);
     }
   };
 } // namespace cppbugs

@@ -29,25 +29,14 @@ namespace cppbugs {
     Normal(const T& x, const bool observed = false): Stochastic<T>(x,observed) {}
 
     template<typename U, typename V>
-    double logp(const U& mu, const V& tau) const {
-      return accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau * pow(Stochastic<T>::value - mu,2.0));
+    void logp(const U& mu, const V& tau) {
+      Stochastic<T>::logp_ = accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau * pow(Stochastic<T>::value - mu,2.0));
     }
 
     // need this specialization b/c we need to do schur product btwn two mat's
-    double logp(const arma::mat& mu, const arma::mat& tau) const {
-      return accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau % pow(Stochastic<T>::value - mu,2.0));
+    void logp(const arma::mat& mu, const arma::mat& tau) {
+      Stochastic<T>::logp_ = accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau % pow(Stochastic<T>::value - mu,2.0));
     }
   };
-
-  template<typename T>
-  class NormalStatic : public Stochastic<T> {
-    double mu_, tau_;
-  public:
-    NormalStatic(const T& x, const double mu, const double tau, const bool observed = false): Stochastic<T>(x,observed), mu_(mu), tau_(tau) {}
-    double logp() const {
-      return accu(0.5*log(0.5*tau_/arma::math::pi()) - 0.5 * tau_ * pow(Stochastic<T>::value - mu_,2.0));
-    }
-  };
-
 } // namespace cppbugs
 #endif //MCMC_NORMAL_HPP

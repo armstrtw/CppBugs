@@ -38,9 +38,9 @@ public:
   void update() {
     y_hat.value = X*b.value;
     rsq.value = as_scalar(1 - var(y - y_hat.value) / var(y));
-  }
-  double logp() const {
-    return b.logp(0.0, 0.0001) + tau_y.logp(0,100) + likelihood.logp(y_hat.value,tau_y.value);
+    b.logp(0.0, 0.0001);
+    tau_y.logp(0,100);
+    likelihood.logp(y_hat.value,tau_y.value);
   }
 };
 

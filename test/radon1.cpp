@@ -70,15 +70,19 @@ public:
     add(tau_a);
     add(sigma_a);
     add(y_hat);
+    add(likelihood);
   }
 
   void update() {
     y_hat.value = group * a.value + b.value * basement;
     tau_y.value = pow(sigma_y.value, -2.0);
     tau_a.value = pow(sigma_a.value, -2.0);
-  }
-  double logp() const {
-    return likelihood.logp(y_hat.value,tau_y.value) + b.logp(0, .0001) + sigma_y.logp(0, 100) + a.logp(mu_a.value, tau_a.value) + mu_a.logp(0, .0001) + sigma_a.logp(0, 100);
+    a.logp(mu_a.value, tau_a.value);
+    b.logp(0, 0.0001);
+    sigma_y.logp(0, 100);
+    mu_a.logp(0, 0.0001);
+    sigma_a.logp(0, 100);
+    likelihood.logp(y_hat.value,tau_y.value);
   }
 };
 

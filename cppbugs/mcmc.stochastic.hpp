@@ -37,21 +37,19 @@ namespace cppbugs {
   class Stochastic : public MCMCSpecialized<T> {
   protected:
     bool observed_;
-    double accepted_,rejected_,scale_;
+    double logp_,accepted_,rejected_,scale_;
   public:
     Stochastic(const T& value, const bool observed): MCMCSpecialized<T>(value), observed_(observed),
-						     accepted_(0), rejected_(0),
+						     logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),
 						     scale_(1) {}
+    const double* getLogp() const { return &logp_; }
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     bool isObserved() const { return observed_; }
     void jump(RngBase& rng) {
-      if(observed_) {
-        return;
-      } else {
-        for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
-          MCMCSpecialized<T>::value[i] += rng.normal() * scale_;
-        }
+      //if(observed_) { return; }
+      for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
+        MCMCSpecialized<T>::value[i] += rng.normal() * scale_;
       }
     }
     void accept() { accepted_ += 1; }
@@ -68,14 +66,16 @@ namespace cppbugs {
   class Stochastic<double> : public MCMCSpecialized<double> {
   protected:
     bool observed_;
-    double accepted_,rejected_,scale_;
+    double logp_,accepted_,rejected_,scale_;
   public:
     Stochastic(const double& value, const bool observed): MCMCSpecialized<double>(value), observed_(observed),
-						     accepted_(0), rejected_(0),scale_(1) {}
+                                                          logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),scale_(1) {}
+    const double* getLogp() const { return &logp_; }
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     bool isObserved() const { return observed_; }
     void jump(RngBase& rng) {
+      //if(observed_) { return; }
       MCMCSpecialized<double>::value += rng.normal() * scale_;
     }
     void accept() { accepted_ += 1; }

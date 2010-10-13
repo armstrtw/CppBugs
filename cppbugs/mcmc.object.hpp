@@ -27,6 +27,7 @@ namespace cppbugs {
     MCMCObject() {}
     virtual void jump(RngBase& rng) {}
     virtual void tune() {}
+    virtual const double* getLogp() const { return static_cast<double*>(NULL); }
     virtual void accept() {}
     virtual void reject() {}
     virtual void preserve() = 0;        // in mcmc.specialized

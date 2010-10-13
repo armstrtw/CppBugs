@@ -19,9 +19,9 @@ class HerdModel: public MCModel {
   mat permutation_matrix;
 
 public:
-  NormalStatic<vec> b;
-  UniformStatic<double> tau_overdisp;
-  UniformStatic<double> tau_b_herd;
+  Normal<vec> b;
+  Uniform<double> tau_overdisp;
+  Uniform<double> tau_b_herd;
   Deterministic<double> sigma_overdisp;
   Deterministic<double> sigma_b_herd;
   Normal<vec> b_herd;
@@ -33,7 +33,7 @@ public:
   HerdModel(const ivec& incidence_,const ivec& size_,const ivec& herd_,const mat& fixed_,int N_, int N_herd_):
     incidence(incidence_),size(size_),herd(herd_),
     fixed(fixed_),N(N_),N_herd(N_herd_),permutation_matrix(N,N_herd),
-    b(randn<vec>(4),0,0.001),tau_overdisp(1,0,1000),tau_b_herd(1,0,100),
+    b(randn<vec>(4)),tau_overdisp(1),tau_b_herd(1),
     sigma_overdisp(1),sigma_b_herd(1),
     b_herd(randn<vec>(N_herd_)),overdisp(randn<vec>(N)),
     phi(randu<vec>(N)),
@@ -59,10 +59,12 @@ public:
     phi.value = 1/(1+exp(-phi.value));
     sigma_overdisp.value = 1/sqrt(tau_overdisp.value);
     sigma_b_herd.value = 1/sqrt(tau_b_herd.value);
-  }
-  double logp() const {
-    return b.logp() + tau_overdisp.logp() + tau_b_herd.logp() + b_herd.logp(0, tau_b_herd.value) +
-      overdisp.logp(0,tau_overdisp.value) + likelihood.logp(size,phi.value);
+    b.logp(0,0.001);
+    tau_overdisp.logp(0,1000);
+    tau_b_herd.logp(0,100);
+    b_herd.logp(0, tau_b_herd.value);
+    overdisp.logp(0,tau_overdisp.value);
+    likelihood.logp(size,phi.value);
   }
 };
 
