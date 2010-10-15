@@ -15,15 +15,14 @@ public:
   const mat& age; // given
   const mat& price; // given
 
-  Normal<double> a;
-  Normal<double> b;
-  GammaStatic<double> tau;
+  Stochastic<double> a;
+  Stochastic<double> b;
+  Stochastic<double> tau;
   Deterministic<mat> y_hat;
-  Normal<mat> likelihood;
+  Stochastic<mat> likelihood;
 
   TestModel(const mat& age_,const mat& price_): age(age_), price(price_),
-                                                a(0),b(0),
-                                                tau(.1, 0.1, 0.1),
+                                                a(0.0),b(0.0),tau(0.1),
                                                 y_hat(a.value + b.value * age),likelihood(price,true)
   {
     add(a);
@@ -35,10 +34,10 @@ public:
 
   void update() {
     y_hat.value = a.value + b.value * age;
-    a.logp(0.0, 0.0001);
-    b.logp(0.0, 0.0001);
-    tau.logp();
-    likelihood.logp(y_hat.value,tau.value);
+    a.dnorm(0.0, 0.0001);
+    b.dnorm(0.0, 0.0001);
+    tau.dgamma(0.1, 0.1);
+    likelihood.dnorm(y_hat.value,tau.value);
   }
 };
 
