@@ -23,6 +23,7 @@
 #include <armadillo>
 #include <boost/math/special_functions/gamma.hpp>
 #include <cppbugs/mcmc.specialized.hpp>
+#include <cppbugs/mcmc.jump.hpp>
 
 namespace cppbugs {
   double accu(const double x) {
@@ -85,12 +86,7 @@ namespace cppbugs {
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     bool isObserved() const { return observed_; }
-    void jump(RngBase& rng) {
-      //if(observed_) { return; }
-      for(size_t i = 0; i < MCMCSpecialized<T>::value.n_elem; i++) {
-        MCMCSpecialized<T>::value[i] += rng.normal() * scale_;
-      }
-    }
+    void jump(RngBase& rng) { jump_impl(rng,MCMCSpecialized<T>::value,scale_); }
     void accept() { accepted_ += 1; }
     void reject() { rejected_ += 1; }
     void tune() {
@@ -116,7 +112,7 @@ namespace cppbugs {
 
     template<typename U, typename V>
     void dgamma(const U& alpha, const V& beta) {
-      MCMCSpecialized<T>::logp_ = (MCMCSpecialized<T>::value < 0 ) ? -std::numeric_limits<double>::infinity() : accu( (alpha - 1.0) * log(MCMCSpecialized<T>::value) - beta*MCMCSpecialized<T>::value - boost::math::lgamma(alpha) + alpha*log(beta) );
+      logp_ = (MCMCSpecialized<T>::value < 0 ) ? -std::numeric_limits<double>::infinity() : accu( (alpha - 1.0) * log(MCMCSpecialized<T>::value) - beta*MCMCSpecialized<T>::value - boost::math::lgamma(alpha) + alpha*log(beta) );
     }
 
     template<typename U, typename V>
@@ -125,59 +121,16 @@ namespace cppbugs {
       arma::uvec greater_than_n = find(MCMCSpecialized<T>::value > n,1);
 
       if(less_than_zero.n_elem) {
-        MCMCSpecialized<T>::logp_ = -std::numeric_limits<double>::infinity();
+        logp_ = -std::numeric_limits<double>::infinity();
       }
 
       if(greater_than_n.n_elem) {
-        MCMCSpecialized<T>::logp_ = -std::numeric_limits<double>::infinity();
+        logp_ = -std::numeric_limits<double>::infinity();
       }
 
-      MCMCSpecialized<T>::logp_ = accu(MCMCSpecialized<T>::value % log(p) + (n-MCMCSpecialized<T>::value) % log(1-p) + factln(n)-factln(MCMCSpecialized<T>::value)-factln(n-MCMCSpecialized<T>::value));
+      logp_ = accu(MCMCSpecialized<T>::value % log(p) + (n-MCMCSpecialized<T>::value) % log(1-p) + factln(n)-factln(MCMCSpecialized<T>::value)-factln(n-MCMCSpecialized<T>::value));
     }
   };
 
-  template<>
-  class Stochastic<double> : public MCMCSpecialized<double> {
-  protected:
-    bool observed_;
-    double logp_,accepted_,rejected_,scale_;
-  public:
-    Stochastic(const double& value, const bool observed=false): MCMCSpecialized<double>(value), observed_(observed),
-                                                                logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),scale_(1) {}
-    const double* getLogp() const { return &logp_; }
-    bool isDeterministc() const { return false; }
-    bool isStochastic() const { return true; }
-    bool isObserved() const { return observed_; }
-    void jump(RngBase& rng) {
-      //if(observed_) { return; }
-      MCMCSpecialized<double>::value += rng.normal() * scale_;
-    }
-    void accept() { accepted_ += 1; }
-    void reject() { rejected_ += 1; }
-    void tune() {
-      double ar_ratio = accepted_ / (accepted_ + rejected_);
-      scale_ *= tune_factor(ar_ratio);
-      accepted_ = 0;
-      rejected_ = 0;
-    }
-    template<typename U, typename V>
-    void dnorm(const U& mu, const V& tau) {
-      logp_ = accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau * pow(MCMCSpecialized<double>::value - mu,2.0));
-    }
-
-    // need this specialization b/c we need to do schur product btwn two mat's
-    void dnorm(const arma::mat& mu, const arma::mat& tau) {
-      logp_ = accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau % pow(MCMCSpecialized<double>::value - mu,2.0));
-    }
-
-    void dunif(const double lower, const double upper) {
-      logp_ = (MCMCSpecialized<double>::value < lower || MCMCSpecialized<double>::value > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
-    }
-
-    template<typename U, typename V>
-    void dgamma(const U& alpha, const V& beta) {
-      logp_ = (MCMCSpecialized<double>::value < 0 ) ? -std::numeric_limits<double>::infinity() : accu( (alpha - 1.0) * log(MCMCSpecialized<double>::value) - beta*MCMCSpecialized<double>::value - boost::math::lgamma(alpha) + alpha*log(beta) );
-    }
-  };
 } // namespace cppbugs
 #endif // MCMC_STOCHASTIC_HPP
