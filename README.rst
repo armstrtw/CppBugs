@@ -53,24 +53,24 @@ Starting with a bugs model::
      sigma.b.herd ~ dunif(0, 100)
     }
 
-This mode can be converted to a CppBugs model by separating the update steps from the likelihood calculation.
+This mode can be converted to a CppBugs model by implementing an update function which encapsulates the bugs model::
 
-The update method is implemented as a matrix multiplication::
+  void update() {
+    phi.value = b0.value + b_period2.value*period2 + b_period3.value*period3 + b_period4.value*period4 + sum(permutation_matrix*b_herd.value,1) + overdisp.value;
+    phi.value = 1/(1+exp(-phi.value));
+    sigma_overdisp.value = 1/sqrt(tau_overdisp.value);
+    sigma_b_herd.value = 1/sqrt(tau_b_herd.value);
+    b0.dnorm(0,0.001);
+    b_period2.dnorm(0,0.001);
+    b_period3.dnorm(0,0.001);
+    b_period4.dnorm(0,0.001);
+    tau_overdisp.dunif(0,1000);
+    tau_b_herd.dunif(0,100);
+    b_herd.dnorm(0, tau_b_herd.value);
+    overdisp.dnorm(0,tau_overdisp.value);
+    likelihood.dbinom(size,phi.value);
+  }
 
-    void update() {
-        phi.value = b0.value + b_period2.value*period2 + b_period3.value*period3 + b_period4.value*period4 + sum(permutation_matrix*b_herd.value,1) + overdisp.value;
-        phi.value = 1/(1+exp(-phi.value));
-        sigma_overdisp.value = 1/sqrt(tau_overdisp.value);
-        sigma_b_herd.value = 1/sqrt(tau_b_herd.value);
-      }
-
-
-and the all of the bugs likelihood statements are consolidated into one logp function::
-
-    double logp() const {
-       return b0.logp() + b_period2.logp() + b_period3.logp() + b_period4.logp() + tau_overdisp.logp() + tau_b_herd.logp() + b_herd.logp(0, tau_b_herd.value) +
-         overdisp.logp(0,tau_overdisp.value) + likelihood.logp(size,phi.value);
-     }
 
 
 That's it.  The model can be compiled and run as follows::
