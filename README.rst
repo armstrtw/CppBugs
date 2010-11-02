@@ -18,8 +18,8 @@ CppBugs is a c++ library designed for MCMC sampling.
 Features
 ========
 
-CppBugs attempts to make writing mcmc models as painless as possible.  It incorporates features 
-from both WinBugs and PyMC requring users to implment only two class methds: update and logp.
+CppBugs attempts to make writing mcmc models as painless as possible.  It incorporates features
+from both WinBugs and PyMC and requires users only to implment an update method which resembles the model section of a WinBUGS script.
 
 * CppBugs is extremely fast.  Typically between 20x and 100x faster than equivalent WinBugs or PyMC models.
 
@@ -70,7 +70,6 @@ This mode can be converted to a CppBugs model by implementing an update function
     overdisp.dnorm(0,tau_overdisp.value);
     likelihood.dbinom(size,phi.value);
   }
-
 
 
 That's it.  The model can be compiled and run as follows::
