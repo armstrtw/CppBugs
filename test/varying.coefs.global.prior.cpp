@@ -18,20 +18,20 @@ public:
   mat permutation_matrix;
   vec rowdup;
 
-  Normal<mat> b;
-  Normal<mat> b_mu;
-  Normal<mat> b_tau;
-  UniformStatic<double> tau_y;
+  Stochastic<mat> b;
+  Stochastic<mat> b_mu;
+  Stochastic<mat> b_tau;
+  Stochastic<double> tau_y;
   Deterministic<mat> y_hat;
-  Normal<mat> likelihood;
+  Stochastic<mat> likelihood;
   Deterministic<double> rsq;
 
   TestModel(const mat& y_,const mat& X_,const ivec& groups_, int NG): y(y_), X(X_), groups(groups_),
                                                                       permutation_matrix(X_.n_rows,NG),
                                                                       b(randn<mat>(NG,X_.n_cols)),
                                                                       b_mu(randn<vec>(1,X_.n_cols)),
-                                                                      b_tau(randn<vec>(1,X_.n_cols)),
-                                                                      tau_y(1,0,100),
+                                                                      b_tau(randu<vec>(1,X_.n_cols)),
+                                                                      tau_y(1),
                                                                       y_hat(sum(X % (permutation_matrix * b.value),1)),
                                                                       likelihood(y_,true),
                                                                       rsq(0)
@@ -57,11 +57,11 @@ public:
     mat b_mu_full_rnk = rowdup * b_mu.value;
     mat b_tau_full_rnk = rowdup * b_tau.value;
 
-    b.logp(b_mu_full_rnk,b_tau_full_rnk);
-    b_mu.logp(0.0,0.001);
-    b_tau.logp(0,100);
-    tau_y.logp();
-    likelihood.logp(y_hat.value,tau_y.value);
+    b.dnorm(b_mu_full_rnk,b_tau_full_rnk);
+    b_mu.dnorm(0.0,0.001);
+    b_tau.dunif(0,100);
+    tau_y.dunif(0,100);
+    likelihood.dnorm(y_hat.value,tau_y.value);
   }
 };
 

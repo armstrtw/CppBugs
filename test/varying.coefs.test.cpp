@@ -17,16 +17,16 @@ public:
   const ivec& groups; // given
   mat permutation_matrix;
 
-  Normal<mat> b;
-  UniformStatic<double> tau_y;
+  Stochastic<mat> b;
+  Stochastic<double> tau_y;
   Deterministic<mat> y_hat;
-  Normal<mat> likelihood;
+  Stochastic<mat> likelihood;
   Deterministic<double> rsq;
 
   TestModel(const mat& y_,const mat& X_,const ivec& groups_, int NG): y(y_), X(X_), groups(groups_),
                                                                       permutation_matrix(X_.n_rows,NG),
                                                                       b(randn<mat>(NG,X_.n_cols)),
-                                                                      tau_y(1,0,100),
+                                                                      tau_y(1),
                                                                       y_hat(sum(X % (permutation_matrix * b.value),1)),
                                                                       likelihood(y_,true),
                                                                       rsq(0)
@@ -47,9 +47,9 @@ public:
   void update() {
     y_hat.value = sum(X % (permutation_matrix * b.value),1);
     rsq.value = as_scalar(1 - var(y - y_hat.value) / var(y));
-    b.logp(0.0, 0.0001);
-    tau_y.logp();
-    likelihood.logp(y_hat.value,tau_y.value);
+    b.dnorm(0.0, 0.0001);
+    tau_y.dunif(0,100);
+    likelihood.dnorm(y_hat.value,tau_y.value);
   }
 };
 

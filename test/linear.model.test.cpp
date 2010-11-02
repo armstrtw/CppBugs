@@ -15,10 +15,10 @@ public:
   const mat& y; // given
   const mat& X; // given
 
-  Normal<vec> b;
-  Uniform<double> tau_y;
+  Stochastic<vec> b;
+  Stochastic<double> tau_y;
   Deterministic<mat> y_hat;
-  Normal<mat> likelihood;
+  Stochastic<mat> likelihood;
   Deterministic<double> rsq;
 
   TestModel(const mat& y_,const mat& X_): y(y_), X(X_),
@@ -38,9 +38,9 @@ public:
   void update() {
     y_hat.value = X*b.value;
     rsq.value = as_scalar(1 - var(y - y_hat.value) / var(y));
-    b.logp(0.0, 0.0001);
-    tau_y.logp(0,100);
-    likelihood.logp(y_hat.value,tau_y.value);
+    b.dnorm(0.0, 0.0001);
+    tau_y.dunif(0,100);
+    likelihood.dnorm(y_hat.value,tau_y.value);
   }
 };
 

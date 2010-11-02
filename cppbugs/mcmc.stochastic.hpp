@@ -24,46 +24,9 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <cppbugs/mcmc.specialized.hpp>
 #include <cppbugs/mcmc.jump.hpp>
+#include <cppbugs/mcmc.logp.hpp>
 
 namespace cppbugs {
-  double accu(const double x) {
-    return x;
-  }
-
-  double factln_single(int n) {
-    if(n > 100) {
-      return boost::math::lgamma(static_cast<double>(n) + 1);
-    }
-    double ans(1);
-    for (int i=n; i>1; i--) {
-      ans *= i;
-    }
-    return log(ans);
-  }
-
-  double factln(const int i) {
-    static std::vector<double> factln_table;
-
-    if(i < 0) {
-      return -std::numeric_limits<double>::infinity();
-    }
-
-    if(factln_table.size() < static_cast<size_t>(i+1)) {
-      for(int j = factln_table.size(); j < (i+1); j++) {
-        factln_table.push_back(factln_single(j));
-      }
-    }
-    //return factln_table[i];
-    return factln_table.at(i);
-  }
-
-  arma::mat factln(const arma::imat& x) {
-    arma::mat ans; ans.copy_size(x);
-    for(size_t i = 0; i < x.n_elem; i++) {
-      ans[i] = factln(x[i]);
-    }
-    return ans;
-  }
 
   double tune_factor(const double acceptance_ratio) {
     const double univariate_target_ar = 0.6;
@@ -107,7 +70,7 @@ namespace cppbugs {
     }
 
     void dunif(const double lower, const double upper) {
-      logp_ = (MCMCSpecialized<T>::value < lower || MCMCSpecialized<T>::value > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
+      logp_ = dunif_impl(MCMCSpecialized<T>::value,lower,upper);
     }
 
     template<typename U, typename V>

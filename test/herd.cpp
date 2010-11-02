@@ -44,18 +44,18 @@ class HerdModel: public MCModel {
   mat permutation_matrix;
 
 public:
-  Normal<double> b0;
-  Normal<double> b_period2;
-  Normal<double> b_period3;
-  Normal<double> b_period4;
-  Uniform<double> tau_overdisp;
-  Uniform<double> tau_b_herd;
+  Stochastic<double> b0;
+  Stochastic<double> b_period2;
+  Stochastic<double> b_period3;
+  Stochastic<double> b_period4;
+  Stochastic<double> tau_overdisp;
+  Stochastic<double> tau_b_herd;
   Deterministic<double> sigma_overdisp;
   Deterministic<double> sigma_b_herd;
-  Normal<vec> b_herd;
-  Normal<vec> overdisp;
+  Stochastic<vec> b_herd;
+  Stochastic<vec> overdisp;
   Deterministic<vec> phi;
-  Binomial<ivec> likelihood;
+  Stochastic<ivec> likelihood;
 
 
   HerdModel(const ivec& incidence_,const ivec& size_,const ivec& herd_,
@@ -93,15 +93,15 @@ public:
     phi.value = 1/(1+exp(-phi.value));
     sigma_overdisp.value = 1/sqrt(tau_overdisp.value);
     sigma_b_herd.value = 1/sqrt(tau_b_herd.value);
-    b0.logp(0,0.001);
-    b_period2.logp(0,0.001);
-    b_period3.logp(0,0.001);
-    b_period4.logp(0,0.001);
-    tau_overdisp.logp(0,1000);
-    tau_b_herd.logp(0,100);
-    b_herd.logp(0, tau_b_herd.value);
-    overdisp.logp(0,tau_overdisp.value);
-    likelihood.logp(size,phi.value);
+    b0.dnorm(0,0.001);
+    b_period2.dnorm(0,0.001);
+    b_period3.dnorm(0,0.001);
+    b_period4.dnorm(0,0.001);
+    tau_overdisp.dunif(0,1000);
+    tau_b_herd.dunif(0,100);
+    b_herd.dnorm(0, tau_b_herd.value);
+    overdisp.dnorm(0,tau_overdisp.value);
+    likelihood.dbinom(size,phi.value);
   }
 };
 
