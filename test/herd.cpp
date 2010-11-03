@@ -89,7 +89,7 @@ public:
   }
 
   void update() {
-    phi.value = b0.value + b_period2.value*period2 + b_period3.value*period3 + b_period4.value*period4 + sum(permutation_matrix*b_herd.value,1) + overdisp.value;
+    phi.value = b0.value + b_period2.value*period2 + b_period3.value*period3 + b_period4.value*period4 + permutation_matrix*b_herd.value + overdisp.value;
     phi.value = 1/(1+exp(-phi.value));
     sigma_overdisp.value = 1/sqrt(tau_overdisp.value);
     sigma_b_herd.value = 1/sqrt(tau_b_herd.value);

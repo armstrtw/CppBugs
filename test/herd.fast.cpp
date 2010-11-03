@@ -55,7 +55,7 @@ public:
   }
 
   void update() {
-    phi.value = fixed*b.value + sum(permutation_matrix*b_herd.value,1) + overdisp.value;
+    phi.value = fixed*b.value + permutation_matrix*b_herd.value + overdisp.value;
     phi.value = 1/(1+exp(-phi.value));
     sigma_overdisp.value = 1/sqrt(tau_overdisp.value);
     sigma_b_herd.value = 1/sqrt(tau_b_herd.value);
