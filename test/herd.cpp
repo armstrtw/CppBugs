@@ -41,7 +41,7 @@ class HerdModel: public MCModel {
   const vec period3;
   const vec period4;
   int N, N_herd;
-  mat permutation_matrix;
+  mat indicator_matrix;
 
 public:
   Stochastic<double> b0;
@@ -62,7 +62,7 @@ public:
             const vec& period2_,const vec& period3_,const vec& period4_, int N_, int N_herd_):
     incidence(incidence_),size(size_),herd(herd_),
     period2(period2_),period3(period3_),period4(period4_),
-    N(N_),N_herd(N_herd_),permutation_matrix(N,N_herd),
+    N(N_),N_herd(N_herd_),indicator_matrix(N,N_herd),
     b0(0),b_period2(0),b_period3(0),b_period4(0),
     tau_overdisp(1),tau_b_herd(1),
     sigma_overdisp(1),sigma_b_herd(1),
@@ -70,9 +70,9 @@ public:
     phi(randu<vec>(N)),
     likelihood(incidence_,true)
   {
-    permutation_matrix.fill(0.0);
+    indicator_matrix.fill(0.0);
     for(uint i = 0; i < herd.n_elem; i++) {
-      permutation_matrix(i,herd[i]) = 1.0;
+      indicator_matrix(i,herd[i]) = 1.0;
     }
     add(b0);
     add(b_period2);
@@ -89,7 +89,7 @@ public:
   }
 
   void update() {
-    phi.value = b0.value + b_period2.value*period2 + b_period3.value*period3 + b_period4.value*period4 + permutation_matrix*b_herd.value + overdisp.value;
+    phi.value = b0.value + b_period2.value*period2 + b_period3.value*period3 + b_period4.value*period4 + indicator_matrix*b_herd.value + overdisp.value;
     phi.value = 1/(1+exp(-phi.value));
     sigma_overdisp.value = 1/sqrt(tau_overdisp.value);
     sigma_b_herd.value = 1/sqrt(tau_b_herd.value);

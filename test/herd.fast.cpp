@@ -16,7 +16,7 @@ class HerdModel: public MCModel {
   const ivec herd;
   const mat fixed;
   int N, N_herd;
-  mat permutation_matrix;
+  mat indicator_matrix;
 
 public:
   Stochastic<vec> b;
@@ -32,16 +32,16 @@ public:
 
   HerdModel(const ivec& incidence_,const ivec& size_,const ivec& herd_,const mat& fixed_,int N_, int N_herd_):
     incidence(incidence_),size(size_),herd(herd_),
-    fixed(fixed_),N(N_),N_herd(N_herd_),permutation_matrix(N,N_herd),
+    fixed(fixed_),N(N_),N_herd(N_herd_),indicator_matrix(N,N_herd),
     b(randn<vec>(4)),tau_overdisp(1),tau_b_herd(1),
     sigma_overdisp(1),sigma_b_herd(1),
     b_herd(randn<vec>(N_herd_)),overdisp(randn<vec>(N)),
     phi(randu<vec>(N)),
     likelihood(incidence_,true)
   {
-    permutation_matrix.fill(0.0);
+    indicator_matrix.fill(0.0);
     for(uint i = 0; i < herd.n_elem; i++) {
-      permutation_matrix(i,herd[i]) = 1.0;
+      indicator_matrix(i,herd[i]) = 1.0;
     }
     add(b);
     add(tau_overdisp);
@@ -55,7 +55,7 @@ public:
   }
 
   void update() {
-    phi.value = fixed*b.value + permutation_matrix*b_herd.value + overdisp.value;
+    phi.value = fixed*b.value + indicator_matrix*b_herd.value + overdisp.value;
     phi.value = 1/(1+exp(-phi.value));
     sigma_overdisp.value = 1/sqrt(tau_overdisp.value);
     sigma_b_herd.value = 1/sqrt(tau_b_herd.value);
