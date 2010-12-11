@@ -80,15 +80,20 @@ namespace cppbugs {
 
     template<typename U, typename V>
     void dbinom(const U& n, const V& p) {
+      //arma::uvec less_than_zero = find(p <= 0,1);
+      //arma::uvec greater_than_n = find(p >= 1,1);
+
       arma::uvec less_than_zero = find(MCMCSpecialized<T>::value < 0,1);
       arma::uvec greater_than_n = find(MCMCSpecialized<T>::value > n,1);
 
       if(less_than_zero.n_elem) {
         logp_ = -std::numeric_limits<double>::infinity();
+        return;
       }
 
       if(greater_than_n.n_elem) {
         logp_ = -std::numeric_limits<double>::infinity();
+        return;
       }
 
       logp_ = accu(MCMCSpecialized<T>::value % log(p) + (n-MCMCSpecialized<T>::value) % log(1-p) + factln(n)-factln(MCMCSpecialized<T>::value)-factln(n-MCMCSpecialized<T>::value));
