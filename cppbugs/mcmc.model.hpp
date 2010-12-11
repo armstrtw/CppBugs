@@ -112,13 +112,15 @@ namespace cppbugs {
       }
     }
 
-    void sample(int iterations, int burn, int thin) {
-      tune(burn,10);
+    void sample(int iterations, int burn, int adapt, int thin) {
       double logp_value,old_logp_value;
+
+      // tuning phase
+      tune(adapt,static_cast<int>(adapt/100));
 
       logp_value  = -std::numeric_limits<double>::infinity();
       old_logp_value = -std::numeric_limits<double>::infinity();
-      for(int i = 1; i <= iterations; i++) {
+      for(int i = 1; i <= (iterations + burn); i++) {
         old_logp_value = logp_value;
         preserve_all(mcmcObjects);
         jump_all(jumping_stochastics);
