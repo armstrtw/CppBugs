@@ -50,8 +50,8 @@ namespace cppbugs {
         factln_table.push_back(factln_single(j));
       }
     }
-    //return factln_table[i];
-    return factln_table.at(i);
+    //return factln_table.at(i);
+    return factln_table[i];
   }
 
   arma::mat factln(const arma::imat& x) {
