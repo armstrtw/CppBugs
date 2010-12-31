@@ -6,7 +6,7 @@ ARMADILLO_LIBS = -llapack
 ##ARMADILLO_LIBS = -lgoto2 -lpthread -lgfortran
 LIBS = $(ARMADILLO_LIBS)
 
-all: linear.model.test varying.coefs.test price herd herd.fast radon1
+all: linear.model.test varying.coefs.test varying.coefs.global.prior price herd herd.fast radon1
 
 clean:
 	rm -f linear.model.test linear.model.test.static varying.coefs.test price herd herd.fast radon1
