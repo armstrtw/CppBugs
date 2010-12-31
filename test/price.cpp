@@ -62,7 +62,7 @@ int main() {
 
   TestModel m(age,price);
   int iterations = 1e5;
-  m.sample(iterations, 1e4, 5);
+  m.sample(iterations, 1e4, 1e4, 5);
   cout << "lm coefs" << endl << coefs;
   cout << "err sd: " << stddev(err,0) << endl;;
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;

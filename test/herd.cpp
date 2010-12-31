@@ -123,7 +123,7 @@ int main() {
   vec period3(period3_raw,N);
   vec period4(period4_raw,N);
   HerdModel m(incidence,size,herd,period2,period3,period4,N,N_herd);
-  m.sample(1e6,1e5,100);
+  m.sample(1e6,1e5,1e4,100);
   //m.sample(1e5,1e4,10);
 
   cout << "samples: " << m.b0.history.size() << endl;

@@ -94,8 +94,8 @@ int main() {
   fixed.col(3) = period4;
 
   HerdModel m(incidence,size,herd,fixed,N,N_herd);
-  //m.sample(1e6,1e5,50);
-  m.sample(1e6,1e4,10);
+  //m.sample(1e6,1e5,1e4,50);
+  m.sample(1e6,1e4,1e4,10);
 
   cout << "samples: " << m.b.history.size() << endl;
   cout << "b: " << endl << m.b.mean() << endl;

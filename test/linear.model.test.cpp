@@ -58,7 +58,7 @@ int main() {
 
   TestModel m(y,X);
   int iterations = 1e5;
-  m.sample(iterations, 1e4, 10);
+  m.sample(iterations, 1e4, 1e4, 10);
 
   cout << "lm coefs" << endl << coefs;
   cout << "err sd: " << stddev(err,0) << endl;;

@@ -142,7 +142,7 @@ string file("/home/warmstrong/dvl/scripts/mcmc/radon/srrs.csv");
   mat group(county_to_groups(county));
 
   RadonVaryingInterceptModel m(level,basement,group);
-  m.sample(50e3, 10e3, 5);
+  m.sample(50e3, 10e3, 1e4, 5);
   cout << "samples: " << m.b.history.size() << endl;
   cout << "a: " << endl << m.a.mean() << endl;
   cout << "b: " << m.b.mean() << endl;
