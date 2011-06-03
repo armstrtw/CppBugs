@@ -35,7 +35,7 @@ namespace cppbugs {
 
     template<typename U>
     double accu(const U&  x) {
-      return accu(x);
+      return arma::accu(x);
     }
 
     double accu(const double x) {
@@ -99,6 +99,9 @@ namespace cppbugs {
       scale_ *= tune_factor(ar_ratio);
       accepted_ = 0;
       rejected_ = 0;
+    }
+    const double logp() const {
+      return logp_;
     }
   };
 
