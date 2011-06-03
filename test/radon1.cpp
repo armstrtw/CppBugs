@@ -46,15 +46,15 @@ public:
   const mat& group;
   int J;
 
-  Stochastic<vec> a;
-  Stochastic<double> b;
+  Normal<vec> a;
+  Normal<double> b;
   Deterministic<double> tau_y;
-  Stochastic<double> sigma_y;
-  Stochastic<double> mu_a;
+  Uniform<double> sigma_y;
+  Normal<double> mu_a;
   Deterministic<double> tau_a;
-  Stochastic<double> sigma_a;
+  Uniform<double> sigma_a;
   Deterministic<mat> y_hat;
-  Stochastic<mat> likelihood;
+  Normal<mat> likelihood;
 
   RadonVaryingInterceptModel(const vec& level_, const vec& basement_, const mat& group_):
     level(level_),basement(basement_),group(group_),J(group_.n_cols),

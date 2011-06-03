@@ -17,10 +17,10 @@ public:
   const ivec& groups; // given
   mat permutation_matrix;
 
-  Stochastic<mat> b;
-  Stochastic<double> tau_y;
+  Normal<mat> b;
+  Uniform<double> tau_y;
   Deterministic<mat> y_hat;
-  Stochastic<mat> likelihood;
+  Normal<mat> likelihood;
   Deterministic<double> rsq;
 
   TestModel(const mat& y_,const mat& X_,const ivec& groups_, int NG): y(y_), X(X_), groups(groups_),

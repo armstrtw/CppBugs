@@ -15,14 +15,36 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef CPPBUGS_HPP
-#define CPPBUGS_HPP
+#ifndef MCMC_GAMMA_HPP
+#define MCMC_GAMMA_HPP
 
-#include <cppbugs/mcmc.deterministic.hpp>
-#include <cppbugs/mcmc.normal.hpp>
-#include <cppbugs/mcmc.uniform.hpp>
-#include <cppbugs/mcmc.gamma.hpp>
-#include <cppbugs/mcmc.binomial.hpp>
-#include <cppbugs/mcmc.model.hpp>
 
-#endif // CPPBUGS_HPP
+#include <cmath>
+#include <armadillo>
+#include <cppbugs/mcmc.stochastic.hpp>
+
+namespace cppbugs {
+
+
+  template<typename T>
+  class Gamma : public Stochastic<T> {
+  public:
+    Gamma(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
+
+    template<typename U, typename V>
+    void dgamma(const U& alpha, const V& beta) {
+      Stochastic<double>::logp_ = (Stochastic<double>::value < 0 ) ? -std::numeric_limits<double>::infinity() : accu( (alpha - 1.0) * log(Stochastic<double>::value) - beta*Stochastic<double>::value - boost::math::lgamma(alpha) + alpha*log(beta) );
+    }
+  };
+
+  template<>
+  class Gamma <double> : public Stochastic<double> {
+  public:
+    Gamma(const double& value, const bool observed=false): Stochastic<double>(value,observed) {}
+
+    void dgamma(const double alpha, const double beta) {
+      Stochastic<double>::logp_ = (Stochastic<double>::value < 0 ) ? -std::numeric_limits<double>::infinity() : (alpha - 1.0) * log(Stochastic<double>::value) - beta*Stochastic<double>::value - boost::math::lgamma(alpha) + alpha*log(beta);
+    }
+  };
+} // namespace cppbugs
+#endif // MCMC_GAMMA_HPP

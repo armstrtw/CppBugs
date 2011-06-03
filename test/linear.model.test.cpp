@@ -1,9 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <armadillo>
-#include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
-#include <cppbugs/mcmc.model.hpp>
 
 using namespace arma;
 using namespace cppbugs;
@@ -15,10 +13,10 @@ public:
   const mat& y; // given
   const mat& X; // given
 
-  Stochastic<vec> b;
-  Stochastic<double> tau_y;
+  Normal<vec> b;
+  Uniform<double> tau_y;
   Deterministic<mat> y_hat;
-  Stochastic<mat> likelihood;
+  Normal<mat> likelihood;
   Deterministic<double> rsq;
 
   TestModel(const mat& y_,const mat& X_): y(y_), X(X_),

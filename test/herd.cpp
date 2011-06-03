@@ -44,18 +44,18 @@ class HerdModel: public MCModel {
   mat indicator_matrix;
 
 public:
-  Stochastic<double> b0;
-  Stochastic<double> b_period2;
-  Stochastic<double> b_period3;
-  Stochastic<double> b_period4;
-  Stochastic<double> tau_overdisp;
-  Stochastic<double> tau_b_herd;
+  Normal<double> b0;
+  Normal<double> b_period2;
+  Normal<double> b_period3;
+  Normal<double> b_period4;
+  Uniform<double> tau_overdisp;
+  Uniform<double> tau_b_herd;
   Deterministic<double> sigma_overdisp;
   Deterministic<double> sigma_b_herd;
-  Stochastic<vec> b_herd;
-  Stochastic<vec> overdisp;
+  Normal<vec> b_herd;
+  Normal<vec> overdisp;
   Deterministic<vec> phi;
-  Stochastic<ivec> likelihood;
+  Binomial<ivec> likelihood;
 
 
   HerdModel(const ivec& incidence_,const ivec& size_,const ivec& herd_,

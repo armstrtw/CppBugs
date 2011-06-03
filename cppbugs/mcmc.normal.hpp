@@ -15,14 +15,31 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef CPPBUGS_HPP
-#define CPPBUGS_HPP
+#ifndef MCMC_NORMAL_HPP
+#define MCMC_NORMAL_HPP
 
-#include <cppbugs/mcmc.deterministic.hpp>
-#include <cppbugs/mcmc.normal.hpp>
-#include <cppbugs/mcmc.uniform.hpp>
-#include <cppbugs/mcmc.gamma.hpp>
-#include <cppbugs/mcmc.binomial.hpp>
-#include <cppbugs/mcmc.model.hpp>
 
-#endif // CPPBUGS_HPP
+#include <cmath>
+#include <armadillo>
+#include <cppbugs/mcmc.stochastic.hpp>
+
+namespace cppbugs {
+
+  template<typename T>
+  class Normal : public Stochastic<T> {
+  public:
+    Normal(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
+
+    template<typename U, typename V>
+    void dnorm(const U& mu, const V& tau) {
+      Stochastic<T>::logp_ = accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau * pow(Stochastic<T>::value - mu,2.0));
+    }
+
+    // need this specialization b/c we need to do schur product btwn two mat's
+    void dnorm(const arma::mat& mu, const arma::mat& tau) {
+      Stochastic<T>::logp_ = accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau % pow(Stochastic<T>::value - mu,2.0));
+    }
+  };
+
+} // namespace cppbugs
+#endif // MCMC_NORMAL_HPP

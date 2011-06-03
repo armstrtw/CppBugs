@@ -15,11 +15,11 @@ public:
   const mat& age; // given
   const mat& price; // given
 
-  Stochastic<double> a;
-  Stochastic<double> b;
-  Stochastic<double> tau;
+  Normal<double> a;
+  Normal<double> b;
+  Gamma<double> tau;
   Deterministic<mat> y_hat;
-  Stochastic<mat> likelihood;
+  Normal<mat> likelihood;
 
   TestModel(const mat& age_,const mat& price_): age(age_), price(price_),
                                                 a(0.0),b(0.0),tau(0.1),
