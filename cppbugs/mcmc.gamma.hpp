@@ -25,15 +25,25 @@
 
 namespace cppbugs {
 
-
   template<typename T>
   class Gamma : public Stochastic<T> {
   public:
     Gamma(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
 
+    // modified jumper to only take positive jumps
+    void jump(RngBase& rng) {
+      for(size_t i = 0; i < Stochastic<T>::value.n_elem; i++) {
+        double original_value = Stochastic<T>::value[i];
+        do {
+          Stochastic<T>::value[i] = original_value + rng.normal() * Stochastic<T>::scale_;
+        } while (Stochastic<T>::value[i] < 0);
+      }
+    }
+
     template<typename U, typename V>
     void dgamma(const U& alpha, const V& beta) {
-      Stochastic<double>::logp_ = (Stochastic<double>::value < 0 ) ? -std::numeric_limits<double>::infinity() : accu( (alpha - 1.0) * log(Stochastic<double>::value) - beta*Stochastic<double>::value - boost::math::lgamma(alpha) + alpha*log(beta) );
+      arma::umat neg_elements = find(Stochastic<T>::value < 0,1);
+      Stochastic<T>::logp_ = neg_elements.n_elem ? -std::numeric_limits<double>::infinity() : accu( (alpha - 1.0) * log(Stochastic<T>::value) - beta*Stochastic<T>::value - log_gamma(alpha) + alpha*log(beta) );
     }
   };
 
@@ -42,8 +52,16 @@ namespace cppbugs {
   public:
     Gamma(const double& value, const bool observed=false): Stochastic<double>(value,observed) {}
 
+    // modified jumper to only take positive jumps
+    void jump(RngBase& rng) {
+      double original_value = Stochastic<double>::value;
+      do {
+        Stochastic<double>::value = original_value + rng.normal() * Stochastic<double>::scale_;
+      } while (Stochastic<double>::value < 0);
+    }
+
     void dgamma(const double alpha, const double beta) {
-      Stochastic<double>::logp_ = (Stochastic<double>::value < 0 ) ? -std::numeric_limits<double>::infinity() : (alpha - 1.0) * log(Stochastic<double>::value) - beta*Stochastic<double>::value - boost::math::lgamma(alpha) + alpha*log(beta);
+      Stochastic<double>::logp_ = (Stochastic<double>::value < 0 ) ? -std::numeric_limits<double>::infinity() : (alpha - 1.0) * log(Stochastic<double>::value) - beta*Stochastic<double>::value - log_gamma(alpha) + alpha*log(beta);
     }
   };
 } // namespace cppbugs

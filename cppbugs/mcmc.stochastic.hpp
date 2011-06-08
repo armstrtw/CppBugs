@@ -26,6 +26,8 @@
 #include <cppbugs/mcmc.jump.hpp>
 
 namespace cppbugs {
+  using namespace boost::math::policies;
+  typedef policy<digits10<5> > boost_numeric_accuracy;
 
   template<typename T>
   class Stochastic : public MCMCSpecialized<T> {
@@ -42,9 +44,13 @@ namespace cppbugs {
       return x;
     }
 
+    double log_gamma(const double x) {
+      return boost::math::lgamma(x,boost_numeric_accuracy());
+    }
+
     double factln_single(int n) {
       if(n > 100) {
-	return boost::math::lgamma(static_cast<double>(n) + 1);
+	return log_gamma(static_cast<double>(n) + 1);
       }
       double ans(1);
       for (int i=n; i>1; i--) {

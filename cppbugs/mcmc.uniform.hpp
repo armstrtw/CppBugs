@@ -48,7 +48,9 @@ namespace cppbugs {
   class Uniform <arma::mat> : public Stochastic<arma::mat> {
   public:
     Uniform(const arma::mat& value, const bool observed=false): Stochastic<arma::mat>(value,observed) {}
-    void dunif(const arma::mat& lower, const arma::mat& upper) {
+
+    template<typename U, typename V>
+    void dunif(const U& lower, const V& upper) {
       arma::uvec less_than_lower_bound = find(value < lower,1);
       arma::uvec greater_than_upper_bound = find(value > upper,1);
 
