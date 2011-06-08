@@ -18,12 +18,12 @@ public:
   mat permutation_matrix;
   vec rowdup;
 
-  Stochastic<mat> b;
-  Stochastic<mat> b_mu;
-  Stochastic<mat> b_tau;
-  Stochastic<double> tau_y;
+  Normal<mat> b;
+  Normal<mat> b_mu;
+  Uniform<mat> b_tau;
+  Uniform<double> tau_y;
   Deterministic<mat> y_hat;
-  Stochastic<mat> likelihood;
+  Normal<mat> likelihood;
   Deterministic<double> rsq;
 
   TestModel(const mat& y_,const mat& X_,const ivec& groups_, int NG): y(y_), X(X_), groups(groups_),
