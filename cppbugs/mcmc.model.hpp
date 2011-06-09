@@ -41,7 +41,7 @@ namespace cppbugs {
     void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
     void tally_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(); } }
     void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
-    bool bad_logp(const double value) const { return isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
+    bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModel(): MCModelBase(), accepted_(0), rejected_(0) {}
 

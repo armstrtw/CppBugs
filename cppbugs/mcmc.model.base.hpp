@@ -29,7 +29,7 @@ namespace cppbugs {
   class MCModelBase {
   private:
     SpecializedRng<boost::minstd_rand> rng_;
-    bool bad_logp(const double value) const { return isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
+    bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModelBase() {}
     virtual void update() = 0;
