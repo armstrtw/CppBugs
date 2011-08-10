@@ -33,10 +33,8 @@ namespace cppbugs {
     // modified jumper to only take positive jumps
     void jump(RngBase& rng) {
       for(size_t i = 0; i < Stochastic<T>::value.n_elem; i++) {
-        double original_value = Stochastic<T>::value[i];
-        do {
-          Stochastic<T>::value[i] = original_value + rng.normal() * Stochastic<T>::scale_;
-        } while (Stochastic<T>::value[i] < 0);
+        double new_value = Stochastic<T>::value[i] + rng.normal() * Stochastic<T>::scale_;
+        Stochastic<T>::value[i] = new_value > 0 ? new_value : Stochastic<T>::value[i];
       }
     }
 
@@ -54,10 +52,8 @@ namespace cppbugs {
 
     // modified jumper to only take positive jumps
     void jump(RngBase& rng) {
-      double original_value = Stochastic<double>::value;
-      do {
-        Stochastic<double>::value = original_value + rng.normal() * Stochastic<double>::scale_;
-      } while (Stochastic<double>::value < 0);
+      double new_value = Stochastic<double>::value + rng.normal() * Stochastic<double>::scale_;
+      Stochastic<double>::value = new_value > 0 ? new_value : Stochastic<double>::value;
     }
 
     void dgamma(const double alpha, const double beta) {
