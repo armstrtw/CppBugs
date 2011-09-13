@@ -39,7 +39,8 @@ namespace cppbugs {
     void jump_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->jump(rng_); } }
     void preserve_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->preserve(); } }
     void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
-    void tally_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(); } }
+    void init_history_all(std::vector<MCMCObject*>& v, const size_t sz) { for(size_t i = 0; i < v.size(); i++) { v[i]->initHistory(sz); } }
+    void tally_all(std::vector<MCMCObject*>& v, const size_t p) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(p); } }
     void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
@@ -115,6 +116,13 @@ namespace cppbugs {
     void sample(int iterations, int burn, int adapt, int thin) {
       double logp_value,old_logp_value;
 
+      if(iterations % thin) {
+        std::cout << "ERROR: interations not a multiple of thin." << std::endl;
+        return;
+      }
+
+      init_history_all(mcmcObjects, iterations / thin);
+
       // tuning phase
       tune(adapt,static_cast<int>(adapt/100));
 
@@ -134,7 +142,7 @@ namespace cppbugs {
           accepted_ += 1;
         }
         if(i > burn && (i % thin == 0)) {
-          tally_all(mcmcObjects);
+          tally_all(mcmcObjects, (i - burn) / thin - 1);
         }
       }
     }
