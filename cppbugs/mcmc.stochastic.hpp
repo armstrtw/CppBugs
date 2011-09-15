@@ -109,6 +109,9 @@ namespace cppbugs {
     const double logp() const {
       return logp_;
     }
+    void setScale(const double scale) {
+      scale_ = scale;
+    }
   };
 
 } // namespace cppbugs

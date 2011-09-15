@@ -44,6 +44,8 @@ namespace cppbugs {
       ans /= static_cast<double>(history.size());
       return ans;
     }
+    int getSize() const { return static_cast<int>(value.n_elem); }
+    void setScale(const double scale) {}
   };
 
   template<>
@@ -66,6 +68,8 @@ namespace cppbugs {
       ans /= static_cast<double>(history.size());
       return ans;
     }
+    int getSize() const { return 1; }
+    void setScale(const double scale) {}
   };
 
 } // namespace cppbugs

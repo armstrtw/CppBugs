@@ -40,11 +40,21 @@ namespace cppbugs {
     void preserve_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->preserve(); } }
     void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
     void init_history_all(std::vector<MCMCObject*>& v, const size_t sz) { for(size_t i = 0; i < v.size(); i++) { v[i]->initHistory(sz); } }
+    void set_scale_all(std::vector<MCMCObject*>& v, const double scale) { for(size_t i = 0; i < v.size(); i++) { v[i]->setScale(scale); } }
     void tally_all(std::vector<MCMCObject*>& v, const size_t p) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(p); } }
     void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModel(): MCModelBase(), accepted_(0), rejected_(0) {}
+
+    double calcDimension(std::vector<MCMCObject*>& v) {
+      double ans(0);
+
+      for(size_t i = 0; i < v.size(); i++) {
+        ans += v[i]->getSize();
+      }
+      return ans;
+    }
 
     void add(MCMCObject& p) {
       mcmcObjects.push_back(&p);
@@ -114,6 +124,7 @@ namespace cppbugs {
     }
 
     void sample(int iterations, int burn, int adapt, int thin) {
+      const double scale_num = 2.38;
       double logp_value,old_logp_value;
 
       if(iterations % thin) {
@@ -122,6 +133,12 @@ namespace cppbugs {
       }
 
       init_history_all(mcmcObjects, iterations / thin);
+      double d = calcDimension(jumping_stochastics);
+      //std::cout << "dim size:" << d << std::endl;
+      //double ideal_scale = sqrt(scale_num / pow(d,2));
+      double ideal_scale = scale_num / sqrt(d);
+      //std::cout << "ideal_scale: " << ideal_scale << std::endl;
+      set_scale_all(jumping_stochastics,ideal_scale);
 
       // tuning phase
       tune(adapt,static_cast<int>(adapt/100));

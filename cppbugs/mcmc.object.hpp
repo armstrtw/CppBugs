@@ -38,6 +38,8 @@ namespace cppbugs {
     virtual bool isDeterministc() const = 0;
     virtual bool isStochastic() const = 0;
     virtual bool isObserved() const = 0;
+    virtual int getSize() const = 0; // in mcmc.specialized
+    virtual void setScale(const double scale) = 0;
   };
 
 } // namespace cppbugs
