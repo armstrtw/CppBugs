@@ -138,7 +138,7 @@ namespace cppbugs {
       //double ideal_scale = sqrt(scale_num / pow(d,2));
       double ideal_scale = scale_num / sqrt(d);
       //std::cout << "ideal_scale: " << ideal_scale << std::endl;
-      set_scale_all(jumping_stochastics,ideal_scale);
+      //set_scale_all(jumping_stochastics,ideal_scale);
 
       // tuning phase
       tune(adapt,static_cast<int>(adapt/100));
