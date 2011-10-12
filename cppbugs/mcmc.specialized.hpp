@@ -25,14 +25,15 @@ namespace cppbugs {
 
   template<typename T>
   class MCMCSpecialized : public MCMCObject {
+    bool save_history_;
   public:
     T value;
     T old_value;
     std::list<T> history;
-    MCMCSpecialized(const T& shape): MCMCObject(), value(shape), old_value(shape) {}
+    MCMCSpecialized(const T& shape): MCMCObject(), save_history_(true), value(shape), old_value(shape) {}
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
-    void tally() { history.push_back(value); }
+    void tally() { if(save_history_) { history.push_back(value); } }
     void print() const { std::cout << value << std::endl; }
     T mean() const {
       T ans(value);
@@ -45,18 +46,22 @@ namespace cppbugs {
     }
     int getSize() const { return static_cast<int>(value.n_elem); }
     void setScale(const double scale) {}
+    void setSaveHistory(const bool save_history) {
+      save_history_ = save_history;
+    }
   };
 
   template<>
   class MCMCSpecialized<double> : public MCMCObject {
+    bool save_history_;
   public:
     double value;
     double old_value;
     std::list<double> history;
-    MCMCSpecialized(const double shape): MCMCObject(), value(shape), old_value(shape) {}
+    MCMCSpecialized(const double shape): MCMCObject(), save_history_(true), value(shape), old_value(shape) {}
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
-    void tally() { history.push_back(value); }
+    void tally() { if(save_history_) { history.push_back(value); } }
     void print() const { std::cout << value << std::endl; }
     double mean() const {
       double ans(0);
@@ -68,6 +73,9 @@ namespace cppbugs {
     }
     int getSize() const { return 1; }
     void setScale(const double scale) {}
+    void setSaveHistory(const bool save_history) {
+      save_history_ = save_history;
+    }
   };
 
 } // namespace cppbugs
