@@ -32,8 +32,7 @@ namespace cppbugs {
     MCMCSpecialized(const T& shape): MCMCObject(), value(shape), old_value(shape) {}
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
-    void initHistory(const size_t i) {}
-    void tally(const size_t i) { history.push_back(value); }
+    void tally() { history.push_back(value); }
     void print() const { std::cout << value << std::endl; }
     T mean() const {
       T ans(value);
@@ -57,8 +56,7 @@ namespace cppbugs {
     MCMCSpecialized(const double shape): MCMCObject(), value(shape), old_value(shape) {}
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
-    void initHistory(const size_t i) {}
-    void tally(const size_t i) { history.push_back(value); }
+    void tally() { history.push_back(value); }
     void print() const { std::cout << value << std::endl; }
     double mean() const {
       double ans(0);

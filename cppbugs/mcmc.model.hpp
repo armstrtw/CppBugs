@@ -39,9 +39,8 @@ namespace cppbugs {
     void jump_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->jump(rng_); } }
     void preserve_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->preserve(); } }
     void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
-    void init_history_all(std::vector<MCMCObject*>& v, const size_t sz) { for(size_t i = 0; i < v.size(); i++) { v[i]->initHistory(sz); } }
     void set_scale_all(std::vector<MCMCObject*>& v, const double scale) { for(size_t i = 0; i < v.size(); i++) { v[i]->setScale(scale); } }
-    void tally_all(std::vector<MCMCObject*>& v, const size_t p) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(p); } }
+    void tally_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(); } }
     void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
@@ -132,7 +131,6 @@ namespace cppbugs {
         return;
       }
 
-      init_history_all(mcmcObjects, iterations / thin);
       double d = calcDimension(jumping_stochastics);
       //std::cout << "dim size:" << d << std::endl;
       //double ideal_scale = sqrt(scale_num / pow(d,2));
@@ -159,7 +157,7 @@ namespace cppbugs {
           accepted_ += 1;
         }
         if(i > burn && (i % thin == 0)) {
-          tally_all(mcmcObjects, (i - burn) / thin - 1);
+          tally_all(mcmcObjects);
         }
       }
     }

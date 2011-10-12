@@ -32,8 +32,7 @@ namespace cppbugs {
     virtual void reject() {}
     virtual void preserve() = 0;        // in mcmc.specialized
     virtual void revert() = 0;          // in mcmc.specialized
-    virtual void initHistory(const size_t i) = 0; // in mcmc.specialized
-    virtual void tally(const size_t i) = 0; // in mcmc.specialized
+    virtual void tally() = 0; // in mcmc.specialized
     virtual void print() const = 0;     // in mcmc.specialized
     virtual bool isDeterministc() const = 0;
     virtual bool isStochastic() const = 0;
