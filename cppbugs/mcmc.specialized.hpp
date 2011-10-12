@@ -18,7 +18,7 @@
 #ifndef MCMC_SPECIALIZED_HPP
 #define MCMC_SPECIALIZED_HPP
 
-#include <vector>
+#include <list>
 #include <cppbugs/mcmc.object.hpp>
 
 namespace cppbugs {
@@ -28,18 +28,18 @@ namespace cppbugs {
   public:
     T value;
     T old_value;
-    std::vector<T> history;
+    std::list<T> history;
     MCMCSpecialized(const T& shape): MCMCObject(), value(shape), old_value(shape) {}
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
-    void initHistory(const size_t i) { history.resize(i); }
-    void tally(const size_t i) { history[i] = value; }
+    void initHistory(const size_t i) {}
+    void tally(const size_t i) { history.push_back(value); }
     void print() const { std::cout << value << std::endl; }
     T mean() const {
       T ans(value);
       ans.fill(0);
-      for(size_t i = 0; i < history.size(); i++) {
-        ans += history[i];
+      for(typename std::list<T>::const_iterator it = history.begin(); it != history.end(); it++) {
+        ans += *it;
       }
       ans /= static_cast<double>(history.size());
       return ans;
@@ -53,17 +53,17 @@ namespace cppbugs {
   public:
     double value;
     double old_value;
-    std::vector<double> history;
+    std::list<double> history;
     MCMCSpecialized(const double shape): MCMCObject(), value(shape), old_value(shape) {}
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
-    void initHistory(const size_t i) { history.resize(i); }
-    void tally(const size_t i) { history[i] = value; }
+    void initHistory(const size_t i) {}
+    void tally(const size_t i) { history.push_back(value); }
     void print() const { std::cout << value << std::endl; }
     double mean() const {
       double ans(0);
-      for(size_t i = 0; i < history.size(); i++) {
-        ans += history[i];
+      for(typename std::list<double>::const_iterator it = history.begin(); it != history.end(); it++) {
+        ans += *it;
       }
       ans /= static_cast<double>(history.size());
       return ans;
