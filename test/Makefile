@@ -9,7 +9,7 @@ LIBS = $(ARMADILLO_LIBS)
 all: linear.model.test varying.coefs.test varying.coefs.global.prior price herd herd.fast radon1
 
 clean:
-	rm -f linear.model.test linear.model.test.static varying.coefs.test price herd herd.fast radon1
+	rm -f linear.model.test linear.model.test.static varying.coefs.test price herd herd.fast radon1 varying.coefs.global.prior
 
 linear.model.test: linear.model.test.cpp
 	$(CC) $(CPPFLAGS) $(LIBS) linear.model.test.cpp -o linear.model.test
