@@ -83,9 +83,16 @@ namespace cppbugs {
       return ans;
     }
   public:
-    Stochastic(const T& value, const bool observed=false): MCMCSpecialized<T>(value), observed_(observed),
-                                                           logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),
-                                                           scale_(1) {}
+    Stochastic(const T& value, const bool observed=false):
+      MCMCSpecialized<T>(value), observed_(observed),
+      logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),
+      scale_(1)
+    {
+      // don't need to save history of observed variables
+      if(observed_) {
+        MCMCSpecialized<T>::setSaveHistory(false);
+      }
+    }
     const double* getLogp() const { return &logp_; }
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
