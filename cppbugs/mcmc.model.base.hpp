@@ -19,8 +19,6 @@
 #define MCMC_MODEL_BASE_HPP
 
 #include <cmath>
-#include <iostream>
-#include <vector>
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.hpp>
 
