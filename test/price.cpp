@@ -28,7 +28,7 @@ public:
     add(a);
     add(b);
     add(tau);
-    add(y_hat);
+    add(y_hat); y_hat.setSaveHistory(false);
     add(likelihood);
   }
 
@@ -70,6 +70,7 @@ int main() {
   cout << "a: " << m.a.mean() << endl;
   cout << "b: " << m.b.mean() << endl;
   cout << "tau: " << m.tau.mean() << endl;
+  cout << "yhat history size: " << m.y_hat.history.size() << endl;
   cout << "samples: " << m.b.history.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
