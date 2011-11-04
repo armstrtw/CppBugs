@@ -27,7 +27,6 @@
 
 namespace cppbugs {
   using namespace boost::math::policies;
-  typedef policy<digits10<5> > boost_numeric_accuracy;
 
   template<typename T>
   class Stochastic : public MCMCSpecialized<T> {
@@ -45,7 +44,7 @@ namespace cppbugs {
     }
 
     double log_gamma(const double x) {
-      return boost::math::lgamma(x,boost_numeric_accuracy());
+      return boost::math::lgamma(x);
     }
 
     double factln_single(int n) {
