@@ -21,77 +21,30 @@
 
 #include <cmath>
 #include <armadillo>
-#include <boost/math/special_functions/gamma.hpp>
 #include <cppbugs/mcmc.specialized.hpp>
 #include <cppbugs/mcmc.jump.hpp>
+#include <cppbugs/mcmc.likelihood.functor.hpp>
 
 namespace cppbugs {
-  using namespace boost::math::policies;
 
   template<typename T>
   class Stochastic : public MCMCSpecialized<T> {
   protected:
     bool observed_;
     double logp_,accepted_,rejected_,scale_;
-
-    template<typename U>
-    double accu(const U&  x) {
-      return arma::accu(x);
-    }
-
-    double accu(const double x) {
-      return x;
-    }
-
-    double log_gamma(const double x) {
-      return boost::math::lgamma(x);
-    }
-
-    double factln_single(int n) {
-      if(n > 100) {
-	return log_gamma(static_cast<double>(n) + 1);
-      }
-      double ans(1);
-      for (int i=n; i>1; i--) {
-	ans *= i;
-      }
-      return log(ans);
-    }
-
-    double factln(const int i) {
-      static std::vector<double> factln_table;
-
-      if(i < 0) {
-	return -std::numeric_limits<double>::infinity();
-      }
-
-      if(factln_table.size() < static_cast<size_t>(i+1)) {
-	for(int j = factln_table.size(); j < (i+1); j++) {
-	  factln_table.push_back(factln_single(j));
-	}
-      }
-      //return factln_table.at(i);
-      return factln_table[i];
-    }
-
-    arma::mat factln(const arma::imat& x) {
-      arma::mat ans; ans.copy_size(x);
-      for(size_t i = 0; i < x.n_elem; i++) {
-	ans[i] = factln(x[i]);
-      }
-      return ans;
-    }
+    LikelihoodFunctor* likelihood_functor_p;
   public:
     Stochastic(const T& value, const bool observed=false):
       MCMCSpecialized<T>(value), observed_(observed),
       logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),
-      scale_(1)
+      scale_(1), likelihood_functor_p(NULL)
     {
       // don't need to save history of observed variables
       if(observed_) {
         MCMCSpecialized<T>::setSaveHistory(false);
       }
     }
+    virtual ~Stochastic() { delete likelihood_functor_p; }
     const double* getLogp() const { return &logp_; }
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
