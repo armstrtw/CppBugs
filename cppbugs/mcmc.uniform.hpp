@@ -25,40 +25,32 @@
 
 namespace cppbugs {
 
+
+  template<typename T, typename U, typename V>
+  class UniformLikelihood : public LikelihoodFunctor {
+  protected:
+    const T& x;
+    const U& lower;
+    const V& upper;
+  public:
+    UniformLikelihood(const T& x_, const U& lower_, const V& upper_): x(x_), lower(lower_), upper(upper_) {}
+    double getLikelihood() const {
+      return (x < lower || x > upper) ? -std::numeric_limits<double>::infinity() : -accu(log(upper - lower));
+    }
+  };
+
   template<typename T>
   class Uniform : public Stochastic<T> {
   public:
     Uniform(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
-    void dunif(const double lower, const double upper) {
-      Stochastic<T>::logp_ =  (Stochastic<T>::value < lower || Stochastic<T>::value > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
-    }
-  };
-
-  template<>
-  class Uniform <double> : public Stochastic<double> {
-  public:
-    Uniform(const double& value, const bool observed=false): Stochastic<double>(value,observed) {}
-    void dunif(const double lower, const double upper) {
-      Stochastic<double>::logp_ =  (Stochastic<double>::value < lower || Stochastic<double>::value > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
-    }
-  };
-
-
-  template<>
-  class Uniform <arma::mat> : public Stochastic<arma::mat> {
-  public:
-    Uniform(const arma::mat& value, const bool observed=false): Stochastic<arma::mat>(value,observed) {}
 
     template<typename U, typename V>
-    void dunif(const U& lower, const V& upper) {
-      arma::uvec less_than_lower_bound = find(value < lower,1);
-      arma::uvec greater_than_upper_bound = find(value > upper,1);
+    void dunif(const MCMCSpecialized<U>& lower, MCMCSpecialized<V>& upper) {
+      Stochastic<T>::likelihood_functor_p = new UniformLikelihood<T,U,V>(Stochastic<T>::value, lower.value, upper.value);
+    }
 
-      if(less_than_lower_bound.n_elem || greater_than_upper_bound.n_elem) {
-	Stochastic<arma::mat>::logp_ = -std::numeric_limits<double>::infinity();
-      } else {
-	Stochastic<arma::mat>::logp_ = accu(-log(upper - lower));
-      }
+    void dunif(const double& lower, const double& upper) {
+      Stochastic<T>::likelihood_functor_p = new UniformLikelihood<T,double,double>(Stochastic<T>::value, lower, upper);
     }
   };
 } // namespace cppbugs
