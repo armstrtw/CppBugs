@@ -22,10 +22,14 @@
 
 namespace cppbugs {
 
-  template<typename T>
+  template<typename T, typename F>
   class Deterministic : public MCMCSpecialized<T> {
+    const F& fo_;
   public:
-    Deterministic(const T& value): MCMCSpecialized<T>(value) {}
+    void update() {
+      MCMCSpecialized<T>::value = fo_();
+    }
+    Deterministic(const F& fo): MCMCSpecialized<T>(fo()), fo_(fo) {}
     bool isDeterministc() const { return true; }
     bool isStochastic() const { return false; }
     bool isObserved() const { return true; }
