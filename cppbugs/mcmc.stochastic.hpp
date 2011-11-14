@@ -71,6 +71,9 @@ namespace cppbugs {
     void setScale(const double scale) {
       scale_ = scale;
     }
+    double loglik() const {
+      return Stochastic<T>::likelihood_functor_p ? Stochastic<T>::likelihood_functor_p->getLikelihood() : 0;
+    }
   };
 
 } // namespace cppbugs
