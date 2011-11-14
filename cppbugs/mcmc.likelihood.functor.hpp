@@ -30,7 +30,7 @@ namespace cppbugs {
   class LikelihoodFunctor {
   protected:
     template<typename U>
-    double accu(const U&  x) {
+    static double accu(const U&  x) {
       return arma::accu(x);
     }
 
@@ -38,11 +38,11 @@ namespace cppbugs {
       return x;
     }
 
-    double log_gamma(const double x) {
+    static double log_gamma(const double x) {
       return boost::math::lgamma(x);
     }
 
-    double factln_single(int n) {
+    static double factln_single(int n) {
       if(n > 100) {
 	return log_gamma(static_cast<double>(n) + 1);
       }
@@ -53,7 +53,7 @@ namespace cppbugs {
       return log(ans);
     }
 
-    double factln(const int i) {
+    static double factln(const int i) {
       static std::vector<double> factln_table;
 
       if(i < 0) {
@@ -69,7 +69,7 @@ namespace cppbugs {
       return factln_table[i];
     }
 
-    arma::mat factln(const arma::imat& x) {
+    static arma::mat factln(const arma::imat& x) {
       arma::mat ans; ans.copy_size(x);
       for(size_t i = 0; i < x.n_elem; i++) {
 	ans[i] = factln(x[i]);
@@ -81,19 +81,5 @@ namespace cppbugs {
     LikelihoodFunctor() {}
     virtual double getLikelihood() const = 0;
   };
-
-  template<typename T, typename U, typename V>
-  class NormalLikelihood : public LikelihoodFunctor {
-  protected:
-    const T& x_;
-    const U& mu_;
-    const V& tau_;
-  public:
-    NormalLikelihood(const T& x, const U& mu, const V& tau): x_(x), mu_(mu), tau_(tau) {}
-    double getLikelihood() const {
-      accu(0.5*log(0.5*tau_/arma::math::pi()) - 0.5 * tau_ * pow(x_ - mu_,2.0));
-    }
-  };
-
 } // namespace cppbugs
 #endif // MCMC_LIKELIHOOD_FUNCTOR_HPP

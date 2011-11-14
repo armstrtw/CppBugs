@@ -25,6 +25,19 @@
 
 namespace cppbugs {
 
+  template<typename T, typename U, typename V>
+  class NormalLikelihood : public LikelihoodFunctor {
+  protected:
+    const T& x_;
+    const U& mu_;
+    const V& tau_;
+  public:
+    NormalLikelihood(const T& x, const U& mu, const V& tau): x_(x), mu_(mu), tau_(tau) {}
+    double getLikelihood() const {
+      accu(0.5*log(0.5*tau_/arma::math::pi()) - 0.5 * tau_ * pow(x_ - mu_,2.0));
+    }
+  };
+
   template<typename T>
   class Normal : public Stochastic<T> {
   public:
@@ -32,8 +45,8 @@ namespace cppbugs {
 
     // need this specialization b/c we need to do schur product btwn two mat's
     template<typename U, typename V>
-    void dnorm(const U& mu, const V& tau) {
-      Stochastic<T>::likelihood_functor_p = new NormalLikelihood<T,U,V>(Stochastic<T>::value, mu, tau);
+    void dnorm(const MCMCSpecialized<U>& mu, const MCMCSpecialized<V>& tau) {
+      Stochastic<T>::likelihood_functor_p = new NormalLikelihood<T,U,V>(Stochastic<T>::value, mu.value, tau.value);
     }
 
     void dnorm(const double& mu, const double& tau) {
