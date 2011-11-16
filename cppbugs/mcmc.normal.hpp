@@ -41,11 +41,16 @@ namespace cppbugs {
   template<typename T>
   class Normal : public Stochastic<T> {
   public:
+    const MCMCObject* mu_;
+    const MCMCObject* tau_;
+
     Normal(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
 
     // need this specialization b/c we need to do schur product btwn two mat's
     template<typename U, typename V>
     void dnorm(const MCMCSpecialized<U>& mu, const MCMCSpecialized<V>& tau) {
+      mu_ = dynamic_cast<const MCMCObject*>(&mu);
+      tau_ = dynamic_cast<const MCMCObject*>(&mu);
       Stochastic<T>::likelihood_functor_p = new NormalLikelihood<T,U,V>(Stochastic<T>::value, mu.value, tau.value);
     }
 

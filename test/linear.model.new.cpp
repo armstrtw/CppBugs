@@ -43,7 +43,8 @@ int main() {
 
   Normal<mat> likelihood(y,true);
   likelihood.dnorm(y_hat,tau_y);
-  //Model.run(a,b,c,d,simple);
+  // cout << "likelihood mu:" << &likelihood.mu_ << endl;
+  // cout << "likelihood tau:" << &likelihood.mu_ << endl;
 
   //std::vector<MCMCObject*> nodes = {&b, &y_hat, &tau_y, &likelihood};
   MCModel m({&b, &y_hat, &tau_y, &likelihood});
