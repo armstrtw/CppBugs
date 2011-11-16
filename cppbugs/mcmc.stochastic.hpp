@@ -23,7 +23,6 @@
 #include <armadillo>
 #include <cppbugs/mcmc.specialized.hpp>
 #include <cppbugs/mcmc.jump.hpp>
-//#include <cppbugs/mcmc.likelihood.functor.hpp>
 
 namespace cppbugs {
 

@@ -36,12 +36,13 @@ namespace cppbugs {
     SpecializedRng<boost::minstd_rand> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_stochastics, deterministics;
     std::vector<std::function<double ()> > logp_functors;
-    void jump_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->jump(rng_); } }
+
+    void jump() { for(auto v : jumping_stochastics) { v->jump(rng_); } }
     void update() { for(auto v : deterministics) v->update(); }
-    void preserve_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->preserve(); } }
-    void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
-    void set_scale_all(std::vector<MCMCObject*>& v, const double scale) { for(size_t i = 0; i < v.size(); i++) { v[i]->setScale(scale); } }
-    void tally_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(); } }
+    void preserve() { for(auto v : mcmcObjects) { v->preserve(); } }
+    void revert() { for(auto v : mcmcObjects) { v->revert(); } }
+    void set_scale(const double scale) { for(auto v : jumping_stochastics) { v->setScale(scale); } }
+    void tally() { for(auto v : mcmcObjects) { v->tally(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModel(std::vector<MCMCObject*> nodes): MCModelBase(), mcmcObjects(nodes), accepted_(0), rejected_(0) {
@@ -60,11 +61,11 @@ namespace cppbugs {
       }
     }
 
-    double calcDimension(std::vector<MCMCObject*>& v) {
+    double calcDimension() {
       double ans(0);
 
-      for(size_t i = 0; i < v.size(); i++) {
-        ans += v[i]->getSize();
+      for(auto v : jumping_stochastics) {
+        ans += v->getSize();
       }
       return ans;
     }
@@ -129,12 +130,12 @@ namespace cppbugs {
         return;
       }
 
-      double d = calcDimension(jumping_stochastics);
+      double d = calcDimension();
       //std::cout << "dim size:" << d << std::endl;
       //double ideal_scale = sqrt(scale_num / pow(d,2));
       double ideal_scale = scale_num / sqrt(d);
       //std::cout << "ideal_scale: " << ideal_scale << std::endl;
-      //set_scale_all(jumping_stochastics,ideal_scale);
+      //set_scale(ideal_scale);
 
       // tuning phase
       tune(adapt,static_cast<int>(adapt/100));
@@ -143,19 +144,19 @@ namespace cppbugs {
       old_logp_value = -std::numeric_limits<double>::infinity();
       for(int i = 1; i <= (iterations + burn); i++) {
         old_logp_value = logp_value;
-        preserve_all(mcmcObjects);
-        jump_all(jumping_stochastics);
+        preserve();
+        jump();
         update();
         logp_value = logp();
         if(reject(logp_value, old_logp_value)) {
-          revert_all(mcmcObjects);
+          revert();
           logp_value = old_logp_value;
           rejected_ += 1;
         } else {
           accepted_ += 1;
         }
         if(i > burn && (i % thin == 0)) {
-          tally_all(mcmcObjects);
+          tally();
         }
       }
     }

@@ -19,7 +19,6 @@
 #define MCMC_OBJECT_HPP
 
 #include <cppbugs/mcmc.model.base.hpp>
-#include <cppbugs/mcmc.likelihood.functor.hpp>
 
 namespace cppbugs {
 
