@@ -2,7 +2,7 @@
 CC = g++
 ##CPPFLAGS = -I.. -Wall -g
 CPPFLAGS = -I.. -Wall -O2
-ARMADILLO_LIBS = -llapack
+ARMADILLO_LIBS = -lblas -llapack
 ##ARMADILLO_LIBS = -lgoto2 -lpthread -lgfortran
 LIBS = $(ARMADILLO_LIBS)
 
@@ -12,22 +12,22 @@ clean:
 	rm -f linear.model.test linear.model.test.static varying.coefs.test price herd herd.fast radon1 varying.coefs.global.prior
 
 linear.model.test: linear.model.test.cpp
-	$(CC) $(CPPFLAGS) $(LIBS) linear.model.test.cpp -o linear.model.test
+	$(CC) $(CPPFLAGS) linear.model.test.cpp -o linear.model.test $(LIBS)
 
 varying.coefs.test: varying.coefs.test.cpp
-	$(CC) $(CPPFLAGS) $(LIBS) varying.coefs.test.cpp -o varying.coefs.test
+	$(CC) $(CPPFLAGS) varying.coefs.test.cpp -o varying.coefs.test $(LIBS)
 
 varying.coefs.global.prior: varying.coefs.global.prior.cpp
-	$(CC) $(CPPFLAGS) $(LIBS) varying.coefs.global.prior.cpp -o varying.coefs.global.prior
+	$(CC) $(CPPFLAGS) varying.coefs.global.prior.cpp -o varying.coefs.global.prior $(LIBS)
 
 price: price.cpp
-	$(CC) $(CPPFLAGS) $(LIBS) price.cpp -o price
+	$(CC) $(CPPFLAGS) price.cpp -o price $(LIBS)
 
 herd: herd.cpp
-	$(CC) $(CPPFLAGS) $(LIBS) herd.cpp -o herd
+	$(CC) $(CPPFLAGS) herd.cpp -o herd $(LIBS)
 
 herd.fast: herd.fast.cpp
-	$(CC) $(CPPFLAGS) $(LIBS) herd.fast.cpp -o herd.fast
+	$(CC) $(CPPFLAGS) herd.fast.cpp -o herd.fast $(LIBS)
 
 radon1: radon1.cpp
-	$(CC) $(CPPFLAGS) $(LIBS) radon1.cpp -o radon1
+	$(CC) $(CPPFLAGS) radon1.cpp -o radon1 $(LIBS)
