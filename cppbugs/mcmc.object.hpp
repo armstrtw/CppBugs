@@ -19,6 +19,7 @@
 #define MCMC_OBJECT_HPP
 
 #include <cppbugs/mcmc.model.base.hpp>
+#include <cppbugs/mcmc.likelihood.functor.hpp>
 
 namespace cppbugs {
 
@@ -26,6 +27,7 @@ namespace cppbugs {
   public:
     MCMCObject() {}
     virtual void jump(RngBase& rng) {}
+    virtual void update() {}
     virtual void tune() {}
     virtual const double* getLogp() const { return static_cast<double*>(NULL); }
     virtual void accept() {}
@@ -39,6 +41,7 @@ namespace cppbugs {
     virtual bool isObserved() const = 0;
     virtual int getSize() const = 0; // in mcmc.specialized
     virtual void setScale(const double scale) = 0;
+    virtual LikelihoodFunctor* getLikelihoodFunctor() const { return NULL; }
   };
 
 } // namespace cppbugs

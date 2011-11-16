@@ -35,16 +35,30 @@ namespace cppbugs {
     double rejected_;
     SpecializedRng<boost::minstd_rand> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_stochastics, deterministics;
-    std::vector<const double*> logps;
+    std::vector<LikelihoodFunctor*> logp_functors;
     void jump_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->jump(rng_); } }
+    void update() { for(auto v : deterministics) v->update(); }
     void preserve_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->preserve(); } }
     void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
     void set_scale_all(std::vector<MCMCObject*>& v, const double scale) { for(size_t i = 0; i < v.size(); i++) { v[i]->setScale(scale); } }
     void tally_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(); } }
-    void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCModel(): MCModelBase(), accepted_(0), rejected_(0) {}
+    MCModel(std::vector<MCMCObject*> nodes): MCModelBase(), mcmcObjects(nodes), accepted_(0), rejected_(0) {
+      for(auto node : mcmcObjects) {
+        if(node->isStochastic()) {
+          logp_functors.push_back(node->getLikelihoodFunctor());
+        }
+
+        if(node->isStochastic() && !node->isObserved()) {
+          jumping_stochastics.push_back(node);
+        }
+
+        if(node->isDeterministc()) {
+          deterministics.push_back(node);
+        }
+      }
+    }
 
     double calcDimension(std::vector<MCMCObject*>& v) {
       double ans(0);
@@ -55,29 +69,13 @@ namespace cppbugs {
       return ans;
     }
 
-    void add(MCMCObject& p) {
-      mcmcObjects.push_back(&p);
-
-      if(p.isStochastic()) {
-        //std::cout << *p.getLogp() << std::endl;
-        logps.push_back(p.getLogp());
-      }
-
-      if(p.isStochastic() && !p.isObserved()) {
-        jumping_stochastics.push_back(&p);
-      }
-
-      if(p.isDeterministc()) {
-        deterministics.push_back(&p);
-      }
-    }
-
     double acceptance_ratio() const {
       return accepted_ / (accepted_ + rejected_);
     }
 
     void print() {
-      print_all(mcmcObjects);
+      for(auto v : deterministics)
+        v->print();
     }
 
     bool reject(const double value, const double old_logp) {
@@ -87,8 +85,8 @@ namespace cppbugs {
 
     double logp() const {
       double ans(0);
-      for(size_t i = 0; i < logps.size(); i++) {
-        ans += *logps[i];
+      for(auto f : logp_functors) {
+        ans += f->getLikelihood();
       }
       return ans;
     }

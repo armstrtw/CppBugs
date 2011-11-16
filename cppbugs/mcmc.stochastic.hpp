@@ -45,7 +45,6 @@ namespace cppbugs {
       }
     }
     virtual ~Stochastic() { delete likelihood_functor_p; }
-    const double* getLogp() const { return &logp_; }
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     bool isObserved() const { return observed_; }
@@ -65,14 +64,14 @@ namespace cppbugs {
       accepted_ = 0;
       rejected_ = 0;
     }
-    const double logp() const {
-      return logp_;
-    }
     void setScale(const double scale) {
       scale_ = scale;
     }
     double loglik() const {
       return Stochastic<T>::likelihood_functor_p ? Stochastic<T>::likelihood_functor_p->getLikelihood() : 0;
+    }
+    LikelihoodFunctor* getLikelihoodFunctor() const {
+      return likelihood_functor_p;
     }
   };
 
