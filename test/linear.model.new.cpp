@@ -10,18 +10,8 @@ using namespace cppbugs;
 using std::cout;
 using std::endl;
 
-template <typename ...Args>
-void foo(Args & ... args)
-{
-  /* ... */
-}
-
-void boo(std::vector<MCMCObject*> nodes) {
-  cout << "boo: " << nodes.size() << endl;
-}
-
 int main() {
-  const int NR = 10;
+  const int NR = 1e2;
   const int NC = 2;
   const mat y = randn<mat>(NR,1) + 10;
   mat X = mat(NR,NC);
@@ -36,7 +26,9 @@ int main() {
   b.dnorm(0.0, 0.0001);
 
   Deterministic<mat> y_hat([&]() { return X * b.value; });
-  cout << y_hat.value;
+  //cout << y_hat.value;
+
+  Deterministic<double >rsq([&]() { return  as_scalar(1 - var(y - y_hat.value) / var(y)); });
 
   Uniform<double> tau_y(1);
   tau_y.dunif(0.,100.);
@@ -47,7 +39,7 @@ int main() {
   // cout << "likelihood tau:" << &likelihood.mu_ << endl;
 
   //std::vector<MCMCObject*> nodes = {&b, &y_hat, &tau_y, &likelihood};
-  MCModel m({&b, &y_hat, &tau_y, &likelihood});
+  MCModel m({&b, &y_hat, &tau_y, &likelihood, &rsq});
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
   cout << "lm coefs" << endl << coefs;
@@ -55,7 +47,7 @@ int main() {
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;
   cout << "b: " << endl << b.mean();
   cout << "tau_y: " << tau_y.mean() << endl;
-  //cout << "R^2: " << m.rsq.mean() << endl;
+  cout << "R^2: " << rsq.mean() << endl;
   cout << "samples: " << b.history.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
 

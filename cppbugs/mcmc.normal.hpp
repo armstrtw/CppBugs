@@ -18,25 +18,13 @@
 #ifndef MCMC_NORMAL_HPP
 #define MCMC_NORMAL_HPP
 
-
+#include <functional>
 #include <cmath>
 #include <armadillo>
 #include <cppbugs/mcmc.stochastic.hpp>
 
 namespace cppbugs {
 
-  template<typename T, typename U, typename V>
-  class NormalLikelihood : public LikelihoodFunctor {
-  protected:
-    const T& x_;
-    const U& mu_;
-    const V& tau_;
-  public:
-    NormalLikelihood(const T& x, const U& mu, const V& tau): x_(x), mu_(mu), tau_(tau) {}
-    double getLikelihood() const {
-      accu(0.5*log(0.5*tau_/arma::math::pi()) - 0.5 * tau_ * pow(x_ - mu_,2.0));
-    }
-  };
 
   template<typename T>
   class Normal : public Stochastic<T> {
@@ -48,14 +36,22 @@ namespace cppbugs {
 
     // need this specialization b/c we need to do schur product btwn two mat's
     template<typename U, typename V>
-    void dnorm(const MCMCSpecialized<U>& mu, const MCMCSpecialized<V>& tau) {
-      mu_ = dynamic_cast<const MCMCObject*>(&mu);
-      tau_ = dynamic_cast<const MCMCObject*>(&mu);
-      Stochastic<T>::likelihood_functor_p = new NormalLikelihood<T,U,V>(Stochastic<T>::value, mu.value, tau.value);
+    void dnorm(const MCMCSpecialized<U>& mu_, const MCMCSpecialized<V>& tau_) {
+      //mu_ = dynamic_cast<const MCMCObject*>(&mu);
+      //tau_ = dynamic_cast<const MCMCObject*>(&tau);
+      const T& x = Stochastic<T>::value;
+      const U& mu = mu_.value;
+      const V& tau = tau_.value;
+      Stochastic<T>::likelihood_functor = [&x,&mu,&tau]() {
+        return accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau * pow(x - mu,2.0));
+      };
     }
 
     void dnorm(const double& mu, const double& tau) {
-      Stochastic<T>::likelihood_functor_p = new NormalLikelihood<T,double,double>(Stochastic<T>::value, mu, tau);
+      T& x = Stochastic<T>::value;
+      Stochastic<T>::likelihood_functor = [&x,&mu,&tau]() {
+        return accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau * pow(x - mu,2.0));;
+      };
     }
   };
 

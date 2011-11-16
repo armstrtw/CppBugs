@@ -41,7 +41,7 @@ namespace cppbugs {
     virtual bool isObserved() const = 0;
     virtual int getSize() const = 0; // in mcmc.specialized
     virtual void setScale(const double scale) = 0;
-    virtual LikelihoodFunctor* getLikelihoodFunctor() const { return NULL; }
+    virtual std::function<double ()> getLikelihoodFunctor() const { return NULL; }
   };
 
 } // namespace cppbugs

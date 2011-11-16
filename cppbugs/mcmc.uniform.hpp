@@ -25,32 +25,26 @@
 
 namespace cppbugs {
 
-
-  template<typename T, typename U, typename V>
-  class UniformLikelihood : public LikelihoodFunctor {
-  protected:
-    const T& x;
-    const U& lower;
-    const V& upper;
-  public:
-    UniformLikelihood(const T& x_, const U& lower_, const V& upper_): x(x_), lower(lower_), upper(upper_) {}
-    double getLikelihood() const {
-      return (x < lower || x > upper) ? -std::numeric_limits<double>::infinity() : -accu(log(upper - lower));
-    }
-  };
-
   template<typename T>
   class Uniform : public Stochastic<T> {
   public:
     Uniform(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
 
     template<typename U, typename V>
-    void dunif(const MCMCSpecialized<U>& lower, MCMCSpecialized<V>& upper) {
-      Stochastic<T>::likelihood_functor_p = new UniformLikelihood<T,U,V>(Stochastic<T>::value, lower.value, upper.value);
+    void dunif(const MCMCSpecialized<U>& lower_, MCMCSpecialized<V>& upper_) {
+      const T& x = Stochastic<T>::value;
+      const U& lower = lower_.value;
+      const V& upper = upper_.value;
+      Stochastic<T>::likelihood_functor = [&x,&lower,&upper]() {
+        return (x < lower || x > upper) ? -std::numeric_limits<double>::infinity() : -accu(log(upper - lower));
+      };
     }
 
     void dunif(const double& lower, const double& upper) {
-      Stochastic<T>::likelihood_functor_p = new UniformLikelihood<T,double,double>(Stochastic<T>::value, lower, upper);
+      const T& x = Stochastic<T>::value;
+      Stochastic<T>::likelihood_functor = [&x,&lower,&upper]() {
+        return (x < lower || x > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
+      };
     }
   };
 } // namespace cppbugs
