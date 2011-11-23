@@ -18,20 +18,15 @@
 #ifndef MCMC_DETERMINISTIC_HPP
 #define MCMC_DETERMINISTIC_HPP
 
-#include <algorithm>
-#include <functional>
 #include <cppbugs/mcmc.specialized.hpp>
 
 namespace cppbugs {
 
   template<typename T>
   class Deterministic : public MCMCSpecialized<T> {
-    std::function<T ()> fo_;
   public:
-    void update() {
-      MCMCSpecialized<T>::value = fo_();
-    }
-    Deterministic(std::function<T ()> fo): MCMCSpecialized<T>(fo()), fo_(fo) {}
+    using MCMCSpecialized<T>::operator=;
+    Deterministic(): MCMCSpecialized<T>(T()) {}
     bool isDeterministc() const { return true; }
     bool isStochastic() const { return false; }
     bool isObserved() const { return true; }

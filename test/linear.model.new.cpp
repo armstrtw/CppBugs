@@ -23,23 +23,21 @@ int main() {
   vec err = y - X*coefs;
 
   Normal<vec> b(randn<vec>(2));
-  b.dnorm(0.0, 0.0001);
-
-  Deterministic<mat> y_hat([&]() { return X * b.value; });
-  //cout << y_hat.value;
-
-  Deterministic<double >rsq([&]() { return  as_scalar(1 - var(y - y_hat.value) / var(y)); });
-
+  Deterministic<mat> y_hat;
+  Deterministic<double> rsq;
   Uniform<double> tau_y(1);
-  tau_y.dunif(0.,100.);
-
   Normal<mat> likelihood(y,true);
-  likelihood.dnorm(y_hat,tau_y);
-  // cout << "likelihood mu:" << &likelihood.mu_ << endl;
-  // cout << "likelihood tau:" << &likelihood.mu_ << endl;
 
-  //std::vector<MCMCObject*> nodes = {&b, &y_hat, &tau_y, &likelihood};
-  MCModel m({&b, &y_hat, &tau_y, &likelihood, &rsq});
+  b.dnorm(0.0, 0.0001);
+  tau_y.dunif(0.,100.);
+  likelihood.dnorm(y_hat,tau_y);
+
+  std::function<void ()> model = [&]() {
+    y_hat = X * b.value;
+    rsq = as_scalar(1 - var(y - y_hat.value) / var(y));
+  };
+
+  MCModel m({&b, &y_hat, &tau_y, &likelihood, &rsq},model);
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
   cout << "lm coefs" << endl << coefs;

@@ -29,23 +29,23 @@
 
 namespace cppbugs {
 
-  class MCModel : public MCModelBase {
+  class MCModel {
   private:
     double accepted_;
     double rejected_;
     SpecializedRng<boost::minstd_rand> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_stochastics, deterministics;
     std::vector<std::function<double ()> > logp_functors;
+    std::function<void ()> update;
 
     void jump() { for(auto v : jumping_stochastics) { v->jump(rng_); } }
-    void update() { for(auto v : deterministics) v->update(); }
     void preserve() { for(auto v : mcmcObjects) { v->preserve(); } }
     void revert() { for(auto v : mcmcObjects) { v->revert(); } }
     void set_scale(const double scale) { for(auto v : jumping_stochastics) { v->setScale(scale); } }
     void tally() { for(auto v : mcmcObjects) { v->tally(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCModel(std::vector<MCMCObject*> nodes): MCModelBase(), mcmcObjects(nodes), accepted_(0), rejected_(0) {
+    MCModel(std::vector<MCMCObject*> nodes, std::function<void ()> update_): mcmcObjects(nodes), accepted_(0), rejected_(0), update(update_) {
       for(auto node : mcmcObjects) {
         if(node->isStochastic()) {
           logp_functors.push_back(node->getLikelihoodFunctor());
@@ -59,6 +59,8 @@ namespace cppbugs {
           deterministics.push_back(node);
         }
       }
+      // init values
+      update();
     }
 
     double calcDimension() {
@@ -79,9 +81,13 @@ namespace cppbugs {
         v->print();
     }
 
+    // bool reject(const double value, const double old_logp) {
+    //   double r = exp(value - old_logp);
+    //   return bad_logp(value) || (rng_.uniform() > r && r < 1)  ? true : false;
+    // }
+
     bool reject(const double value, const double old_logp) {
-      double r = exp(value - old_logp);
-      return bad_logp(value) || (rng_.uniform() > r && r < 1)  ? true : false;
+      return bad_logp(value) || log(rng_.uniform()) > (value - old_logp) ? true : false;
     }
 
     double logp() const {
@@ -121,25 +127,8 @@ namespace cppbugs {
       }
     }
 
-    void sample(int iterations, int burn, int adapt, int thin) {
-      const double scale_num = 2.38;
+    void run(int iterations, int burn, int thin) {
       double logp_value,old_logp_value;
-
-      if(iterations % thin) {
-        std::cout << "ERROR: interations not a multiple of thin." << std::endl;
-        return;
-      }
-
-      double d = calcDimension();
-      //std::cout << "dim size:" << d << std::endl;
-      //double ideal_scale = sqrt(scale_num / pow(d,2));
-      double ideal_scale = scale_num / sqrt(d);
-      //std::cout << "ideal_scale: " << ideal_scale << std::endl;
-      //set_scale(ideal_scale);
-
-      // tuning phase
-      tune(adapt,static_cast<int>(adapt/100));
-
       logp_value  = -std::numeric_limits<double>::infinity();
       old_logp_value = -std::numeric_limits<double>::infinity();
       for(int i = 1; i <= (iterations + burn); i++) {
@@ -159,6 +148,29 @@ namespace cppbugs {
           tally();
         }
       }
+
+    }
+
+    void sample(int iterations, int burn, int adapt, int thin) {
+      const double scale_num = 2.38;
+
+      if(iterations % thin) {
+        std::cout << "ERROR: interations not a multiple of thin." << std::endl;
+        return;
+      }
+
+      double d = calcDimension();
+      //std::cout << "dim size:" << d << std::endl;
+      //double ideal_scale = sqrt(scale_num / pow(d,2));
+      double ideal_scale = scale_num / sqrt(d);
+      //std::cout << "ideal_scale: " << ideal_scale << std::endl;
+      //set_scale(ideal_scale);
+
+      // tuning phase
+      tune(adapt,static_cast<int>(adapt/100));
+
+      // sampling
+      run(iterations, burn, thin);
     }
   };
 } // namespace cppbugs
