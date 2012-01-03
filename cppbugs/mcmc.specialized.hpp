@@ -65,7 +65,7 @@ namespace cppbugs {
     void print() const { std::cout << value << std::endl; }
     double mean() const {
       double ans(0);
-      for(typename std::list<double>::const_iterator it = history.begin(); it != history.end(); it++) {
+      for(std::list<double>::const_iterator it = history.begin(); it != history.end(); it++) {
         ans += *it;
       }
       ans /= static_cast<double>(history.size());
