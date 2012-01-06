@@ -33,7 +33,7 @@ namespace cppbugs {
     MCMCSpecialized(const T& shape): MCMCObject(), save_history_(true), value(shape), old_value(shape) {}
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
-    void tally() { if(save_history_) { history.push_back(value); } }
+    virtual void tally() { if(save_history_) { history.push_back(value); } }
     void print() const { std::cout << value << std::endl; }
     T mean() const {
       T ans(value);
@@ -61,11 +61,11 @@ namespace cppbugs {
     MCMCSpecialized(const double shape): MCMCObject(), save_history_(true), value(shape), old_value(shape) {}
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
-    void tally() { if(save_history_) { history.push_back(value); } }
+    virtual void tally() { if(save_history_) { history.push_back(value); } }
     void print() const { std::cout << value << std::endl; }
     double mean() const {
       double ans(0);
-      for(typename std::list<double>::const_iterator it = history.begin(); it != history.end(); it++) {
+      for(std::list<double>::const_iterator it = history.begin(); it != history.end(); it++) {
         ans += *it;
       }
       ans /= static_cast<double>(history.size());
