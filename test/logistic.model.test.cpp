@@ -2,6 +2,7 @@
 #include <vector>
 #include <armadillo>
 #include <cppbugs/cppbugs.hpp>
+#include <algorithm>
 
 using namespace arma;
 using namespace cppbugs;
@@ -56,8 +57,16 @@ int main() {
   TestModel m(y,X, size, randn<vec>(NC));
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
+  typename std::list<double>::iterator max_logp_it = std::max_element(m.likelihood.logp_history.begin(), m.likelihood.logp_history.end());
+  typename std::list<double>::iterator min_logp_it = std::min_element(m.likelihood.logp_history.begin(), m.likelihood.logp_history.end());
+  typename std::list<vec>::iterator max_b_it = m.b.history.begin(); std::advance(max_b_it, std::distance(m.likelihood.logp_history.begin(),max_logp_it));
+  typename std::list<vec>::iterator min_b_it = m.b.history.begin(); std::advance(min_b_it, std::distance(m.likelihood.logp_history.begin(),min_logp_it));
+  cout << "data generated from b:" << endl << real_b;
+  cout << "highest log likelihood attained in sampling:" << *max_logp_it << endl;
+  cout << "highest likelihood sampled b:"<<endl<< *max_b_it;
+  cout << "lowest log likelihood attained in sampling:" << *min_logp_it << endl;
+  cout << "lowest likelihood sampled b:"<<endl<< *min_b_it;
 
-  cout << "maximum likelihood b:" << endl << real_b;
 
   cout << "mean model likelihood:" << m.likelihood.meanLogLikelihood() << endl;
   cout << "b: " << endl << m.b.mean();
