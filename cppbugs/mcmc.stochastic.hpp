@@ -34,7 +34,17 @@ namespace cppbugs {
   protected:
     bool observed_;
     bool save_logp_;
-    double logp_,accepted_,rejected_,scale_;
+    double old_logp_,logp_,accepted_,rejected_,scale_;
+
+    void revert() {
+      logp_ = old_logp_;
+      MCMCSpecialized<T>::revert();
+    }
+
+    void preserve() {
+      old_logp_ = logp_;
+      MCMCSpecialized<T>::preserve();
+    }
 
     template<typename U>
     double accu(const U&  x) {

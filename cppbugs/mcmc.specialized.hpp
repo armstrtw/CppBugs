@@ -31,8 +31,8 @@ namespace cppbugs {
     T old_value;
     std::list<T> history;
     MCMCSpecialized(const T& shape): MCMCObject(), save_history_(true), value(shape), old_value(shape) {}
-    void preserve() { old_value = value; }
-    void revert() { value = old_value; }
+    virtual void preserve() { old_value = value; }
+    virtual void revert() { value = old_value; }
     virtual void tally() { if(save_history_) { history.push_back(value); } }
     void print() const { std::cout << value << std::endl; }
     T mean() const {
