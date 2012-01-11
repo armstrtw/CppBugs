@@ -33,7 +33,18 @@ namespace cppbugs {
   class Stochastic : public MCMCSpecialized<T> {
   protected:
     bool observed_;
-    double logp_,accepted_,rejected_,scale_;
+    bool save_logp_;
+    double old_logp_,logp_,accepted_,rejected_,scale_;
+
+    void revert() {
+      logp_ = old_logp_;
+      MCMCSpecialized<T>::revert();
+    }
+
+    void preserve() {
+      old_logp_ = logp_;
+      MCMCSpecialized<T>::preserve();
+    }
 
     template<typename U>
     double accu(const U&  x) {
@@ -83,14 +94,17 @@ namespace cppbugs {
       return ans;
     }
   public:
+    std::list<double> logp_history;
     Stochastic(const T& value, const bool observed=false):
-      MCMCSpecialized<T>(value), observed_(observed),
+      MCMCSpecialized<T>(value), observed_(observed), save_logp_(false),
       logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),
       scale_(1)
     {
       // don't need to save history of observed variables
       if(observed_) {
         MCMCSpecialized<T>::setSaveHistory(false);
+        // save the log likelihood history for observed variables
+        setSaveLogP(true);
       }
     }
     const double* getLogp() const { return &logp_; }
@@ -119,6 +133,23 @@ namespace cppbugs {
     void setScale(const double scale) {
       scale_ = scale;
     }
+    void setSaveLogP(const bool save_logp) {
+      save_logp_ = save_logp;
+    }
+    void tally() {
+      // call base class tally() (to save value history if needed)
+      MCMCSpecialized<T>::tally();
+      if (save_logp_) { logp_history.push_back(logp_); }
+    }
+    double meanLogLikelihood() const {
+      double ans(0);
+      for(typename std::list<double>::const_iterator it = logp_history.begin(); it != logp_history.end(); it++) {
+        ans += *it;
+      }
+      ans /= static_cast<double>(logp_history.size());
+      return ans;
+    }
+
   };
 
 } // namespace cppbugs
