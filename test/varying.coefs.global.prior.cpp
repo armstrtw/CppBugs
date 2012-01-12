@@ -38,7 +38,7 @@ public:
   {
     rowdup.ones(NG);
     permutation_matrix.fill(0.0);
-    for(uint i = 0; i < groups.n_elem; i++) {
+    for(unsigned int i = 0; i < groups.n_elem; i++) {
       permutation_matrix(i,groups[i]) = 1.0;
     }
 
@@ -67,9 +67,9 @@ public:
 
 int main() {
 
-  const uint NR = 100;
-  const uint NC = 2;
-  const uint J = 3;
+  const unsigned int NR = 100;
+  const unsigned int NC = 2;
+  const unsigned int J = 3;
 
   mat X = randn<mat>(NR,NC);
   mat y = randn<mat>(NR,1);
@@ -78,19 +78,19 @@ int main() {
 
   // create fake groups
   ivec groups(NR);
-  for(uint i = 0; i < NR; i++) {
+  for(unsigned int i = 0; i < NR; i++) {
     groups[i] = i % J;
   }
 
   // shift y's by group sums
   vec group_shift(J);
-  for(uint i = 0; i < J; i++) {
+  for(unsigned int i = 0; i < J; i++) {
     group_shift[i] = (i + 1) * 10;
   }
   cout << "group_shift" << endl << group_shift;
 
   // do the shift on the data
-  for(uint i = 0; i < NR; i++) {
+  for(unsigned int i = 0; i < NR; i++) {
     y[i] += group_shift[ groups[i] ];
   }
 

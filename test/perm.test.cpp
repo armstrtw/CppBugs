@@ -20,7 +20,7 @@ int main() {
   vec b_herd = randn<vec>(N_herd);
 
   permutation_matrix.fill(0.0);
-  for(uint i = 0; i < N; i++) {
+  for(unsigned int i = 0; i < N; i++) {
     permutation_matrix(i,herd[i]) = 1.0;
   }
   cout << permutation_matrix << endl;

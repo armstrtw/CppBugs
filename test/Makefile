@@ -1,8 +1,8 @@
 
 CC = g++
 ##CPPFLAGS = -I.. -Wall -g
-CPPFLAGS = -I.. -Wall -O2
-ARMADILLO_LIBS = -llapack
+CPPFLAGS = -I.. -Wall -O2 -I../../../R/R-2.14.0/library/RcppArmadillo/include -I../../../../../../boost_1_48_0/
+ARMADILLO_LIBS = -L../../../../../../lib -llapack 
 ##ARMADILLO_LIBS = -lgoto2 -lpthread -lgfortran
 LIBS = $(ARMADILLO_LIBS)
 
