@@ -2,7 +2,6 @@
 CC = g++
 ##CPPFLAGS = -I.. -Wall -g
 CPPFLAGS = -I.. -Wall -O2
-##ARMADILLO_LIBS = -lgoto2 -lpthread -lgfortran
 ARMADILLO_LIBS = -larmadillo
 ##ARMADILLO_LIBS = -lblas -llapack
 LIBS = $(ARMADILLO_LIBS)
@@ -11,6 +10,10 @@ all: linear.model.test varying.coefs.test varying.coefs.global.prior price herd 
 
 clean:
 	rm -f linear.model.test linear.model.test.static varying.coefs.test price herd herd.fast radon1 varying.coefs.global.prior
+
+
+logistic.model.test: logistic.model.test.cpp
+	$(CC) $(CPPFLAGS) $(LIBS) logistic.model.test.cpp -o logistic.model.test
 
 linear.model.test: linear.model.test.cpp
 	$(CC) $(CPPFLAGS) linear.model.test.cpp -o linear.model.test $(LIBS)
