@@ -1,9 +1,13 @@
 
 CC = g++
 ##CPPFLAGS = -I.. -Wall -g
-CPPFLAGS = -I.. -Wall -O2 -I../../../R/R-2.14.0/library/RcppArmadillo/include -I../../../../../../boost_1_48_0/
-ARMADILLO_LIBS = -L../../../../../../lib -llapack 
+#CPPFLAGS = -I.. -Wall -O2 -I../../../R/R-2.14.0/library/RcppArmadillo/include -I../../../../../../boost_1_48_0/
+#ARMADILLO_LIBS = -L../../../../../../lib -llapack 
 ##ARMADILLO_LIBS = -lgoto2 -lpthread -lgfortran
+
+CPPFLAGS = -I.. -Wall -O2 
+ARMADILLO_LIBS = -llapack -lblas
+
 LIBS = $(ARMADILLO_LIBS)
 
 all: linear.model.test varying.coefs.test varying.coefs.global.prior price herd herd.fast radon1
