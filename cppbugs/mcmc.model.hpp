@@ -45,7 +45,7 @@ namespace cppbugs {
     void tally() { for(auto v : mcmcObjects) { v->tally(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCModel(std::vector<MCMCObject*> nodes, std::function<void ()> update_): mcmcObjects(nodes), accepted_(0), rejected_(0), update(update_) {
+    MCModel(std::vector<MCMCObject*> nodes, std::function<void ()> update_): accepted_(0), rejected_(0), mcmcObjects(nodes), update(update_) {
       for(auto node : mcmcObjects) {
         if(node->isStochastic()) {
           logp_functors.push_back(node->getLikelihoodFunctor());
@@ -152,17 +152,17 @@ namespace cppbugs {
     }
 
     void sample(int iterations, int burn, int adapt, int thin) {
-      const double scale_num = 2.38;
+      //const double scale_num = 2.38;
 
       if(iterations % thin) {
         std::cout << "ERROR: interations not a multiple of thin." << std::endl;
         return;
       }
 
-      double d = calcDimension();
+      //double d = calcDimension();
       //std::cout << "dim size:" << d << std::endl;
       //double ideal_scale = sqrt(scale_num / pow(d,2));
-      double ideal_scale = scale_num / sqrt(d);
+      //double ideal_scale = scale_num / sqrt(d);
       //std::cout << "ideal_scale: " << ideal_scale << std::endl;
       //set_scale(ideal_scale);
 
