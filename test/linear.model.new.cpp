@@ -23,31 +23,20 @@ int main() {
   vec err = y - X*coefs;
 
   vec b = randn<vec>(2);
-  Normal<vec> b_lik(b);
-  //Deterministic<mat> y_hat;
   mat y_hat;
-  //double rsq(0);
-  //Deterministic<double> rsq_d(rsq);
-
+  double rsq(0);
   double tau_y(1);
-  //Uniform<double> tau_y_lik(tau_y);
-  //Normal<mat> likelihood(y,true);
-
-  //b_lik.dnorm(0.0, 0.0001);
-  //tau_y_lik.dunif(0,100);
-  //likelihood.dnorm(y_hat,tau_y);
 
   std::function<void ()> model = [&]() {
     y_hat = X * b;
-    //rsq = as_scalar(1 - var(y - y_hat) / var(y));
+    rsq = as_scalar(1 - var(y - y_hat) / var(y));
   };
 
-  //MCModel m({&b_lik, &tau_y_lik, &likelihood, &rsq_d},model);
   MCModel m(model);
   Normal<vec>& b_hist = m.normal(b).dnorm(0.0, 0.0001);
-  m.uniform(tau_y).dunif(0,100);
+  Uniform<double>& tau_y_hist = m.uniform(tau_y).dunif(0,100);
   m.normal(y,true).dnorm(y_hat,tau_y);
-  //m.addNode(&rsq_d);
+  Deterministic<double>& rsq_hist = m.deterministic(rsq);
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
@@ -55,9 +44,9 @@ int main() {
   cout << "err sd: " << stddev(err,0) << endl;;
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;
   cout << "b: " << endl << b_hist.mean();
-  //cout << "tau_y: " << tau_y_lik.mean() << endl;
-  //cout << "R^2: " << rsq_d.mean() << endl;
-  //cout << "samples: " << b_lik.history.size() << endl;
+  cout << "tau_y: " << tau_y_hist.mean() << endl;
+  cout << "R^2: " << rsq_hist.mean() << endl;
+  cout << "samples: " << b_hist.history.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
 
   return 0;

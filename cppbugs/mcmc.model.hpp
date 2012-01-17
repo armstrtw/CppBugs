@@ -216,13 +216,10 @@ namespace cppbugs {
     }
 
     template<typename T>
-    MCMCObject& getNode(T& x) {
-      for(auto node : mcmcObjects) {
-        if(&(node->value) == &x) {
-          return &node;
-        }
-      }
-      throw std::logic_error("node not found.");
+    Deterministic<T>& deterministic(T& x) {
+      Deterministic<T>* node = new Deterministic<T>(x);
+      mcmcObjects.push_back(node);
+      return *node;
     }
   };
 } // namespace cppbugs
