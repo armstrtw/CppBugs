@@ -29,7 +29,7 @@ namespace cppbugs {
   template<typename T>
   class Normal : public Stochastic<T> {
   public:
-    Normal(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
+    Normal(T& value, const bool observed=false): Stochastic<T>(value,observed) {}
 
     // need this specialization b/c we need to do schur product btwn two mat's
     template<typename U, typename V>

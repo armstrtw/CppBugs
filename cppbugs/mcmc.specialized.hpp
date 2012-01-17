@@ -27,10 +27,10 @@ namespace cppbugs {
   class MCMCSpecialized : public MCMCObject {
     bool save_history_;
   public:
-    T value;
+    T& value;
     T old_value;
     std::list<T> history;
-    MCMCSpecialized(const T& shape): MCMCObject(), save_history_(true), value(shape), old_value(shape) {}
+    MCMCSpecialized(T& shape): MCMCObject(), save_history_(true), value(shape), old_value(shape) {}
 
     static int sum_dims(const double& value) { return 1; }
     static int sum_dims(const arma::mat& value) { return value.n_elem; }

@@ -33,7 +33,7 @@ namespace cppbugs {
     double logp_,accepted_,rejected_,scale_;
     std::function<double ()> likelihood_functor;
   public:
-    Stochastic(const T& value, const bool observed=false):
+    Stochastic(T& value, const bool observed=false):
       MCMCSpecialized<T>(value), observed_(observed),
       logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),
       scale_(1)

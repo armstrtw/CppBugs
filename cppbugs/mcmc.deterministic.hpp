@@ -26,7 +26,7 @@ namespace cppbugs {
   class Deterministic : public MCMCSpecialized<T> {
   public:
     using MCMCSpecialized<T>::operator=;
-    Deterministic(): MCMCSpecialized<T>(T()) {}
+    Deterministic(T& value): MCMCSpecialized<T>(value) {}
     bool isDeterministc() const { return true; }
     bool isStochastic() const { return false; }
     bool isObserved() const { return true; }

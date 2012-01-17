@@ -28,7 +28,7 @@ namespace cppbugs {
   template<typename T>
   class Uniform : public Stochastic<T> {
   public:
-    Uniform(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
+    Uniform(T& value, const bool observed=false): Stochastic<T>(value,observed) {}
 
     template<typename U, typename V>
     void dunif(const MCMCSpecialized<U>& lower_, MCMCSpecialized<V>& upper_) {
