@@ -45,9 +45,12 @@ namespace cppbugs {
     void tally() { for(auto v : mcmcObjects) { v->tally(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCModel(std::vector<MCMCObject*> nodes, std::function<void ()> update_): accepted_(0), rejected_(0), mcmcObjects(nodes), update(update_) {
-      for(auto node : mcmcObjects) {
-        if(node->isStochastic()) {
+    MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), update(update_) {}
+
+    void addNode(MCMCObject* node) {
+      mcmcObjects.push_back(node);
+
+      if(node->isStochastic()) {
           logp_functors.push_back(node->getLikelihoodFunctor());
         }
 
@@ -58,7 +61,6 @@ namespace cppbugs {
         if(node->isDeterministc()) {
           deterministics.push_back(node);
         }
-      }
       // init values
       update();
     }

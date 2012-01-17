@@ -42,8 +42,13 @@ int main() {
     rsq = as_scalar(1 - var(y - y_hat) / var(y));
   };
 
-  //MCModel m({&b_lik, &tau_y_lik, &likelihood, &rsq},model);
-  MCModel m({&b_lik, &tau_y_lik, &likelihood, &rsq_d},model);
+  //MCModel m({&b_lik, &tau_y_lik, &likelihood, &rsq_d},model);
+  MCModel m(model);
+  m.addNode(&b_lik);
+  m.addNode(&tau_y_lik);
+  m.addNode(&likelihood);
+  m.addNode(&rsq_d);
+
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
   cout << "lm coefs" << endl << coefs;
