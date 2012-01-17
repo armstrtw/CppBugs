@@ -21,6 +21,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <exception>
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.hpp>
 #include <cppbugs/mcmc.model.base.hpp>
@@ -61,6 +62,28 @@ namespace cppbugs {
         if(node->isDeterministc()) {
           deterministics.push_back(node);
         }
+      // init values
+      update();
+    }
+
+    void initChain() {
+      logp_functors.clear();
+      jumping_stochastics.clear();
+      deterministics.clear();
+
+      for(auto node : mcmcObjects) {
+        if(node->isStochastic()) {
+          logp_functors.push_back(node->getLikelihoodFunctor());
+        }
+
+        if(node->isStochastic() && !node->isObserved()) {
+          jumping_stochastics.push_back(node);
+        }
+
+        if(node->isDeterministc()) {
+          deterministics.push_back(node);
+        }
+      }
       // init values
       update();
     }
@@ -168,11 +191,38 @@ namespace cppbugs {
       //std::cout << "ideal_scale: " << ideal_scale << std::endl;
       //set_scale(ideal_scale);
 
+      // setup logp's etc.
+      initChain();
+
       // tuning phase
       tune(adapt,static_cast<int>(adapt/100));
 
       // sampling
       run(iterations, burn, thin);
+    }
+
+    template<typename T>
+    Normal<T>& normal(T& x, const bool observed = false) {
+      Normal<T>* node = new Normal<T>(x,observed);
+      mcmcObjects.push_back(node);
+      return *node;
+    }
+
+    template<typename T>
+    Uniform<T>& uniform(T& x, const bool observed = false) {
+      Uniform<T>* node = new Uniform<T>(x, observed);
+      mcmcObjects.push_back(node);
+      return *node;
+    }
+
+    template<typename T>
+    MCMCObject& getNode(T& x) {
+      for(auto node : mcmcObjects) {
+        if(&(node->value) == &x) {
+          return &node;
+        }
+      }
+      throw std::logic_error("node not found.");
     }
   };
 } // namespace cppbugs
