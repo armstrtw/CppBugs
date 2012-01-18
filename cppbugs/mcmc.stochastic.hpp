@@ -31,12 +31,12 @@ namespace cppbugs {
   class Stochastic : public MCMCSpecialized<T> {
   protected:
     bool observed_;
-    double logp_,accepted_,rejected_,scale_;
+    double accepted_,rejected_,scale_;
     std::function<double ()> likelihood_functor;
   public:
     Stochastic(T& value, const bool observed=false):
       MCMCSpecialized<T>(value), observed_(observed),
-      logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),
+      accepted_(0), rejected_(0),
       scale_(1)
     {
       // don't need to save history of observed variables
