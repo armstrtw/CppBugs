@@ -21,6 +21,8 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <map>
+#include <exception>
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.hpp>
 #include <cppbugs/mcmc.model.base.hpp>
@@ -28,48 +30,71 @@
 #include <cppbugs/cppbugs.hpp>
 
 namespace cppbugs {
+  typedef std::map<void*,MCMCObject*> vmc_map;
+  typedef std::map<void*,MCMCObject*>::iterator vmc_map_iter;
 
-  class MCModel : public MCModelBase {
+  class MCModel {
   private:
     double accepted_;
     double rejected_;
     SpecializedRng<boost::minstd_rand> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_stochastics, deterministics;
-    std::vector<const double*> logps;
-    void jump_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->jump(rng_); } }
-    void preserve_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->preserve(); } }
-    void revert_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->revert(); } }
-    void set_scale_all(std::vector<MCMCObject*>& v, const double scale) { for(size_t i = 0; i < v.size(); i++) { v[i]->setScale(scale); } }
-    void tally_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->tally(); } }
-    void print_all(std::vector<MCMCObject*>& v) { for(size_t i = 0; i < v.size(); i++) { v[i]->print(); } }
+    std::vector<std::function<double ()> > logp_functors;
+    std::function<void ()> update;
+    vmc_map data_node_map;
+
+    void jump() { for(auto v : jumping_stochastics) { v->jump(rng_); } }
+    void preserve() { for(auto v : mcmcObjects) { v->preserve(); } }
+    void revert() { for(auto v : mcmcObjects) { v->revert(); } }
+    void set_scale(const double scale) { for(auto v : jumping_stochastics) { v->setScale(scale); } }
+    void tally() { for(auto v : mcmcObjects) { v->tally(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCModel(): MCModelBase(), accepted_(0), rejected_(0) {}
-
-    double calcDimension(std::vector<MCMCObject*>& v) {
-      double ans(0);
-
-      for(size_t i = 0; i < v.size(); i++) {
-        ans += v[i]->getSize();
+    MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), update(update_) {}
+    ~MCModel() {
+      // use data_node_map as delete list
+      // only objects allocated by this class are inserted thre
+      // addNode allows user allocated objects to enter the mcmcObjects vector
+      for(auto m : data_node_map) {
+        delete m.second;
       }
-      return ans;
     }
 
-    void add(MCMCObject& p) {
-      mcmcObjects.push_back(&p);
+    // allows node to be added without being put on the delete list
+    // for those who want full control of their memory...
+    void addNode(MCMCObject* node) {
+      mcmcObjects.push_back(node);
+    }
 
-      if(p.isStochastic()) {
-        //std::cout << *p.getLogp() << std::endl;
-        logps.push_back(p.getLogp());
-      }
+    void initChain() {
+      logp_functors.clear();
+      jumping_stochastics.clear();
+      deterministics.clear();
 
-      if(p.isStochastic() && !p.isObserved()) {
-        jumping_stochastics.push_back(&p);
-      }
+      for(auto node : mcmcObjects) {
+        if(node->isStochastic()) {
+          logp_functors.push_back(node->getLikelihoodFunctor());
+        }
 
-      if(p.isDeterministc()) {
-        deterministics.push_back(&p);
+        if(node->isStochastic() && !node->isObserved()) {
+          jumping_stochastics.push_back(node);
+        }
+
+        if(node->isDeterministc()) {
+          deterministics.push_back(node);
+        }
       }
+      // init values
+      update();
+    }
+
+    double calcDimension() {
+      double ans(0);
+
+      for(auto v : jumping_stochastics) {
+        ans += v->getSize();
+      }
+      return ans;
     }
 
     double acceptance_ratio() const {
@@ -77,18 +102,23 @@ namespace cppbugs {
     }
 
     void print() {
-      print_all(mcmcObjects);
+      for(auto v : deterministics)
+        v->print();
     }
 
+    // bool reject(const double value, const double old_logp) {
+    //   double r = exp(value - old_logp);
+    //   return bad_logp(value) || (rng_.uniform() > r && r < 1)  ? true : false;
+    // }
+
     bool reject(const double value, const double old_logp) {
-      double r = exp(value - old_logp);
-      return bad_logp(value) || (rng_.uniform() > r && r < 1)  ? true : false;
+      return bad_logp(value) || log(rng_.uniform()) > (value - old_logp) ? true : false;
     }
 
     double logp() const {
       double ans(0);
-      for(size_t i = 0; i < logps.size(); i++) {
-        ans += *logps[i];
+      for(auto f : logp_functors) {
+        ans += f();
       }
       return ans;
     }
@@ -99,67 +129,113 @@ namespace cppbugs {
       old_logp_value = -std::numeric_limits<double>::infinity();
 
       for(int i = 1; i <= iterations; i++) {
-	for(std::vector<MCMCObject*>::iterator it = jumping_stochastics.begin(); it != jumping_stochastics.end(); it++) {
+	for(auto it : jumping_stochastics) {
           old_logp_value = logp_value;
-          (*it)->preserve();
-          (*it)->jump(rng_);
+          it->preserve();
+          it->jump(rng_);
           update();
           logp_value = logp();
           if(reject(logp_value, old_logp_value)) {
-            (*it)->revert();
+            it->revert();
             logp_value = old_logp_value;
-            (*it)->reject();
+            it->reject();
           } else {
-            (*it)->accept();
+            it->accept();
           }
 	}
 	if(i % tuning_step == 0) {
           //std::cout << "tuning at step: " << i << std::endl;
-	  for(std::vector<MCMCObject*>::iterator it = jumping_stochastics.begin(); it != jumping_stochastics.end(); it++) {
-	    (*it)->tune();
+	  for(auto it : jumping_stochastics) {
+	    it->tune();
 	  }
 	}
       }
     }
 
-    void sample(int iterations, int burn, int adapt, int thin) {
-      const double scale_num = 2.38;
+    void run(int iterations, int burn, int thin) {
       double logp_value,old_logp_value;
-
-      if(iterations % thin) {
-        std::cout << "ERROR: interations not a multiple of thin." << std::endl;
-        return;
-      }
-
-      double d = calcDimension(jumping_stochastics);
-      //std::cout << "dim size:" << d << std::endl;
-      //double ideal_scale = sqrt(scale_num / pow(d,2));
-      double ideal_scale = scale_num / sqrt(d);
-      //std::cout << "ideal_scale: " << ideal_scale << std::endl;
-      //set_scale_all(jumping_stochastics,ideal_scale);
-
-      // tuning phase
-      tune(adapt,static_cast<int>(adapt/100));
-
       logp_value  = -std::numeric_limits<double>::infinity();
       old_logp_value = -std::numeric_limits<double>::infinity();
       for(int i = 1; i <= (iterations + burn); i++) {
         old_logp_value = logp_value;
-        preserve_all(mcmcObjects);
-        jump_all(jumping_stochastics);
+        preserve();
+        jump();
         update();
         logp_value = logp();
         if(reject(logp_value, old_logp_value)) {
-          revert_all(mcmcObjects);
+          revert();
           logp_value = old_logp_value;
           rejected_ += 1;
         } else {
           accepted_ += 1;
         }
         if(i > burn && (i % thin == 0)) {
-          tally_all(mcmcObjects);
+          tally();
         }
       }
+
+    }
+
+    void sample(int iterations, int burn, int adapt, int thin) {
+      //const double scale_num = 2.38;
+
+      if(iterations % thin) {
+        std::cout << "ERROR: interations not a multiple of thin." << std::endl;
+        return;
+      }
+
+      //double d = calcDimension();
+      //std::cout << "dim size:" << d << std::endl;
+      //double ideal_scale = sqrt(scale_num / pow(d,2));
+      //double ideal_scale = scale_num / sqrt(d);
+      //std::cout << "ideal_scale: " << ideal_scale << std::endl;
+      //set_scale(ideal_scale);
+
+      // setup logp's etc.
+      initChain();
+
+      // tuning phase
+      tune(adapt,static_cast<int>(adapt/100));
+
+      // sampling
+      run(iterations, burn, thin);
+    }
+
+    template<typename T>
+    Normal<T>& normal(T& x, const bool observed = false) {
+      Normal<T>* node = new Normal<T>(x,observed);
+      mcmcObjects.push_back(node);
+      data_node_map[(void*)(&x)] = node;
+      return *node;
+    }
+
+    template<typename T>
+    Uniform<T>& uniform(T& x, const bool observed = false) {
+      Uniform<T>* node = new Uniform<T>(x, observed);
+      data_node_map[(void*)(&x)] = node;
+      mcmcObjects.push_back(node);
+      return *node;
+    }
+
+    template<typename T>
+    Deterministic<T>& deterministic(T& x) {
+      Deterministic<T>* node = new Deterministic<T>(x);
+      data_node_map[(void*)(&x)] = node;
+      mcmcObjects.push_back(node);
+      return *node;
+    }
+
+    template<typename T>
+    MCMCSpecialized<T>& getNode(const T& x) {
+      vmc_map_iter iter = data_node_map.find((void*)(&x));
+      if(iter == data_node_map.end()) {
+        throw std::logic_error("node not found.");
+      }
+      MCMCSpecialized<T>* ans = dynamic_cast<MCMCSpecialized<T>*>(iter->second);
+      if(ans == nullptr) {
+        throw std::logic_error("invalid node conversion.");
+      }
+      return *ans;
     }
   };
 } // namespace cppbugs

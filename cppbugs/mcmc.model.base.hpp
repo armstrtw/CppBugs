@@ -30,7 +30,6 @@ namespace cppbugs {
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModelBase() {}
-    virtual void update() = 0;
     bool reject(const double value, const double old_logp) {
       return bad_logp(value) || log(rng_.uniform()) > value - old_logp ? true : false;
     }

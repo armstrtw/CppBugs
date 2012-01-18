@@ -2,8 +2,8 @@
 CC = g++
 ##CPPFLAGS = -I.. -Wall -g
 CPPFLAGS = -I.. -Wall -O2
-ARMADILLO_LIBS = -larmadillo
-##ARMADILLO_LIBS = -lblas -llapack
+ARMADILLO_LIBS = -lblas -llapack
+##ARMADILLO_LIBS = -lgoto2 -lpthread -lgfortran
 LIBS = $(ARMADILLO_LIBS)
 
 all: linear.model.test varying.coefs.test varying.coefs.global.prior price herd herd.fast radon1

@@ -21,7 +21,6 @@
 
 #include <cmath>
 #include <armadillo>
-#include <boost/math/special_functions/gamma.hpp>
 #include <cppbugs/mcmc.stochastic.hpp>
 
 namespace cppbugs {

@@ -21,93 +21,30 @@
 
 #include <cmath>
 #include <armadillo>
-#include <boost/math/special_functions/gamma.hpp>
 #include <cppbugs/mcmc.specialized.hpp>
 #include <cppbugs/mcmc.jump.hpp>
+#include <cppbugs/mcmc.math.hpp>
 
 namespace cppbugs {
-  using namespace boost::math::policies;
-  typedef policy<digits10<5> > boost_numeric_accuracy;
 
   template<typename T>
   class Stochastic : public MCMCSpecialized<T> {
   protected:
     bool observed_;
-    bool save_logp_;
-    double old_logp_,logp_,accepted_,rejected_,scale_;
-
-    void revert() {
-      logp_ = old_logp_;
-      MCMCSpecialized<T>::revert();
-    }
-
-    void preserve() {
-      old_logp_ = logp_;
-      MCMCSpecialized<T>::preserve();
-    }
-
-    template<typename U>
-    double accu(const U&  x) {
-      return arma::accu(x);
-    }
-
-    double accu(const double x) {
-      return x;
-    }
-
-    double log_gamma(const double x) {
-      return boost::math::lgamma(x,boost_numeric_accuracy());
-    }
-
-    double factln_single(int n) {
-      if(n > 100) {
-	return log_gamma(static_cast<double>(n) + 1);
-      }
-      double ans(1);
-      for (int i=n; i>1; i--) {
-	ans *= i;
-      }
-      return log(ans);
-    }
-
-    double factln(const int i) {
-      static std::vector<double> factln_table;
-
-      if(i < 0) {
-	return -std::numeric_limits<double>::infinity();
-      }
-
-      if(factln_table.size() < static_cast<size_t>(i+1)) {
-	for(int j = factln_table.size(); j < (i+1); j++) {
-	  factln_table.push_back(factln_single(j));
-	}
-      }
-      //return factln_table.at(i);
-      return factln_table[i];
-    }
-
-    arma::mat factln(const arma::imat& x) {
-      arma::mat ans; ans.copy_size(x);
-      for(size_t i = 0; i < x.n_elem; i++) {
-	ans[i] = factln(x[i]);
-      }
-      return ans;
-    }
+    double accepted_,rejected_,scale_;
+    std::function<double ()> likelihood_functor;
   public:
-    std::list<double> logp_history;
-    Stochastic(const T& value, const bool observed=false):
-      MCMCSpecialized<T>(value), observed_(observed), save_logp_(false),
-      logp_(-std::numeric_limits<double>::infinity()),accepted_(0), rejected_(0),
+    Stochastic(T& value, const bool observed=false):
+      MCMCSpecialized<T>(value), observed_(observed),
+      accepted_(0), rejected_(0),
       scale_(1)
     {
       // don't need to save history of observed variables
       if(observed_) {
         MCMCSpecialized<T>::setSaveHistory(false);
-        // save the log likelihood history for observed variables
-        setSaveLogP(true);
       }
     }
-    const double* getLogp() const { return &logp_; }
+    virtual ~Stochastic() {}
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     bool isObserved() const { return observed_; }
@@ -127,29 +64,15 @@ namespace cppbugs {
       accepted_ = 0;
       rejected_ = 0;
     }
-    const double logp() const {
-      return logp_;
-    }
     void setScale(const double scale) {
       scale_ = scale;
     }
-    void setSaveLogP(const bool save_logp) {
-      save_logp_ = save_logp;
+    double loglik() const {
+      return Stochastic<T>::likelihood_functor_p ? Stochastic<T>::likelihood_functor_p->getLikelihood() : 0;
     }
-    void tally() {
-      // call base class tally() (to save value history if needed)
-      MCMCSpecialized<T>::tally();
-      if (save_logp_) { logp_history.push_back(logp_); }
+    std::function<double ()> getLikelihoodFunctor() const {
+      return likelihood_functor;
     }
-    double meanLogLikelihood() const {
-      double ans(0);
-      for(typename std::list<double>::const_iterator it = logp_history.begin(); it != logp_history.end(); it++) {
-        ans += *it;
-      }
-      ans /= static_cast<double>(logp_history.size());
-      return ans;
-    }
-
   };
 
 } // namespace cppbugs

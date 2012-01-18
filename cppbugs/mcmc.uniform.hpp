@@ -28,37 +28,24 @@ namespace cppbugs {
   template<typename T>
   class Uniform : public Stochastic<T> {
   public:
-    Uniform(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
-    void dunif(const double lower, const double upper) {
-      Stochastic<T>::logp_ =  (Stochastic<T>::value < lower || Stochastic<T>::value > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
-    }
-  };
-
-  template<>
-  class Uniform <double> : public Stochastic<double> {
-  public:
-    Uniform(const double& value, const bool observed=false): Stochastic<double>(value,observed) {}
-    void dunif(const double lower, const double upper) {
-      Stochastic<double>::logp_ =  (Stochastic<double>::value < lower || Stochastic<double>::value > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
-    }
-  };
-
-
-  template<>
-  class Uniform <arma::mat> : public Stochastic<arma::mat> {
-  public:
-    Uniform(const arma::mat& value, const bool observed=false): Stochastic<arma::mat>(value,observed) {}
+    Uniform(T& value, const bool observed=false): Stochastic<T>(value,observed) {}
 
     template<typename U, typename V>
-    void dunif(const U& lower, const V& upper) {
-      arma::uvec less_than_lower_bound = find(value < lower,1);
-      arma::uvec greater_than_upper_bound = find(value > upper,1);
+    Uniform<T>& dunif(const MCMCSpecialized<U>& lower_, MCMCSpecialized<V>& upper_) {
+      const T& x = Stochastic<T>::value;
+      const U& lower = lower_.value;
+      const V& upper = upper_.value;
+      Stochastic<T>::likelihood_functor = [&x,&lower,&upper]() {
+        return (x < lower || x > upper) ? -std::numeric_limits<double>::infinity() : -accu(log(upper - lower));
+      };
+    }
 
-      if(less_than_lower_bound.n_elem || greater_than_upper_bound.n_elem) {
-	Stochastic<arma::mat>::logp_ = -std::numeric_limits<double>::infinity();
-      } else {
-	Stochastic<arma::mat>::logp_ = accu(-log(upper - lower));
-      }
+    Uniform<T>& dunif(const double& lower, const double& upper) {
+      const T& x = Stochastic<T>::value;
+      Stochastic<T>::likelihood_functor = [&x,&lower,&upper]() {
+        return (x < lower || x > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
+      };
+      return *this;
     }
   };
 } // namespace cppbugs
