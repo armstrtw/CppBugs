@@ -23,6 +23,7 @@
 #include <armadillo>
 #include <cppbugs/mcmc.specialized.hpp>
 #include <cppbugs/mcmc.jump.hpp>
+#include <cppbugs/mcmc.math.hpp>
 
 namespace cppbugs {
 
@@ -72,58 +73,6 @@ namespace cppbugs {
     std::function<double ()> getLikelihoodFunctor() const {
       return likelihood_functor;
     }
-
-    /////////////////////////////////////////////////
-    // Stochastic/Math related functions below     //
-    /////////////////////////////////////////////////
-    template<typename U>
-    static double accu(const U&  x) {
-      return arma::accu(x);
-    }
-
-    static double accu(const double x) {
-      return x;
-    }
-
-    static double log_gamma(const double x) {
-      return boost::math::lgamma(x);
-    }
-
-    static double factln_single(int n) {
-      if(n > 100) {
-	return log_gamma(static_cast<double>(n) + 1);
-      }
-      double ans(1);
-      for (int i=n; i>1; i--) {
-	ans *= i;
-      }
-      return log(ans);
-    }
-
-    static double factln(const int i) {
-      static std::vector<double> factln_table;
-
-      if(i < 0) {
-	return -std::numeric_limits<double>::infinity();
-      }
-
-      if(factln_table.size() < static_cast<size_t>(i+1)) {
-	for(int j = factln_table.size(); j < (i+1); j++) {
-	  factln_table.push_back(factln_single(j));
-	}
-      }
-      //return factln_table.at(i);
-      return factln_table[i];
-    }
-
-    static arma::mat factln(const arma::imat& x) {
-      arma::mat ans; ans.copy_size(x);
-      for(size_t i = 0; i < x.n_elem; i++) {
-	ans[i] = factln(x[i]);
-      }
-      return ans;
-    }
-
   };
 
 } // namespace cppbugs
