@@ -48,22 +48,10 @@ namespace cppbugs {
   public:
     MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), update(update_) {}
 
+    // allows node to be added without being put on the
+    // delete list
     void addNode(MCMCObject* node) {
       mcmcObjects.push_back(node);
-
-      if(node->isStochastic()) {
-          logp_functors.push_back(node->getLikelihoodFunctor());
-        }
-
-        if(node->isStochastic() && !node->isObserved()) {
-          jumping_stochastics.push_back(node);
-        }
-
-        if(node->isDeterministc()) {
-          deterministics.push_back(node);
-        }
-      // init values
-      update();
     }
 
     void initChain() {
