@@ -13,7 +13,7 @@ using std::endl;
 int main() {
   const int NR = 1e2;
   const int NC = 2;
-  mat y = randn<mat>(NR,1) + 10;
+  const mat y = randn<mat>(NR,1) + 10;
   mat X = mat(NR,NC);
   X.col(0).fill(1);
   X.col(1) = y + randn<mat>(NR,1)/2 - 10;
@@ -36,7 +36,7 @@ int main() {
 
   m.normal(b).dnorm(0.0, 0.0001);
   m.uniform(tau_y).dunif(0,100);
-  m.normal(y,true).dnorm(y_hat,tau_y);
+  m.normal(y).dnorm(y_hat,tau_y);
   m.deterministic(rsq);
 
 

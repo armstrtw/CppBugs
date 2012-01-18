@@ -202,8 +202,16 @@ namespace cppbugs {
     }
 
     template<typename T>
-    Normal<T>& normal(T& x, const bool observed = false) {
-      Normal<T>* node = new Normal<T>(x,observed);
+    Normal<T>& normal(const T& x) {
+      Normal<T>* node = new Normal<T>(const_cast<T&>(x),true);
+      mcmcObjects.push_back(node);
+      data_node_map[(void*)(&x)] = node;
+      return *node;
+    }
+
+    template<typename T>
+    Normal<T>& normal(T& x) {
+      Normal<T>* node = new Normal<T>(x,false);
       mcmcObjects.push_back(node);
       data_node_map[(void*)(&x)] = node;
       return *node;
