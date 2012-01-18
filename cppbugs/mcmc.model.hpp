@@ -21,6 +21,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
+#include <map>
 #include <exception>
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.hpp>
@@ -29,6 +30,8 @@
 #include <cppbugs/cppbugs.hpp>
 
 namespace cppbugs {
+  typedef std::map<void*,MCMCObject*> vmc_map;
+  typedef std::map<void*,MCMCObject*>::iterator vmc_map_iter;
 
   class MCModel {
   private:
@@ -38,6 +41,7 @@ namespace cppbugs {
     std::vector<MCMCObject*> mcmcObjects, jumping_stochastics, deterministics;
     std::vector<std::function<double ()> > logp_functors;
     std::function<void ()> update;
+    vmc_map data_node_map;
 
     void jump() { for(auto v : jumping_stochastics) { v->jump(rng_); } }
     void preserve() { for(auto v : mcmcObjects) { v->preserve(); } }
@@ -47,9 +51,17 @@ namespace cppbugs {
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), update(update_) {}
+    ~MCModel() {
+      // use data_node_map as delete list
+      // only objects allocated by this class are inserted thre
+      // addNode allows user allocated objects to enter the mcmcObjects vector
+      for(auto m : data_node_map) {
+        delete m.second;
+      }
+    }
 
-    // allows node to be added without being put on the
-    // delete list
+    // allows node to be added without being put on the delete list
+    // for those who want full control of their memory...
     void addNode(MCMCObject* node) {
       mcmcObjects.push_back(node);
     }
@@ -193,12 +205,14 @@ namespace cppbugs {
     Normal<T>& normal(T& x, const bool observed = false) {
       Normal<T>* node = new Normal<T>(x,observed);
       mcmcObjects.push_back(node);
+      data_node_map[(void*)(&x)] = node;
       return *node;
     }
 
     template<typename T>
     Uniform<T>& uniform(T& x, const bool observed = false) {
       Uniform<T>* node = new Uniform<T>(x, observed);
+      data_node_map[(void*)(&x)] = node;
       mcmcObjects.push_back(node);
       return *node;
     }
@@ -206,8 +220,22 @@ namespace cppbugs {
     template<typename T>
     Deterministic<T>& deterministic(T& x) {
       Deterministic<T>* node = new Deterministic<T>(x);
+      data_node_map[(void*)(&x)] = node;
       mcmcObjects.push_back(node);
       return *node;
+    }
+
+    template<typename T>
+    MCMCSpecialized<T>& getNode(const T& x) {
+      vmc_map_iter iter = data_node_map.find((void*)(&x));
+      if(iter == data_node_map.end()) {
+        throw std::logic_error("node not found.");
+      }
+      MCMCSpecialized<T>* ans = dynamic_cast<MCMCSpecialized<T>*>(iter->second);
+      if(ans == nullptr) {
+        throw std::logic_error("invalid node conversion.");
+      }
+      return *ans;
     }
   };
 } // namespace cppbugs

@@ -33,20 +33,22 @@ int main() {
   };
 
   MCModel m(model);
-  Normal<vec>& b_hist = m.normal(b).dnorm(0.0, 0.0001);
-  Uniform<double>& tau_y_hist = m.uniform(tau_y).dunif(0,100);
+
+  m.normal(b).dnorm(0.0, 0.0001);
+  m.uniform(tau_y).dunif(0,100);
   m.normal(y,true).dnorm(y_hat,tau_y);
-  Deterministic<double>& rsq_hist = m.deterministic(rsq);
+  m.deterministic(rsq);
+
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
   cout << "lm coefs" << endl << coefs;
   cout << "err sd: " << stddev(err,0) << endl;;
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;
-  cout << "b: " << endl << b_hist.mean();
-  cout << "tau_y: " << tau_y_hist.mean() << endl;
-  cout << "R^2: " << rsq_hist.mean() << endl;
-  cout << "samples: " << b_hist.history.size() << endl;
+  cout << "b: " << endl << m.getNode(b).mean();
+  cout << "tau_y: " << m.getNode(tau_y).mean() << endl;
+  cout << "R^2: " << m.getNode(rsq).mean() << endl;
+  cout << "samples: " << m.getNode(b).history.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
 
   return 0;
