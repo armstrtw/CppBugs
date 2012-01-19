@@ -39,53 +39,6 @@ model {
 }
 */
 
-class RadonVaryingInterceptModel: public MCModel {
-public:
-  const vec& level;
-  const vec& basement;
-  const mat& group;
-  int J;
-
-  Normal<vec> a;
-  Normal<double> b;
-  Deterministic<double> tau_y;
-  Uniform<double> sigma_y;
-  Normal<double> mu_a;
-  Deterministic<double> tau_a;
-  Uniform<double> sigma_a;
-  Deterministic<mat> y_hat;
-  Normal<mat> likelihood;
-
-  RadonVaryingInterceptModel(const vec& level_, const vec& basement_, const mat& group_):
-    level(level_),basement(basement_),group(group_),J(group_.n_cols),
-    a(randn<vec>(group_.n_cols)), b(0),
-    tau_y(1),sigma_y(1),mu_a(0),tau_a(1),sigma_a(1),
-    y_hat(randn<mat>(level_.n_rows,1)),likelihood(level_,true)
-  {
-    add(a);
-    add(b);
-    add(tau_y);
-    add(sigma_y);
-    add(mu_a);
-    add(tau_a);
-    add(sigma_a);
-    add(y_hat);
-    add(likelihood);
-  }
-
-  void update() {
-    y_hat.value = group * a.value + b.value * basement;
-    tau_y.value = pow(sigma_y.value, -2.0);
-    tau_a.value = pow(sigma_a.value, -2.0);
-    a.dnorm(mu_a.value, tau_a.value);
-    b.dnorm(0, 0.0001);
-    sigma_y.dunif(0, 100);
-    mu_a.dnorm(0, 0.0001);
-    sigma_a.dunif(0, 100);
-    likelihood.dnorm(y_hat.value,tau_y.value);
-  }
-};
-
 void read_csv(string fname, vector< vector<string> >& rows) {
   ifstream fin;
   string buf;
@@ -129,6 +82,7 @@ string file("/home/warmstrong/dvl/scripts/mcmc/radon/srrs.csv");
   read_csv(file,rows);
 
   vec level(rows.size(),1);
+  const vec& level_const = level;
   vec basement(rows.size(),1);
   vector<string> county(rows.size());
 
@@ -141,11 +95,31 @@ string file("/home/warmstrong/dvl/scripts/mcmc/radon/srrs.csv");
   fixlog(level);
   mat group(county_to_groups(county));
 
-  RadonVaryingInterceptModel m(level,basement,group);
+
+  vec a(randn<vec>(group.n_cols));
+  double b, tau_y(1), sigma_y(1), mu_a, tau_a(1), sigma_a(1);
+  mat y_hat;
+
+  std::function<void ()> model = [&]() {
+    y_hat = group * a + b * basement;
+    tau_y = pow(sigma_y, -2.0);
+    tau_a = pow(sigma_a, -2.0);
+  };
+
+  MCModel m(model);
+  m.normal(a).dnorm(mu_a, tau_a);
+  m.normal(b).dnorm(0, 0.0001);
+  m.normal(mu_a).dnorm(0, 0.0001);
+  m.uniform(sigma_y).dunif(0, 100);
+  m.uniform(sigma_a).dunif(0, 100);
+  m.normal(level_const).dnorm(y_hat,tau_y);
+  m.deterministic(tau_y);
+  m.deterministic(tau_a);
+
   m.sample(50e3, 10e3, 1e4, 5);
-  cout << "samples: " << m.b.history.size() << endl;
-  cout << "a: " << endl << m.a.mean() << endl;
-  cout << "b: " << m.b.mean() << endl;
+  cout << "samples: " << m.getNode(b).history.size() << endl;
+  cout << "a: " << endl << m.getNode(a).mean() << endl;
+  cout << "b: " << m.getNode(b).mean() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
 };

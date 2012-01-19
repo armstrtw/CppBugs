@@ -24,6 +24,6 @@
 #include <cppbugs/mcmc.gamma.hpp>
 // #include <cppbugs/mcmc.binomial.hpp>
 // #include <cppbugs/mcmc.bernoulli.hpp>
-// #include <cppbugs/mcmc.model.hpp>
+#include <cppbugs/mcmc.model.hpp>
 
 #endif // CPPBUGS_HPP
