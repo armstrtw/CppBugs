@@ -32,6 +32,14 @@ namespace cppbugs {
     Normal(T& value, const bool observed=false): Stochastic<T>(value,observed) {}
 
     // need this specialization b/c we need to do schur product btwn two mat's
+    Normal<T>& dnorm(const arma::mat& mu, const arma::mat& tau) {
+      const T& x = Stochastic<T>::value;
+      Stochastic<T>::likelihood_functor = [&x,&mu,&tau]() {
+        return accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * tau % pow(x - mu,2.0));
+      };
+      return *this;
+    }
+
     template<typename U, typename V>
     Normal<T>& dnorm(const U& mu, const V& tau) {
       const T& x = Stochastic<T>::value;

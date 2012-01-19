@@ -34,6 +34,15 @@ namespace cppbugs {
     return x;
   }
 
+  bool any(const bool x) {
+    return x;
+  }
+
+  bool any(const arma::umat& x) {
+    const arma::umat ans(arma::find(x,1));
+    return ans.n_elem > 0;
+  }
+
   double log_gamma(const double x) {
     return boost::math::lgamma(x);
   }

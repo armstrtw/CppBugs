@@ -31,13 +31,12 @@ namespace cppbugs {
     Uniform(T& value, const bool observed=false): Stochastic<T>(value,observed) {}
 
     template<typename U, typename V>
-    Uniform<T>& dunif(const MCMCSpecialized<U>& lower_, MCMCSpecialized<V>& upper_) {
+    Uniform<T>& dunif(const U& lower, const V& upper) {
       const T& x = Stochastic<T>::value;
-      const U& lower = lower_.value;
-      const V& upper = upper_.value;
       Stochastic<T>::likelihood_functor = [&x,&lower,&upper]() {
-        return (x < lower || x > upper) ? -std::numeric_limits<double>::infinity() : -accu(log(upper - lower));
+        return (any(x < lower) || any(x > upper)) ? -std::numeric_limits<double>::infinity() : -accu(log(upper - lower));
       };
+      return *this;
     }
 
     Uniform<T>& dunif(const double& lower, const double& upper) {
