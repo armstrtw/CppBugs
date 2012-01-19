@@ -21,7 +21,7 @@
 #include <cppbugs/mcmc.deterministic.hpp>
 #include <cppbugs/mcmc.normal.hpp>
 #include <cppbugs/mcmc.uniform.hpp>
-// #include <cppbugs/mcmc.gamma.hpp>
+#include <cppbugs/mcmc.gamma.hpp>
 // #include <cppbugs/mcmc.binomial.hpp>
 // #include <cppbugs/mcmc.bernoulli.hpp>
 // #include <cppbugs/mcmc.model.hpp>

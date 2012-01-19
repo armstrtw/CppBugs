@@ -226,6 +226,14 @@ namespace cppbugs {
     }
 
     template<typename T>
+    Gamma<T>& gamma(T& x) {
+      Gamma<T>* node = new Gamma<T>(x, false);
+      data_node_map[(void*)(&x)] = node;
+      mcmcObjects.push_back(node);
+      return *node;
+    }
+
+    template<typename T>
     Deterministic<T>& deterministic(T& x) {
       Deterministic<T>* node = new Deterministic<T>(x);
       data_node_map[(void*)(&x)] = node;

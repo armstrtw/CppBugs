@@ -28,7 +28,7 @@ namespace cppbugs {
   template<typename T>
   class Gamma : public Stochastic<T> {
   public:
-    Gamma(const T& value, const bool observed=false): Stochastic<T>(value,observed) {}
+    Gamma(T& value, const bool observed=false): Stochastic<T>(value,observed) {}
 
     // modified jumper to only take positive jumps
     void jump(RngBase& rng) {
@@ -48,7 +48,7 @@ namespace cppbugs {
   template<>
   class Gamma <double> : public Stochastic<double> {
   public:
-    Gamma(const double& value, const bool observed=false): Stochastic<double>(value,observed) {}
+    Gamma(double& value, const bool observed=false): Stochastic<double>(value,observed) {}
 
     // modified jumper to only take positive jumps
     void jump(RngBase& rng) {
@@ -56,8 +56,14 @@ namespace cppbugs {
       Stochastic<double>::value = new_value > 0 ? new_value : Stochastic<double>::value;
     }
 
-    void dgamma(const double alpha, const double beta) {
-      Stochastic<double>::logp_ = (Stochastic<double>::value < 0 ) ? -std::numeric_limits<double>::infinity() : (alpha - 1.0) * log(Stochastic<double>::value) - beta*Stochastic<double>::value - log_gamma(alpha) + alpha*log(beta);
+    Gamma<double>& dgamma(const double& alpha, const double& beta) {
+      const double& x = Stochastic<double>::value;
+      Stochastic<double>::likelihood_functor = [&x,&alpha,&beta]() {
+        return (x < 0 ) ?
+        -std::numeric_limits<double>::infinity() :
+        (alpha - 1.0) * log(x) - beta*x - log_gamma(alpha) + alpha*log(beta);
+      };
+      return *this;     
     }
   };
 } // namespace cppbugs
