@@ -48,19 +48,23 @@ namespace cppbugs {
   template<>
   class Binomial <arma::ivec> : public Stochastic<arma::ivec> {
   public:
-    Binomial(const arma::ivec& value, const bool observed=false): Stochastic<arma::ivec>(value,observed) {}
+    Binomial(arma::ivec& value, const bool observed=false): Stochastic<arma::ivec>(value,observed) {}
 
-    void dbinom(const arma::ivec& n, const arma::mat& p) {
-      arma::uvec p_less_than_zero = find(p <= 0,1);
-      arma::uvec p_greater_than_1 = find(p >= 1,1);
-      arma::uvec value_less_than_zero = find(Stochastic<arma::ivec>::value < 0,1);
-      arma::uvec value_greater_than_n = find(Stochastic<arma::ivec>::value > n,1);
+    Binomial<arma::ivec>& dbinom(const arma::ivec& n, const arma::mat& p) {
+      const arma::ivec& x = Stochastic<arma::ivec>::value;
+      Stochastic<arma::ivec>::likelihood_functor = [&x,&n,&p]() {
+        arma::uvec p_less_than_zero = find(p <= 0,1);
+        arma::uvec p_greater_than_1 = find(p >= 1,1);
+        arma::uvec value_less_than_zero = find(x < 0,1);
+        arma::uvec value_greater_than_n = find(x > n,1);
 
-      if(p_less_than_zero.n_elem || p_greater_than_1.n_elem || value_less_than_zero.n_elem || value_greater_than_n.n_elem) {
-        Stochastic<arma::ivec>::logp_ = -std::numeric_limits<double>::infinity();
-      } else {
-	Stochastic<arma::ivec>::logp_ = accu(Stochastic<arma::ivec>::value % log(p) + (n-Stochastic<arma::ivec>::value) % log(1-p) + factln(n)-factln(Stochastic<arma::ivec>::value)-factln(n-Stochastic<arma::ivec>::value));
-      }
+        if(p_less_than_zero.n_elem || p_greater_than_1.n_elem || value_less_than_zero.n_elem || value_greater_than_n.n_elem) {
+          return -std::numeric_limits<double>::infinity();
+        } else {
+          return accu(x % log(p) + (n-x) % log(1-p) + factln(n)-factln(x)-factln(n-x));
+        }
+      };
+      return *this;
     }
   };
 } // namespace cppbugs

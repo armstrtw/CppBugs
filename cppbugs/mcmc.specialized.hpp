@@ -34,6 +34,7 @@ namespace cppbugs {
 
     static int sum_dims(const double& value) { return 1; }
     static int sum_dims(const arma::mat& value) { return value.n_elem; }
+    static int sum_dims(const arma::ivec& value) { return value.n_elem; }
     static void fill(arma::mat& value) { value.fill(0); }
     static void fill(double& value) { value = 0; }
 

@@ -234,6 +234,14 @@ namespace cppbugs {
     }
 
     template<typename T>
+    Binomial<T>& binomial(const T& x) {
+      Binomial<T>* node = new Binomial<T>(const_cast<T&>(x),true);
+      mcmcObjects.push_back(node);
+      data_node_map[(void*)(&x)] = node;
+      return *node;
+    }
+
+    template<typename T>
     Deterministic<T>& deterministic(T& x) {
       Deterministic<T>* node = new Deterministic<T>(x);
       data_node_map[(void*)(&x)] = node;
