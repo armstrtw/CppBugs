@@ -53,9 +53,12 @@ Starting with a bugs model::
      sigma.b.herd ~ dunif(0, 100)
     }
 
-This mode can be converted to a CppBugs model in three steps:
+This mode can be converted to a CppBugs model in three steps.
+
 * define the variable space
+
 * implement a function which updates the deterministic variables
+
 * add nodes to the model and define the parameters governing the stochastic variables
 
 ::
