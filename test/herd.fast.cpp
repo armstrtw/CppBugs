@@ -21,14 +21,12 @@ int main() {
   int N = 56;
   int N_herd = 15;
 
-  ivec incidence(incidence_raw,N);
-  const ivec& incidence_const(incidence);
-  ivec size(size_raw,N);
+  const ivec incidence(incidence_raw,N);
+  const ivec size(size_raw,N);
   ivec herd(herd_raw,N); herd -= 1;
-  vec a(N); a.fill(1);
-  vec period2(period2_raw,N);
-  vec period3(period3_raw,N);
-  vec period4(period4_raw,N);
+  const vec period2(period2_raw,N);
+  const vec period3(period3_raw,N);
+  const vec period4(period4_raw,N);
 
   mat indicator_matrix(N,N_herd);
   indicator_matrix.fill(0.0);
@@ -61,13 +59,11 @@ int main() {
   m.uniform(tau_b_herd).dunif(0,100);
   m.normal(b_herd).dnorm(0, tau_b_herd);
   m.normal(overdisp).dnorm(0,tau_overdisp);
-  m.binomial(incidence_const).dbinom(size,phi);
+  m.binomial(incidence).dbinom(size,phi);
   m.deterministic(sigma_overdisp);
   m.deterministic(sigma_b_herd);
   m.deterministic(phi);
-
   m.sample(1e6,1e5,1e4,50);
-  //m.sample(1e4,1e4,1e4,10);
 
   cout << "samples: " << m.getNode(b).history.size() << endl;
   cout << "b: " << endl << m.getNode(b).mean() << endl;
@@ -77,10 +73,8 @@ int main() {
   cout << "sigma_b_herd: " << m.getNode(sigma_b_herd).mean() << endl;
   cout << "b_herd: " << endl << m.getNode(b_herd).mean() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
-  // cout << "overdisp" << m.overdisp.mean() << endl;
-  // cout << "phi" << m.phi.mean() << endl;
-  // cout << "phi2" << m.phi2.mean() << endl;
-  //cout << "likelihood" << m.likelihood.mean() << endl;
+  //cout << "overdisp" << endl << m.getNode(overdisp).mean() << endl;
+  //cout << "phi" << endl << m.getNode(phi).mean() << endl;
 
   return 0;
 }
