@@ -2,7 +2,7 @@
 Introduction
 ************
 
-:Date: October 1, 2010
+:Date: January 20, 2012
 :Authors: Whit Armstrong
 :Contact: armstrong.whit@gmail.com
 :Web site: http://github.com/armstrtw/CppBugs
@@ -21,7 +21,7 @@ Features
 CppBugs attempts to make writing mcmc models as painless as possible.  It incorporates features
 from both WinBugs and PyMC and requires users only to implment an update method which resembles the model section of a WinBUGS script.
 
-* CppBugs is extremely fast.  Typically between 20x and 100x faster than equivalent WinBugs or PyMC models.
+* CppBugs is extremely fast.  Typically between 5x to 10x faster than equivalent WinBugs and 3x to 5x faster than PyMC models.
 
 * Common statistical distributions are supported drawing heavily on Boost libraries.  Many more will be implemented
   to eventually be as feature complete as WinBugs/PyMC. 
