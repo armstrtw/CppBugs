@@ -54,9 +54,9 @@ Starting with a bugs model::
     }
 
 This mode can be converted to a CppBugs model in three steps:
-- define the variable space
-- implement a function which updates the deterministic variables
-- add nodes to the model and define the parameters governing the stochastic variables
+* define the variable space
+* implement a function which updates the deterministic variables
+* add nodes to the model and define the parameters governing the stochastic variables
 
 ::
 
