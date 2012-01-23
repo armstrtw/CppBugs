@@ -82,5 +82,14 @@ namespace cppbugs {
     return ans;
   }
 
+  const arma::mat schur(const arma::mat& x, const double y) { return x * y; }
+  const arma::mat schur(const double x, const arma::mat& y) { return x * y; }
+  const arma::mat schur(const arma::mat& x, const arma::mat& y) { return x % y; }
+  const double schur(const double x, const double y) { return x * y; }
+
+  template<typename T, typename U, typename V>
+  double normal_logp(const T& x, const U& mu, const V& tau) {
+    return accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * schur(tau, pow(x - mu,2.0)));
+  }
 } // namespace cppbugs
 #endif // MCMC_STOCHASTIC_HPP
