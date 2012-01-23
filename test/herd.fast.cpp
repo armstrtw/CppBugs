@@ -30,7 +30,7 @@ int main() {
 
   mat indicator_matrix(N,N_herd);
   indicator_matrix.fill(0.0);
-  for(uint i = 0; i < herd.n_elem; i++) {
+  for(unsigned int i = 0; i < herd.n_elem; i++) {
     indicator_matrix(i,herd[i]) = 1.0;
   }
 
