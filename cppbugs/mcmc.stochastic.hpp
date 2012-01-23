@@ -28,27 +28,27 @@
 namespace cppbugs {
 
   template<typename T>
-  class Stochastic : public MCMCSpecialized<T> {
+  class Stochastic : public Dynamic<T> {
   protected:
     bool observed_;
     double accepted_,rejected_,scale_;
     std::function<double ()> likelihood_functor;
   public:
     Stochastic(T& value, const bool observed=false):
-      MCMCSpecialized<T>(value), observed_(observed),
+      Dynamic<T>(value), observed_(observed),
       accepted_(0), rejected_(0),
       scale_(1)
     {
       // don't need to save history of observed variables
       if(observed_) {
-        MCMCSpecialized<T>::setSaveHistory(false);
+        Dynamic<T>::setSaveHistory(false);
       }
     }
     virtual ~Stochastic() {}
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     bool isObserved() const { return observed_; }
-    void jump(RngBase& rng) { jump_impl(rng,MCMCSpecialized<T>::value,scale_); }
+    void jump(RngBase& rng) { jump_impl(rng,Dynamic<T>::value,scale_); }
     void accept() { accepted_ += 1; }
     void reject() { rejected_ += 1; }
     double tune_factor(const double acceptance_ratio) {

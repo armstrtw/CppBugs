@@ -25,25 +25,21 @@ namespace cppbugs {
 
   template<typename T>
   class MCMCSpecialized : public MCMCObject {
+  protected:
     bool save_history_;
   public:
-    T& value;
-    T old_value;
     std::list<T> history;
-    MCMCSpecialized(T& shape): MCMCObject(), save_history_(true), value(shape), old_value(shape) {}
+    MCMCSpecialized(): MCMCObject(), save_history_(true) {}
 
-    static int sum_dims(const double& value) { return 1; }
-    static int sum_dims(const arma::mat& value) { return value.n_elem; }
-    static int sum_dims(const arma::ivec& value) { return value.n_elem; }
-    static void fill(arma::mat& value) { value.fill(0); }
-    static void fill(double& value) { value = 0; }
+    static void fill(arma::mat& x) { x.fill(0); }
+    static void fill(double& x) { x = 0; }
 
-    void preserve() { old_value = value; }
-    void revert() { value = old_value; }
-    void tally() { if(save_history_) { history.push_back(value); } }
-    void print() const { std::cout << value << std::endl; }
     T mean() const {
-      T ans(value);
+      if(history.size() == 0) {
+        return T();
+      }
+
+      T ans(*history.begin());
       fill(ans);
       for(typename std::list<T>::const_iterator it = history.begin(); it != history.end(); it++) {
         ans += *it;
@@ -51,15 +47,8 @@ namespace cppbugs {
       ans /= static_cast<double>(history.size());
       return ans;
     }
-    int getSize() const { return sum_dims(value); }
-    void setScale(const double scale) {}
     void setSaveHistory(const bool save_history) {
       save_history_ = save_history;
-    }
-
-    MCMCSpecialized<T>& operator=(const T& rvalue) {
-      value = rvalue;
-      return *this;
     }
   };
 

@@ -15,21 +15,32 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_DETERMINISTIC_HPP
-#define MCMC_DETERMINISTIC_HPP
+#ifndef MCMC_DYNAMIC_HPP
+#define MCMC_DYNAMIC_HPP
 
-#include <cppbugs/mcmc.dynamic.hpp>
+#include <list>
+#include <cppbugs/mcmc.specialized.hpp>
 
 namespace cppbugs {
 
   template<typename T>
-  class Deterministic : public Dynamic<T> {
+  class Dynamic : public MCMCSpecialized<T> {
   public:
-    Deterministic(T& value): Dynamic<T>(value) {}
-    bool isDeterministc() const { return true; }
-    bool isStochastic() const { return false; }
-    bool isObserved() const { return true; }
+    T& value;
+    T old_value;
+    Dynamic(T& shape): MCMCSpecialized<T>(), value(shape), old_value(shape) {}
+
+    static int sum_dims(const double& value) { return 1; }
+    static int sum_dims(const arma::mat& value) { return value.n_elem; }
+    static int sum_dims(const arma::ivec& value) { return value.n_elem; }
+
+    void preserve() { old_value = value; }
+    void revert() { value = old_value; }
+    void tally() { if(MCMCSpecialized<T>::save_history_) { MCMCSpecialized<T>::history.push_back(value); } }
+    void print() const { std::cout << value << std::endl; }
+    int getSize() const { return sum_dims(value); }
+    void setScale(const double scale) {}
   };
 
 } // namespace cppbugs
-#endif //MCMC_DETERMINISTIC_HPP
+#endif //MCMC_DYNAMIC_HPP
