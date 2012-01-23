@@ -26,23 +26,15 @@
 namespace cppbugs {
 
   template<typename T>
-  class Uniform : public Stochastic<T> {
+  class Uniform : public DynamicStochastic<T> {
   public:
-    Uniform(T& value, const bool observed=false): Stochastic<T>(value,observed) {}
+    Uniform(T& value, const bool observed=false): DynamicStochastic<T>(value) {}
 
     template<typename U, typename V>
     Uniform<T>& dunif(const U& lower, const V& upper) {
-      const T& x = Stochastic<T>::value;
-      Stochastic<T>::likelihood_functor = [&x,&lower,&upper]() {
-        return (any(x < lower) || any(x > upper)) ? -std::numeric_limits<double>::infinity() : -accu(log(upper - lower));
-      };
-      return *this;
-    }
-
-    Uniform<T>& dunif(const double& lower, const double& upper) {
-      const T& x = Stochastic<T>::value;
-      Stochastic<T>::likelihood_functor = [&x,&lower,&upper]() {
-        return (x < lower || x > upper) ? -std::numeric_limits<double>::infinity() : -log(upper - lower);
+      const T& x = DynamicStochastic<T>::value;
+      Stochastic::likelihood_functor = [&x,&lower,&upper]() {
+        return uniform_logp(x,lower,upper);
       };
       return *this;
     }

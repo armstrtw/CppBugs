@@ -15,48 +15,32 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_NORMAL_HPP
-#define MCMC_NORMAL_HPP
+#ifndef MCMC_OBSERVED_HPP
+#define MCMC_OBSERVED_HPP
 
-#include <functional>
-#include <cmath>
-#include <armadillo>
-#include <cppbugs/mcmc.dynamic.stochastic.hpp>
-#include <cppbugs/mcmc.observed.hpp>
+#include <cppbugs/mcmc.specialized.hpp>
+#include <cppbugs/mcmc.stochastic.hpp>
 
 namespace cppbugs {
 
-
   template<typename T>
-  class Normal : public DynamicStochastic<T> {
+  class Observed : public MCMCSpecialized<T>, public Stochastic {
   public:
-    Normal(T& value): DynamicStochastic<T>(value) {}
+    const T& value;
+    Observed(const T& shape): MCMCSpecialized<T>(), value(shape) {}
 
-    template<typename U, typename V>
-    Normal<T>& dnorm(const U& mu, const V& tau) {
-      const T& x = DynamicStochastic<T>::value;
-      Stochastic::likelihood_functor = [&x,&mu,&tau]() {
-        return normal_logp(x,mu,tau);
-      };
-      return *this;
-    }
+    void jump(RngBase& rng) {}
+    void accept() {}
+    void reject() {}
+    void tune() {}
+    void preserve() {}
+    void revert() {}
+    void tally() {}
+    bool isDeterministc() const { return false; }
+    bool isStochastic() const { return true; }
+    bool isObserved() const { return true; }
+    void setScale(const double scale) {}
   };
-
-  template<typename T>
-  class ObservedNormal : public Observed<T> {
-  public:
-    ObservedNormal(const T& value): Observed<T>(value) {}
-
-    template<typename U, typename V>
-    ObservedNormal<T>& dnorm(const U& mu, const V& tau) {
-      const T& x = Observed<T>::value;
-      Stochastic::likelihood_functor = [&x,&mu,&tau]() {
-        return normal_logp(x,mu,tau);
-      };
-      return *this;
-    }
-  };
-
 
 } // namespace cppbugs
-#endif // MCMC_NORMAL_HPP
+#endif //MCMC_OBSERVED_HPP

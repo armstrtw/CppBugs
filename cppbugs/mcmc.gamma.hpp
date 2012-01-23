@@ -26,45 +26,22 @@
 namespace cppbugs {
 
   template<typename T>
-  class Gamma : public Stochastic<T> {
+  class Gamma : public DynamicStochastic<T> {
   public:
-    Gamma(T& value, const bool observed=false): Stochastic<T>(value,observed) {}
+    Gamma(T& value): DynamicStochastic<T>(value) {}
 
     // modified jumper to only take positive jumps
-    void jump(RngBase& rng) {
-      for(size_t i = 0; i < Stochastic<T>::value.n_elem; i++) {
-        double new_value = Stochastic<T>::value[i] + rng.normal() * Stochastic<T>::scale_;
-        Stochastic<T>::value[i] = new_value > 0 ? new_value : Stochastic<T>::value[i];
-      }
-    }
+    void jump(RngBase& rng) { positive_jump_impl(rng, DynamicStochastic<T>::value,DynamicStochastic<T>::scale_); }
 
     template<typename U, typename V>
-    void dgamma(const U& alpha, const V& beta) {
-      arma::umat neg_elements = find(Stochastic<T>::value < 0,1);
-      Stochastic<T>::logp_ = neg_elements.n_elem ? -std::numeric_limits<double>::infinity() : accu( (alpha - 1.0) * log(Stochastic<T>::value) - beta*Stochastic<T>::value - log_gamma(alpha) + alpha*log(beta) );
-    }
-  };
-
-  template<>
-  class Gamma <double> : public Stochastic<double> {
-  public:
-    Gamma(double& value, const bool observed=false): Stochastic<double>(value,observed) {}
-
-    // modified jumper to only take positive jumps
-    void jump(RngBase& rng) {
-      double new_value = Stochastic<double>::value + rng.normal() * Stochastic<double>::scale_;
-      Stochastic<double>::value = new_value > 0 ? new_value : Stochastic<double>::value;
-    }
-
-    Gamma<double>& dgamma(const double& alpha, const double& beta) {
-      const double& x = Stochastic<double>::value;
-      Stochastic<double>::likelihood_functor = [&x,&alpha,&beta]() {
-        return (x < 0 ) ?
-        -std::numeric_limits<double>::infinity() :
-        (alpha - 1.0) * log(x) - beta*x - log_gamma(alpha) + alpha*log(beta);
+    Gamma<double>& dgamma(const U& alpha, const V& beta) {
+      const T& x = DynamicStochastic<T>::value;
+      Stochastic::likelihood_functor = [&x,&alpha,&beta]() {
+        return gamma_logp(x,alpha,beta);
       };
-      return *this;     
+      return *this;
     }
   };
+
 } // namespace cppbugs
 #endif // MCMC_GAMMA_HPP

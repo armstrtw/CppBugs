@@ -25,22 +25,17 @@ namespace cppbugs {
   class MCMCObject {
   public:
     MCMCObject() {}
-    virtual void jump(RngBase& rng) {}
-    virtual void update() {}
-    virtual void tune() {}
-    virtual const double* getLogp() const { return static_cast<double*>(NULL); }
-    virtual void accept() {}
-    virtual void reject() {}
-    virtual void preserve() = 0;        // in mcmc.specialized
-    virtual void revert() = 0;          // in mcmc.specialized
-    virtual void tally() = 0; // in mcmc.specialized
-    virtual void print() const = 0;     // in mcmc.specialized
+    virtual void jump(RngBase& rng) = 0;
+    virtual void accept() = 0;
+    virtual void reject() = 0;
+    virtual void tune() = 0;
+    virtual void preserve() = 0;
+    virtual void revert() = 0;
+    virtual void tally() = 0;
     virtual bool isDeterministc() const = 0;
     virtual bool isStochastic() const = 0;
     virtual bool isObserved() const = 0;
-    virtual int getSize() const = 0; // in mcmc.specialized
     virtual void setScale(const double scale) = 0;
-    virtual std::function<double ()> getLikelihoodFunctor() const { return NULL; }
   };
 
 } // namespace cppbugs

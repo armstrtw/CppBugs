@@ -18,57 +18,21 @@
 #ifndef MCMC_STOCHASTIC_HPP
 #define MCMC_STOCHASTIC_HPP
 
-
+#include <limits>
 #include <cmath>
-#include <armadillo>
-#include <cppbugs/mcmc.specialized.hpp>
-#include <cppbugs/mcmc.jump.hpp>
-#include <cppbugs/mcmc.math.hpp>
 
 namespace cppbugs {
 
-  template<typename T>
-  class Stochastic : public Dynamic<T> {
+  class Stochastic {
   protected:
-    bool observed_;
-    double accepted_,rejected_,scale_;
     std::function<double ()> likelihood_functor;
   public:
-    Stochastic(T& value, const bool observed=false):
-      Dynamic<T>(value), observed_(observed),
-      accepted_(0), rejected_(0),
-      scale_(1)
-    {
-      // don't need to save history of observed variables
-      if(observed_) {
-        Dynamic<T>::setSaveHistory(false);
-      }
-    }
-    virtual ~Stochastic() {}
-    bool isDeterministc() const { return false; }
-    bool isStochastic() const { return true; }
-    bool isObserved() const { return observed_; }
-    void jump(RngBase& rng) { jump_impl(rng,Dynamic<T>::value,scale_); }
-    void accept() { accepted_ += 1; }
-    void reject() { rejected_ += 1; }
-    double tune_factor(const double acceptance_ratio) {
-      const double univariate_target_ar = 0.6;
-      const double thresh = 0.1;
-      const double dilution = 1.0;
-      double diff = acceptance_ratio - univariate_target_ar;
-      return 1.0 + diff * dilution * static_cast<double>(fabs(diff) > thresh);
-    }
-    void tune() {
-      double ar_ratio = accepted_ / (accepted_ + rejected_);
-      scale_ *= tune_factor(ar_ratio);
-      accepted_ = 0;
-      rejected_ = 0;
-    }
-    void setScale(const double scale) {
-      scale_ = scale;
-    }
+    Stochastic() {}
     double loglik() const {
-      return Stochastic<T>::likelihood_functor_p ? Stochastic<T>::likelihood_functor_p->getLikelihood() : 0;
+      return 
+        likelihood_functor ?
+        likelihood_functor():
+        std::numeric_limits<double>::quiet_NaN();
     }
     std::function<double ()> getLikelihoodFunctor() const {
       return likelihood_functor;

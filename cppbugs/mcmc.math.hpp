@@ -82,14 +82,52 @@ namespace cppbugs {
     return ans;
   }
 
+  // basic
+  const double schur(const double x, const double y) { return x * y; }
+  const double schur(const int x, const double y) { return x * y; }
+  const double schur(const double x, const int  y) { return x * y; }
+
+  // arma
   const arma::mat schur(const arma::mat& x, const double y) { return x * y; }
   const arma::mat schur(const double x, const arma::mat& y) { return x * y; }
   const arma::mat schur(const arma::mat& x, const arma::mat& y) { return x % y; }
-  const double schur(const double x, const double y) { return x * y; }
+  
+  template<typename T, typename U>
+  const arma::mat schur(const arma::Mat<T>& x, const arma::Mat<U>& y) { return x % y; }
 
   template<typename T, typename U, typename V>
   double normal_logp(const T& x, const U& mu, const V& tau) {
     return accu(0.5*log(0.5*tau/arma::math::pi()) - 0.5 * schur(tau, pow(x - mu,2.0)));
   }
+
+  template<typename T, typename U, typename V>
+  double uniform_logp(const T& x, const U& lower, const V& upper) {
+    return (any(x < lower) || any(x > upper)) ? -std::numeric_limits<double>::infinity() : -accu(log(upper - lower));
+  }
+
+  template<typename T, typename U, typename V>
+  double gamma_logp(const T& x, const U& alpha, const V& beta) {
+    return any(x < 0 ) ?
+      -std::numeric_limits<double>::infinity() :
+      schur((alpha - 1.0),log(x)) - schur(beta,x) - log_gamma(alpha) + schur(alpha,log(beta));
+  }
+
+  double binom_logp(const arma::ivec& x, const arma::ivec& n, const arma::vec& p) {
+    if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
+      return -std::numeric_limits<double>::infinity();
+    } else {
+      //return accu(schur(x,log(p)) + schur((n-x),log(1-p)) + factln(n) - factln(x) - factln(n-x));
+      return accu(x % log(p) + (n-x) % log(1-p) + factln(n) - factln(x) - factln(n-x));
+    }
+  }
+
+  double binom_logp(const int x, const int n, const double p) {
+    if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
+      return -std::numeric_limits<double>::infinity();
+    } else {
+      return accu(x * log(p) + (n-x) * log(1-p) + factln(n) - factln(x) - factln(n-x));
+    }
+  }
+
 } // namespace cppbugs
 #endif // MCMC_STOCHASTIC_HPP

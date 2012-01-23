@@ -66,15 +66,18 @@ namespace cppbugs {
       mcmcObjects.push_back(node);
     }
 
+    void addStochcasticNode(MCMCObject* node) {
+      Stochastic* sp = dynamic_cast<Stochastic*>(node);
+      if(sp && sp->getLikelihoodFunctor() ) { logp_functors.push_back(sp->getLikelihoodFunctor()); }
+    }
+
     void initChain() {
       logp_functors.clear();
       jumping_stochastics.clear();
       deterministics.clear();
 
       for(auto node : mcmcObjects) {
-        if(node->isStochastic()) {
-          logp_functors.push_back(node->getLikelihoodFunctor());
-        }
+        addStochcasticNode(node);
 
         if(node->isStochastic() && !node->isObserved()) {
           jumping_stochastics.push_back(node);
@@ -88,6 +91,7 @@ namespace cppbugs {
       update();
     }
 
+    /*
     double calcDimension() {
       double ans(0);
 
@@ -96,14 +100,10 @@ namespace cppbugs {
       }
       return ans;
     }
+    */
 
     double acceptance_ratio() const {
       return accepted_ / (accepted_ + rejected_);
-    }
-
-    void print() {
-      for(auto v : deterministics)
-        v->print();
     }
 
     // bool reject(const double value, const double old_logp) {
@@ -202,8 +202,8 @@ namespace cppbugs {
     }
 
     template<typename T>
-    Normal<T>& normal(const T& x) {
-      Normal<T>* node = new Normal<T>(const_cast<T&>(x),true);
+    ObservedNormal<T>& normal(const T& x) {
+      ObservedNormal<T>* node = new ObservedNormal<T>(const_cast<T&>(x));
       mcmcObjects.push_back(node);
       data_node_map[(void*)(&x)] = node;
       return *node;
@@ -211,15 +211,15 @@ namespace cppbugs {
 
     template<typename T>
     Normal<T>& normal(T& x) {
-      Normal<T>* node = new Normal<T>(x,false);
+      Normal<T>* node = new Normal<T>(x);
       mcmcObjects.push_back(node);
       data_node_map[(void*)(&x)] = node;
       return *node;
     }
 
     template<typename T>
-    Uniform<T>& uniform(T& x, const bool observed = false) {
-      Uniform<T>* node = new Uniform<T>(x, observed);
+    Uniform<T>& uniform(T& x) {
+      Uniform<T>* node = new Uniform<T>(x);
       data_node_map[(void*)(&x)] = node;
       mcmcObjects.push_back(node);
       return *node;
@@ -227,15 +227,15 @@ namespace cppbugs {
 
     template<typename T>
     Gamma<T>& gamma(T& x) {
-      Gamma<T>* node = new Gamma<T>(x, false);
+      Gamma<T>* node = new Gamma<T>(x);
       data_node_map[(void*)(&x)] = node;
       mcmcObjects.push_back(node);
       return *node;
     }
 
     template<typename T>
-    Binomial<T>& binomial(const T& x) {
-      Binomial<T>* node = new Binomial<T>(const_cast<T&>(x),true);
+    ObservedBinomial<T>& binomial(const T& x) {
+      ObservedBinomial<T>* node = new ObservedBinomial<T>(x);
       mcmcObjects.push_back(node);
       data_node_map[(void*)(&x)] = node;
       return *node;

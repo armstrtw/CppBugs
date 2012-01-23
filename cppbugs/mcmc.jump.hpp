@@ -22,6 +22,19 @@
 
 namespace cppbugs {
 
+  void jump_impl(RngBase& rng, double& value, const double scale) {
+    value += rng.normal() * scale;
+  }
+
+  void positive_jump_impl(RngBase& rng, double& value, const double scale) {
+    double new_value;
+    do {
+      new_value = value + rng.normal() * scale;
+    } while (new_value < 0);
+
+    value = new_value;
+  }
+
   template<typename T>
   void jump_impl(RngBase& rng, T& value, const double scale) {
     for(size_t i = 0; i < value.n_elem; i++) {
@@ -29,8 +42,11 @@ namespace cppbugs {
     }
   }
 
-  void jump_impl(RngBase& rng, double& value, const double scale) {
-    value += rng.normal() * scale;
+  template<typename T>
+  void positive_jump_impl(RngBase& rng, T& value, const double scale) {
+    for(size_t i = 0; i < value.n_elem; i++) {
+      positive_jump_impl(rng, value[i], scale);
+    }
   }
 
 } // namespace cppbugs
