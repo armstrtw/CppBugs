@@ -36,7 +36,7 @@ int main() {
     y_hat = a + b * age;
   };
 
-  MCModel m(model);
+  MCModel<boost::minstd_rand> m(model);
   m.normal(a).dnorm(0.0, 0.0001);
   m.normal(b).dnorm(0.0, 0.0001);
   m.gamma(tau).dgamma(0.1, 0.1);

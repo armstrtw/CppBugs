@@ -18,7 +18,7 @@
 #ifndef MCMC_OBJECT_HPP
 #define MCMC_OBJECT_HPP
 
-#include <cppbugs/mcmc.model.base.hpp>
+#include <cppbugs/mcmc.rng.hpp>
 
 namespace cppbugs {
 

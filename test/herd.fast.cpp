@@ -53,7 +53,7 @@ int main() {
     sigma_b_herd = 1/sqrt(tau_b_herd);
   };
 
-  MCModel m(model);
+  MCModel<boost::minstd_rand> m(model);
   m.normal(b).dnorm(0,0.001);
   m.uniform(tau_overdisp).dunif(0,1000);
   m.uniform(tau_b_herd).dunif(0,100);

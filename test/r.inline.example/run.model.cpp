@@ -19,7 +19,7 @@ std::function<void ()> model = [&]() {
   rsq = as_scalar(1 - var(y - y_hat) / var(y));
 };
 
-MCModel m(model);
+MCModel<boost::minstd_rand> m(model);
 m.normal(b).dnorm(0.0, 0.0001);
 m.gamma(tau_y).dgamma(0.1,0.1);
 m.normal(y).dnorm(y_hat,tau_y);
@@ -28,4 +28,3 @@ m.deterministic(rsq);
 m.sample(iterations_, burn_, adapt_, thin_);
 
 return Rcpp::List::create(Rcpp::Named("b", m.getNode(b).mean()), Rcpp::Named("ar", m.acceptance_ratio()), Rcpp::Named("rsq", m.getNode(rsq).mean()));
-

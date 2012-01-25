@@ -58,7 +58,7 @@ int main() {
     rsq = as_scalar(1 - var(y - y_hat) / var(y));
   };
 
-  MCModel m(model);
+  MCModel<boost::minstd_rand> m(model);
   m.normal(b).dnorm(0.0, 0.0001);
   m.uniform(tau_y).dunif(0,100);
   m.normal(y_const).dnorm(y_hat,tau_y);

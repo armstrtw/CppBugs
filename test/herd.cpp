@@ -70,7 +70,7 @@ int main() {
     sigma_b_herd = 1/sqrt(tau_b_herd);
   };
 
-  MCModel m(model);
+  MCModel<boost::minstd_rand> m(model);
   m.normal(b0).dnorm(0,0.001);
   m.normal(b_period2).dnorm(0,0.001);
   m.normal(b_period3).dnorm(0,0.001);

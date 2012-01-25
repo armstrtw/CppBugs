@@ -106,7 +106,7 @@ string file("/home/warmstrong/dvl/scripts/mcmc/radon/srrs.csv");
     tau_a = pow(sigma_a, -2.0);
   };
 
-  MCModel m(model);
+  MCModel<boost::minstd_rand> m(model);
   m.normal(a).dnorm(mu_a, tau_a);
   m.normal(b).dnorm(0, 0.0001);
   m.normal(mu_a).dnorm(0, 0.0001);

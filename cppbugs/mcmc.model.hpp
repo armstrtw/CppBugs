@@ -25,19 +25,25 @@
 #include <exception>
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.hpp>
-#include <cppbugs/mcmc.model.base.hpp>
 #include <cppbugs/mcmc.object.hpp>
-#include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.deterministic.hpp>
+#include <cppbugs/mcmc.normal.hpp>
+#include <cppbugs/mcmc.uniform.hpp>
+#include <cppbugs/mcmc.gamma.hpp>
+#include <cppbugs/mcmc.binomial.hpp>
+
+
 
 namespace cppbugs {
   typedef std::map<void*,MCMCObject*> vmc_map;
   typedef std::map<void*,MCMCObject*>::iterator vmc_map_iter;
 
+  template<class RNG>
   class MCModel {
   private:
     double accepted_;
     double rejected_;
-    SpecializedRng<boost::minstd_rand> rng_;
+    SpecializedRng<RNG> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_nodes, dynamic_nodes;
     std::vector<std::function<double ()> > logp_functors;
     std::function<void ()> update;
@@ -48,7 +54,7 @@ namespace cppbugs {
     void revert() { for(auto v : dynamic_nodes) { v->revert(); } }
     void set_scale(const double scale) { for(auto v : jumping_nodes) { v->setScale(scale); } }
     void tally() { for(auto v : dynamic_nodes) { v->tally(); } }
-    bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
+    static bool bad_logp(const double value) { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), update(update_) {}
     ~MCModel() {

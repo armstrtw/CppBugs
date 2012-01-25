@@ -68,7 +68,7 @@ int main() {
     b_tau_full_rnk = rowdup * b_tau;
   };
 
-  MCModel m(model);
+  MCModel<boost::minstd_rand> m(model);
 
   m.normal(b).dnorm(b_mu_full_rnk,b_tau_full_rnk);
   m.normal(b_mu).dnorm(0.0,0.001);

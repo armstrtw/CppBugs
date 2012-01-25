@@ -29,7 +29,7 @@ int main() {
     rsq = as_scalar(1 - var(y - y_hat) / var(y));
   };
 
-  MCModel m(model);
+  MCModel<boost::minstd_rand> m(model);
   m.normal(b).dnorm(0.0, 0.0001);
   m.binomial(y).dbinom(size,p_hat);
   m.deterministic(rsq);
