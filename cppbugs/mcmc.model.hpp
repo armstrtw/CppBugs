@@ -38,15 +38,15 @@ namespace cppbugs {
     double accepted_;
     double rejected_;
     SpecializedRng<boost::minstd_rand> rng_;
-    std::vector<MCMCObject*> mcmcObjects, jumping_stochastics, deterministics;
+    std::vector<MCMCObject*> mcmcObjects, jumping_nodes;
     std::vector<std::function<double ()> > logp_functors;
     std::function<void ()> update;
     vmc_map data_node_map;
 
-    void jump() { for(auto v : jumping_stochastics) { v->jump(rng_); } }
+    void jump() { for(auto v : jumping_nodes) { v->jump(rng_); } }
     void preserve() { for(auto v : mcmcObjects) { v->preserve(); } }
     void revert() { for(auto v : mcmcObjects) { v->revert(); } }
-    void set_scale(const double scale) { for(auto v : jumping_stochastics) { v->setScale(scale); } }
+    void set_scale(const double scale) { for(auto v : jumping_nodes) { v->setScale(scale); } }
     void tally() { for(auto v : mcmcObjects) { v->tally(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
@@ -68,23 +68,19 @@ namespace cppbugs {
 
     void addStochcasticNode(MCMCObject* node) {
       Stochastic* sp = dynamic_cast<Stochastic*>(node);
+      // FIXME: this should throw if sp->getLikelihoodFunctor() returns null
       if(sp && sp->getLikelihoodFunctor() ) { logp_functors.push_back(sp->getLikelihoodFunctor()); }
     }
 
     void initChain() {
       logp_functors.clear();
-      jumping_stochastics.clear();
-      deterministics.clear();
+      jumping_nodes.clear();
 
       for(auto node : mcmcObjects) {
         addStochcasticNode(node);
 
         if(node->isStochastic() && !node->isObserved()) {
-          jumping_stochastics.push_back(node);
-        }
-
-        if(node->isDeterministc()) {
-          deterministics.push_back(node);
+          jumping_nodes.push_back(node);
         }
       }
       // init values
@@ -95,7 +91,7 @@ namespace cppbugs {
     double calcDimension() {
       double ans(0);
 
-      for(auto v : jumping_stochastics) {
+      for(auto v : jumping_nodes) {
         ans += v->getSize();
       }
       return ans;
@@ -129,7 +125,7 @@ namespace cppbugs {
       old_logp_value = -std::numeric_limits<double>::infinity();
 
       for(int i = 1; i <= iterations; i++) {
-	for(auto it : jumping_stochastics) {
+	for(auto it : jumping_nodes) {
           old_logp_value = logp_value;
           it->preserve();
           it->jump(rng_);
@@ -145,7 +141,7 @@ namespace cppbugs {
 	}
 	if(i % tuning_step == 0) {
           //std::cout << "tuning at step: " << i << std::endl;
-	  for(auto it : jumping_stochastics) {
+	  for(auto it : jumping_nodes) {
 	    it->tune();
 	  }
 	}
