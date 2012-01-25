@@ -5,16 +5,20 @@ get.model <- function(model.file) {
     do.call(paste,as.list(paste(readLines(model.file),"\n")))
 }
 
-model <- get.model("linear.model.hpp")
 src <- get.model("run.model.cpp")
 
-linear.model <- cxxfunction(signature(XR="numeric", yr="numeric",iterations="integer",burn="integer",adapt="adapt",thin="integer"), body=src, include=model, plugin="RcppArmadillo",verbose=F)
+cppbugs.plugin <- getPlugin("RcppArmadillo")
+cppbugs.plugin$env$PKG_CXXFLAGS <- "-std=c++0x"
+cppbugs.plugin$env$PKG_LIBS <- paste(cppbugs.plugin$env$PKG_LIBS,"-larmadillo")
+
+linear.model <- cxxfunction(signature(XR="numeric", yr="numeric",iterations="integer",burn="integer",adapt="adapt",thin="integer"), includes="#include <cppbugs/cppbugs.hpp>",body=src,settings=cppbugs.plugin)
 
 
 NR <- 1000
 NC <- 5
 X <- cbind(rep(1,NR),matrix(rnorm(NR*NC),nrow=NR,ncol=NC))
-y <- matrix(rnorm(NR),nrow=NR)
+b <- rnorm(NC + 1)
+y <- X %*% b + rnorm(NR) + 10
 
-res <- linear.model(XR=X,yr=y,iterations=1e5L,burn=1e5L,adapt=2e3L,thin=5L)
+res <- linear.model(XR=X,yr=y,iterations=1e5L,burn=1e5L,adapt=1e3L,thin=5L)
 print(res)
