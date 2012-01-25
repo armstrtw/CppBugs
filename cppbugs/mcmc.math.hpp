@@ -34,6 +34,23 @@ namespace cppbugs {
     return x;
   }
 
+  double dim_size(const double x) {
+    return 1;
+  }
+
+  double dim_size(const int x) {
+    return 1;
+  }
+
+  double dim_size(const bool x) {
+    return 1;
+  }
+
+  template<typename T>
+  double dim_size(const T& x) {
+    return x.n_elem;
+  }
+
   bool any(const bool x) {
     return x;
   }

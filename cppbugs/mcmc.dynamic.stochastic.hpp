@@ -18,8 +18,6 @@
 #ifndef MCMC_DYNAMIC_STOCHASTIC_HPP
 #define MCMC_DYNAMIC_STOCHASTIC_HPP
 
-
-#include <cmath>
 #include <armadillo>
 #include <cppbugs/mcmc.specialized.hpp>
 #include <cppbugs/mcmc.stochastic.hpp>
@@ -42,8 +40,11 @@ namespace cppbugs {
       return 1.0 + diff * dilution * static_cast<double>(fabs(diff) > thresh);
     }
   public:
-    DynamicStochastic(T& value):
-      Dynamic<T>(value), accepted_(0), rejected_(0), scale_(1) {}
+    DynamicStochastic(T& value): Dynamic<T>(value), accepted_(0), rejected_(0) {
+      const double scale_num = 2.38;
+      double ideal_scale = sqrt(scale_num / pow(dim_size(Dynamic<T>::value),2));
+      scale_ = ideal_scale > 1.0 ? 1.0 : ideal_scale;
+    }
     virtual ~DynamicStochastic() {}
     void jump(RngBase& rng) { jump_impl(rng,Dynamic<T>::value,scale_); }
     void accept() { accepted_ += 1; }

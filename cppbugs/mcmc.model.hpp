@@ -91,25 +91,9 @@ namespace cppbugs {
       update();
     }
 
-    /*
-    double calcDimension() {
-      double ans(0);
-
-      for(auto v : jumping_nodes) {
-        ans += v->getSize();
-      }
-      return ans;
-    }
-    */
-
     double acceptance_ratio() const {
       return accepted_ / (accepted_ + rejected_);
     }
-
-    // bool reject(const double value, const double old_logp) {
-    //   double r = exp(value - old_logp);
-    //   return bad_logp(value) || (rng_.uniform() > r && r < 1)  ? true : false;
-    // }
 
     bool reject(const double value, const double old_logp) {
       return bad_logp(value) || log(rng_.uniform()) > (value - old_logp) ? true : false;
@@ -177,19 +161,12 @@ namespace cppbugs {
     }
 
     void sample(int iterations, int burn, int adapt, int thin) {
-      //const double scale_num = 2.38;
+
 
       if(iterations % thin) {
         std::cout << "ERROR: interations not a multiple of thin." << std::endl;
         return;
       }
-
-      //double d = calcDimension();
-      //std::cout << "dim size:" << d << std::endl;
-      //double ideal_scale = sqrt(scale_num / pow(d,2));
-      //double ideal_scale = scale_num / sqrt(d);
-      //std::cout << "ideal_scale: " << ideal_scale << std::endl;
-      //set_scale(ideal_scale);
 
       // setup logp's etc.
       initChain();
