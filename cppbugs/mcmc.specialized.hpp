@@ -19,6 +19,7 @@
 #define MCMC_SPECIALIZED_HPP
 
 #include <list>
+#include <armadillo>
 #include <cppbugs/mcmc.object.hpp>
 
 namespace cppbugs {
