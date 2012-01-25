@@ -38,16 +38,16 @@ namespace cppbugs {
     double accepted_;
     double rejected_;
     SpecializedRng<boost::minstd_rand> rng_;
-    std::vector<MCMCObject*> mcmcObjects, jumping_nodes;
+    std::vector<MCMCObject*> mcmcObjects, jumping_nodes, dynamic_nodes;
     std::vector<std::function<double ()> > logp_functors;
     std::function<void ()> update;
     vmc_map data_node_map;
 
     void jump() { for(auto v : jumping_nodes) { v->jump(rng_); } }
-    void preserve() { for(auto v : mcmcObjects) { v->preserve(); } }
-    void revert() { for(auto v : mcmcObjects) { v->revert(); } }
+    void preserve() { for(auto v : dynamic_nodes) { v->preserve(); } }
+    void revert() { for(auto v : dynamic_nodes) { v->revert(); } }
     void set_scale(const double scale) { for(auto v : jumping_nodes) { v->setScale(scale); } }
-    void tally() { for(auto v : mcmcObjects) { v->tally(); } }
+    void tally() { for(auto v : dynamic_nodes) { v->tally(); } }
     bool bad_logp(const double value) const { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), update(update_) {}
@@ -81,6 +81,10 @@ namespace cppbugs {
 
         if(node->isStochastic() && !node->isObserved()) {
           jumping_nodes.push_back(node);
+        }
+
+        if(!node->isObserved()) {
+          dynamic_nodes.push_back(node);
         }
       }
       // init values
