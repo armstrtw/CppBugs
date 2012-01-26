@@ -20,10 +20,10 @@ std::function<void ()> model = [&]() {
 };
 
 MCModel<boost::minstd_rand> m(model);
-m.normal(b).dnorm(0.0, 0.0001);
-m.gamma(tau_y).dgamma(0.1,0.1);
-m.normal(y).dnorm(y_hat,tau_y);
-m.deterministic(rsq);
+m.track<Normal>(b).dnorm(0.0, 0.0001);
+m.track<Gamma>(tau_y).dgamma(0.1,0.1);
+m.track<ObservedNormal>(y).dnorm(y_hat,tau_y);
+m.track<Deterministic>(rsq);
 
 m.sample(iterations_, burn_, adapt_, thin_);
 

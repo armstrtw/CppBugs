@@ -18,7 +18,16 @@ NR <- 1000
 NC <- 5
 X <- cbind(rep(1,NR),matrix(rnorm(NR*NC),nrow=NR,ncol=NC))
 b <- rnorm(NC + 1)
-y <- X %*% b + rnorm(NR) + 10
+b[1] <- 10
+y <- X %*% b + rnorm(NR)
 
 res <- linear.model(XR=X,yr=y,iterations=1e5L,burn=1e5L,adapt=1e3L,thin=5L)
-print(res)
+
+cat("actual vs estimated:\n")
+act.vs.est <- cbind(as.matrix(b),res$b)
+colnames(act.vs.est) <- c("actual","estimated")
+print(act.vs.est)
+
+cat("ar:",res$ar,"\n")
+cat("R^2:",res$rsq,"\n")
+

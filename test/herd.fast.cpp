@@ -54,15 +54,15 @@ int main() {
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.normal(b).dnorm(0,0.001);
-  m.uniform(tau_overdisp).dunif(0,1000);
-  m.uniform(tau_b_herd).dunif(0,100);
-  m.normal(b_herd).dnorm(0, tau_b_herd);
-  m.normal(overdisp).dnorm(0,tau_overdisp);
-  m.binomial(incidence).dbinom(size,phi);
-  m.deterministic(sigma_overdisp);
-  m.deterministic(sigma_b_herd);
-  m.deterministic(phi);
+  m.track<Normal>(b).dnorm(0,0.001);
+  m.track<Uniform>(tau_overdisp).dunif(0,1000);
+  m.track<Uniform>(tau_b_herd).dunif(0,100);
+  m.track<Normal>(b_herd).dnorm(0, tau_b_herd);
+  m.track<Normal>(overdisp).dnorm(0,tau_overdisp);
+  m.track<ObservedBinomial>(incidence).dbinom(size,phi);
+  m.track<Deterministic>(sigma_overdisp);
+  m.track<Deterministic>(sigma_b_herd);
+  m.track<Deterministic>(phi);
   m.sample(1e6,1e5,1e4,50);
 
   cout << "samples: " << m.getNode(b).history.size() << endl;

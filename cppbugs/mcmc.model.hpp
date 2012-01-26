@@ -26,13 +26,6 @@
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.hpp>
 #include <cppbugs/mcmc.object.hpp>
-#include <cppbugs/mcmc.deterministic.hpp>
-#include <cppbugs/mcmc.normal.hpp>
-#include <cppbugs/mcmc.uniform.hpp>
-#include <cppbugs/mcmc.gamma.hpp>
-#include <cppbugs/mcmc.binomial.hpp>
-
-
 
 namespace cppbugs {
   typedef std::map<void*,MCMCObject*> vmc_map;
@@ -64,12 +57,6 @@ namespace cppbugs {
       for(auto m : data_node_map) {
         delete m.second;
       }
-    }
-
-    // allows node to be added without being put on the delete list
-    // for those who want full control of their memory...
-    void addNode(MCMCObject* node) {
-      mcmcObjects.push_back(node);
     }
 
     void addStochcasticNode(MCMCObject* node) {
@@ -184,52 +171,26 @@ namespace cppbugs {
       run(iterations, burn, thin);
     }
 
-    template<typename T>
-    ObservedNormal<T>& normal(const T& x) {
-      ObservedNormal<T>* node = new ObservedNormal<T>(const_cast<T&>(x));
+    template<template<typename> class MCTYPE, typename T>
+    MCTYPE<T>& track(T& x) {
+      MCTYPE<T>* node = new MCTYPE<T>(x);
       mcmcObjects.push_back(node);
       data_node_map[(void*)(&x)] = node;
       return *node;
     }
 
-    template<typename T>
-    Normal<T>& normal(T& x) {
-      Normal<T>* node = new Normal<T>(x);
+    template<template<typename> class MCTYPE, typename T>
+    MCTYPE<T>& track(const T& x) {
+      MCTYPE<T>* node = new MCTYPE<T>(x);
       mcmcObjects.push_back(node);
       data_node_map[(void*)(&x)] = node;
       return *node;
     }
 
-    template<typename T>
-    Uniform<T>& uniform(T& x) {
-      Uniform<T>* node = new Uniform<T>(x);
-      data_node_map[(void*)(&x)] = node;
+    // allows node to be added without being put on the delete list
+    // for those who want full control of their memory...
+    void track(MCMCObject* node) {
       mcmcObjects.push_back(node);
-      return *node;
-    }
-
-    template<typename T>
-    Gamma<T>& gamma(T& x) {
-      Gamma<T>* node = new Gamma<T>(x);
-      data_node_map[(void*)(&x)] = node;
-      mcmcObjects.push_back(node);
-      return *node;
-    }
-
-    template<typename T>
-    ObservedBinomial<T>& binomial(const T& x) {
-      ObservedBinomial<T>* node = new ObservedBinomial<T>(x);
-      mcmcObjects.push_back(node);
-      data_node_map[(void*)(&x)] = node;
-      return *node;
-    }
-
-    template<typename T>
-    Deterministic<T>& deterministic(T& x) {
-      Deterministic<T>* node = new Deterministic<T>(x);
-      data_node_map[(void*)(&x)] = node;
-      mcmcObjects.push_back(node);
-      return *node;
     }
 
     template<typename T>

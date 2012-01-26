@@ -37,10 +37,10 @@ int main() {
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.normal(a).dnorm(0.0, 0.0001);
-  m.normal(b).dnorm(0.0, 0.0001);
-  m.gamma(tau).dgamma(0.1, 0.1);
-  m.normal(price).dnorm(y_hat,tau);
+  m.track<Normal>(a).dnorm(0.0, 0.0001);
+  m.track<Normal>(b).dnorm(0.0, 0.0001);
+  m.track<Gamma>(tau).dgamma(0.1, 0.1);
+  m.track<ObservedNormal>(price).dnorm(y_hat,tau);
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 5);

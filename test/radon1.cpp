@@ -107,14 +107,14 @@ string file("/home/warmstrong/dvl/scripts/mcmc/radon/srrs.csv");
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.normal(a).dnorm(mu_a, tau_a);
-  m.normal(b).dnorm(0, 0.0001);
-  m.normal(mu_a).dnorm(0, 0.0001);
-  m.uniform(sigma_y).dunif(0, 100);
-  m.uniform(sigma_a).dunif(0, 100);
-  m.normal(level_const).dnorm(y_hat,tau_y);
-  m.deterministic(tau_y);
-  m.deterministic(tau_a);
+  m.track<Normal>(a).dnorm(mu_a, tau_a);
+  m.track<Normal>(b).dnorm(0, 0.0001);
+  m.track<Normal>(mu_a).dnorm(0, 0.0001);
+  m.track<Uniform>(sigma_y).dunif(0, 100);
+  m.track<Uniform>(sigma_a).dunif(0, 100);
+  m.track<ObservedNormal>(level_const).dnorm(y_hat,tau_y);
+  m.track<Deterministic>(tau_y);
+  m.track<Deterministic>(tau_a);
 
   m.sample(50e3, 10e3, 1e4, 5);
   cout << "samples: " << m.getNode(b).history.size() << endl;

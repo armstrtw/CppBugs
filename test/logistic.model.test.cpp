@@ -30,13 +30,14 @@ int main() {
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.normal(b).dnorm(0.0, 0.0001);
-  m.binomial(y).dbinom(size,p_hat);
-  m.deterministic(rsq);
+  m.track<Normal>(b).dnorm(0.0, 0.0001);
+  m.track<ObservedBinomial>(y).dbinom(size,p_hat);
+  m.track<Deterministic>(rsq);
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
 
+  cout << "b (actual):" << endl << real_b;
   cout << "b: " << endl << m.getNode(b).mean();
   cout << "R^2: " << m.getNode(rsq).mean() << endl;
   cout << "samples: " << m.getNode(b).history.size() << endl;

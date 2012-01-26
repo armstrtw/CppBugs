@@ -71,17 +71,17 @@ int main() {
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.normal(b0).dnorm(0,0.001);
-  m.normal(b_period2).dnorm(0,0.001);
-  m.normal(b_period3).dnorm(0,0.001);
-  m.normal(b_period4).dnorm(0,0.001);
-  m.uniform(tau_overdisp).dunif(0,1000);
-  m.uniform(tau_b_herd).dunif(0,100);
-  m.normal(b_herd).dnorm(0, tau_b_herd);
-  m.normal(overdisp).dnorm(0,tau_overdisp);
-  m.binomial(incidence).dbinom(size,phi);
-  m.deterministic(sigma_overdisp);
-  m.deterministic(sigma_b_herd);
+  m.track<Normal>(b0).dnorm(0,0.001);
+  m.track<Normal>(b_period2).dnorm(0,0.001);
+  m.track<Normal>(b_period3).dnorm(0,0.001);
+  m.track<Normal>(b_period4).dnorm(0,0.001);
+  m.track<Uniform>(tau_overdisp).dunif(0,1000);
+  m.track<Uniform>(tau_b_herd).dunif(0,100);
+  m.track<Normal>(b_herd).dnorm(0, tau_b_herd);
+  m.track<Normal>(overdisp).dnorm(0,tau_overdisp);
+  m.track<ObservedBinomial>(incidence).dbinom(size,phi);
+  m.track<Deterministic>(sigma_overdisp);
+  m.track<Deterministic>(sigma_b_herd);
 
   m.sample(1e6,5e5,1e4,50);
   //m.sample(1e5,1e4,10);

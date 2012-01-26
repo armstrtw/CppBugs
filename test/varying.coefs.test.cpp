@@ -59,10 +59,10 @@ int main() {
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.normal(b).dnorm(0.0, 0.0001);
-  m.uniform(tau_y).dunif(0,100);
-  m.normal(y_const).dnorm(y_hat,tau_y);
-  m.deterministic(rsq);
+  m.track<Normal>(b).dnorm(0.0, 0.0001);
+  m.track<Uniform>(tau_y).dunif(0,100);
+  m.track<ObservedNormal>(y_const).dnorm(y_hat,tau_y);
+  m.track<Deterministic>(rsq);
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);

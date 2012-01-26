@@ -52,7 +52,7 @@ int main() {
 
   mat b(randn<mat>(J,NC));
   mat b_mu(randn<vec>(1,NC));
-  mat b_tau(randn<vec>(1,NC));
+  mat b_tau(randu<vec>(1,NC));
   mat b_mu_full_rnk;
   mat b_tau_full_rnk;
   double tau_y(1);
@@ -70,12 +70,12 @@ int main() {
 
   MCModel<boost::minstd_rand> m(model);
 
-  m.normal(b).dnorm(b_mu_full_rnk,b_tau_full_rnk);
-  m.normal(b_mu).dnorm(0.0,0.001);
-  m.uniform(b_tau).dunif(0,100);
-  m.uniform(tau_y).dunif(0,100);
-  m.normal(y_const).dnorm(y_hat,tau_y);
-  m.deterministic(rsq);
+  m.track<Normal>(b).dnorm(b_mu_full_rnk,b_tau_full_rnk);
+  m.track<Normal>(b_mu).dnorm(0.0,0.001);
+  m.track<Uniform>(b_tau).dunif(0,100);
+  m.track<Uniform>(tau_y).dunif(0,100);
+  m.track<ObservedNormal>(y_const).dnorm(y_hat,tau_y);
+  m.track<Deterministic>(rsq);
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
