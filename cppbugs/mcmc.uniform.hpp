@@ -28,7 +28,7 @@ namespace cppbugs {
   template<typename T>
   class Uniform : public DynamicStochastic<T> {
   public:
-    Uniform(T& value, const bool observed=false): DynamicStochastic<T>(value) {}
+    Uniform(T& value): DynamicStochastic<T>(value) {}
 
     template<typename U, typename V>
     Uniform<T>& dunif(const U& lower, const V& upper) {
