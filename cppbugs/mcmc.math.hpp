@@ -126,8 +126,16 @@ namespace cppbugs {
   double gamma_logp(const T& x, const U& alpha, const V& beta) {
     return any(x < 0 ) ?
       -std::numeric_limits<double>::infinity() :
-      schur((alpha - 1.0),log(x)) - schur(beta,x) - log_gamma(alpha) + schur(alpha,log(beta));
+      accu(schur((alpha - 1.0),log(x)) - schur(beta,x) - log_gamma(alpha) + schur(alpha,log(beta)));
   }
+
+  /*
+  double gamma_logp(mat& x, const double alpha, const double beta) {
+    return any(x < 0 ) ?
+      -std::numeric_limits<double>::infinity() :
+      (alpha - 1.0) * log(x) - beta * x - log_gamma(alpha) + alpha *log(beta);
+  }
+  */
 
   double binom_logp(const arma::ivec& x, const arma::ivec& n, const arma::vec& p) {
     if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
@@ -146,5 +154,14 @@ namespace cppbugs {
     }
   }
 
+  template<typename T, typename U>
+  double bernoulli_logp(const T& x, const U& p) {
+
+    if( any(p <= 0 ) || any(p >= 1) || any(x < 0)  || any(x > 1) ) {
+      return -std::numeric_limits<double>::infinity();
+    } else {
+      return accu(schur(x,log(p)) + schur((1-x), log(1-p)));
+    }
+  }
 } // namespace cppbugs
 #endif // MCMC_STOCHASTIC_HPP

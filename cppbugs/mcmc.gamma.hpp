@@ -34,7 +34,7 @@ namespace cppbugs {
     void jump(RngBase& rng) { positive_jump_impl(rng, DynamicStochastic<T>::value,DynamicStochastic<T>::scale_); }
 
     template<typename U, typename V>
-    Gamma<double>& dgamma(const U& alpha, const V& beta) {
+    Gamma<T>& dgamma(const U& alpha, const V& beta) {
       const T& x = DynamicStochastic<T>::value;
       Stochastic::likelihood_functor = [&x,&alpha,&beta]() {
         return gamma_logp(x,alpha,beta);
