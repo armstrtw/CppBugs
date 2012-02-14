@@ -11,6 +11,16 @@ all: linear.model.test varying.coefs.test price herd herd.fast radon1 varying.co
 clean:
 	rm -f linear.model.test varying.coefs.test price herd herd.fast radon1 varying.coefs.global.prior logistic.model.test
 
+benchmark:
+	rm -f ./benchmark.output
+	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./linear.model.test
+	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./varying.coefs.test
+	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./price
+	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./herd
+	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./herd.fast
+	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./radon1
+	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./varying.coefs.global.prior
+	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./logistic.model.test
 
 logistic.model.test: logistic.model.test.cpp
 	$(CC) $(CPPFLAGS) $(LIBS) logistic.model.test.cpp -o logistic.model.test
