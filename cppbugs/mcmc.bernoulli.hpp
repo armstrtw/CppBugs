@@ -25,6 +25,17 @@
 
 namespace cppbugs {
 
+  template <typename T,typename U>
+  class BernoulliLikelihiood : public Likelihiood {
+    const T& x_;
+    const U& p_;
+  public:
+    BernoulliLikelihiood(const T& x, const U& p): x_(x), p_(p) {}
+    inline double calc() const {
+      return bernoulli_logp(x_,p_);
+    }
+  };
+
   template<typename T>
   class Bernoulli : public DynamicStochastic<T> {
   public:
@@ -40,10 +51,7 @@ namespace cppbugs {
 
     template<typename U>
     Bernoulli<T>& dbern(const U& p) {
-      const T& x = DynamicStochastic<T>::value;
-      Stochastic::likelihood_functor = [&x,&p]() {
-        return bernoulli_logp(x,p);
-      };
+      Stochastic::likelihood_functor = new BernoulliLikelihiood<T,U>(DynamicStochastic<T>::value,p);
       return *this;
     }
   };

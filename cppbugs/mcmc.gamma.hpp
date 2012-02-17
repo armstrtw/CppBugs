@@ -25,6 +25,18 @@
 
 namespace cppbugs {
 
+  template <typename T,typename U, typename V>
+  class GammaLikelihiood : public Likelihiood {
+    const T& x_;
+    const U& alpha_;
+    const V& beta_;
+  public:
+    GammaLikelihiood(const T& x,  const U& alpha,  const V& beta): x_(x), alpha_(alpha), beta_(beta) {}
+    inline double calc() const {
+      return gamma_logp(x_,alpha_,beta_);
+    }
+  };
+
   template<typename T>
   class Gamma : public DynamicStochastic<T> {
   public:
@@ -35,10 +47,7 @@ namespace cppbugs {
 
     template<typename U, typename V>
     Gamma<T>& dgamma(const U& alpha, const V& beta) {
-      const T& x = DynamicStochastic<T>::value;
-      Stochastic::likelihood_functor = [&x,&alpha,&beta]() {
-        return gamma_logp(x,alpha,beta);
-      };
+      Stochastic::likelihood_functor = new GammaLikelihiood<T,U,V>(DynamicStochastic<T>::value,alpha,beta);
       return *this;
     }
   };

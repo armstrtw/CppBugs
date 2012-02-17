@@ -25,6 +25,18 @@
 
 namespace cppbugs {
 
+  template <typename T,typename U, typename V>
+  class UniformLikelihiood : public Likelihiood {
+    const T& x_;
+    const U& lower_;
+    const V& upper_;
+  public:
+    UniformLikelihiood(const T& x,  const U& lower,  const V& upper): x_(x), lower_(lower), upper_(upper) {}
+    inline double calc() const {
+      return uniform_logp(x_,lower_,upper_);
+    }
+  };
+
   template<typename T>
   class Uniform : public DynamicStochastic<T> {
   public:
@@ -32,10 +44,7 @@ namespace cppbugs {
 
     template<typename U, typename V>
     Uniform<T>& dunif(const U& lower, const V& upper) {
-      const T& x = DynamicStochastic<T>::value;
-      Stochastic::likelihood_functor = [&x,&lower,&upper]() {
-        return uniform_logp(x,lower,upper);
-      };
+      Stochastic::likelihood_functor = new UniformLikelihiood<T,U,V>(DynamicStochastic<T>::value,lower,upper);
       return *this;
     }
   };

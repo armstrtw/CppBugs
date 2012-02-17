@@ -26,6 +26,7 @@
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.hpp>
 #include <cppbugs/mcmc.object.hpp>
+#include <cppbugs/mcmc.stochastic.hpp>
 
 namespace cppbugs {
   typedef std::map<void*,MCMCObject*> vmc_map;
@@ -38,7 +39,7 @@ namespace cppbugs {
     double rejected_;
     SpecializedRng<RNG> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_nodes, dynamic_nodes;
-    std::vector<std::function<double ()> > logp_functors;
+    std::vector<Likelihiood*> logp_functors;
     std::function<void ()> update;
     vmc_map data_node_map;
 
@@ -95,7 +96,7 @@ namespace cppbugs {
     double logp() const {
       double ans(0);
       for(auto f : logp_functors) {
-        ans += f();
+        ans += f->calc();
       }
       return ans;
     }

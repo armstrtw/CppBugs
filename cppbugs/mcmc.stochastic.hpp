@@ -23,18 +23,24 @@
 
 namespace cppbugs {
 
+  class Likelihiood {
+  public:
+    virtual double calc() const = 0;
+  };
+
   class Stochastic {
   protected:
-    std::function<double ()> likelihood_functor;
+    Likelihiood* likelihood_functor;
   public:
     Stochastic() {}
+    ~Stochastic() { delete likelihood_functor; }
     double loglik() const {
       return 
         likelihood_functor ?
-        likelihood_functor():
+        likelihood_functor->calc():
         std::numeric_limits<double>::quiet_NaN();
     }
-    std::function<double ()> getLikelihoodFunctor() const {
+    Likelihiood* getLikelihoodFunctor() const {
       return likelihood_functor;
     }
   };

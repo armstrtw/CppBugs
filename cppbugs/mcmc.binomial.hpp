@@ -25,6 +25,18 @@
 
 namespace cppbugs {
 
+  template <typename T,typename U, typename V>
+  class BinomialLikelihiood : public Likelihiood {
+    const T& x_;
+    const U& n_;
+    const V& p_;
+  public:
+    BinomialLikelihiood(const T& x,  const U& n,  const V& p): x_(x), n_(n), p_(p) {}
+    inline double calc() const {
+      return binom_logp(x_,n_,p_);
+    }
+  };
+
   template<typename T>
   class Binomial : public DynamicStochastic<T> {
   public:
@@ -32,10 +44,7 @@ namespace cppbugs {
 
     template<typename U, typename V>
     Binomial<T>& dbinom(const T n, const arma::mat& p) {
-      const T& x = DynamicStochastic<T>::value;
-      Stochastic::likelihood_functor = [&x,&n,&p]() {
-        return binom_logp(x, n, p);
-      };
+      Stochastic::likelihood_functor = new BinomialLikelihiood<T,U,V>(DynamicStochastic<T>::value, n, p);
       return *this;
     }
   };
@@ -47,10 +56,7 @@ namespace cppbugs {
 
     template<typename U, typename V>
     ObservedBinomial<T>& dbinom(const U& n, const V& p) {
-      const T& x = Observed<T>::value;
-      Stochastic::likelihood_functor = [&x,&n,&p]() {
-        return binom_logp(x, n, p);
-      };
+      Stochastic::likelihood_functor = new BinomialLikelihiood<T,U,V>(Observed<T>::value, n, p);
       return *this;
     }
   };

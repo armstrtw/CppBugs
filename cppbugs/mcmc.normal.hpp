@@ -26,6 +26,18 @@
 
 namespace cppbugs {
 
+  template <typename T,typename U, typename V>
+  class NormalLikelihiood : public Likelihiood {
+    const T& x_;
+    const U& mu_;
+    const V& tau_;
+  public:
+    NormalLikelihiood(  const T& x,  const U& mu,  const V& tau): x_(x), mu_(mu), tau_(tau) {}
+    inline double calc() const {
+      //return accu(0.5*log(0.5*tau_/arma::math::pi()) - 0.5 * tau_ * square(x_ - mu_));
+      return normal_logp(x_,mu_,tau_);
+    }
+  };
 
   template<typename T>
   class Normal : public DynamicStochastic<T> {
@@ -34,10 +46,7 @@ namespace cppbugs {
 
     template<typename U, typename V>
     Normal<T>& dnorm(const U& mu, const V& tau) {
-      const T& x = DynamicStochastic<T>::value;
-      Stochastic::likelihood_functor = [&x,&mu,&tau]() {
-        return normal_logp(x,mu,tau);
-      };
+      Stochastic::likelihood_functor = new NormalLikelihiood<T,U,V>(DynamicStochastic<T>::value,mu,tau);
       return *this;
     }
   };
@@ -49,10 +58,7 @@ namespace cppbugs {
 
     template<typename U, typename V>
     ObservedNormal<T>& dnorm(const U& mu, const V& tau) {
-      const T& x = Observed<T>::value;
-      Stochastic::likelihood_functor = [&x,&mu,&tau]() {
-        return normal_logp(x,mu,tau);
-      };
+      Stochastic::likelihood_functor = new NormalLikelihiood<T,U,V>(Observed<T>::value,mu,tau);
       return *this;
     }
   };
