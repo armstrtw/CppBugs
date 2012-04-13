@@ -32,8 +32,10 @@ namespace cppbugs {
     std::list<T> history;
     MCMCSpecialized(): MCMCObject(), save_history_(true) {}
 
+    static void fill(arma::ivec& x) { x.fill(0); }
     static void fill(arma::mat& x) { x.fill(0); }
     static void fill(double& x) { x = 0; }
+    static void fill(int& x) { x = 0; }
 
     T mean() const {
       if(history.size() == 0) {
