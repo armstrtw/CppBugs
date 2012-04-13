@@ -48,5 +48,19 @@ namespace cppbugs {
       return *this;
     }
   };
+
+  template<typename T>
+  class ObservedUniform : public Observed<T> {
+  public:
+    ObservedUniform(const T& value): Observed<T>(value) {}
+
+    template<typename U, typename V>
+    ObservedUniform<T>& dunif(const U& lower, const V& upper) {
+      Stochastic::likelihood_functor = new UniformLikelihiood<T,U,V>(Observed<T>::value,lower,upper);
+      return *this;
+    }
+  };
+
+
 } // namespace cppbugs
 #endif // MCMC_UNIFORM_HPP
