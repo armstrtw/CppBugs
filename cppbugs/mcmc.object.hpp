@@ -25,6 +25,7 @@ namespace cppbugs {
   class MCMCObject {
   public:
     MCMCObject() {}
+    virtual ~MCMCObject() {}
     virtual void jump(RngBase& rng) = 0;
     virtual void accept() = 0;
     virtual void reject() = 0;
