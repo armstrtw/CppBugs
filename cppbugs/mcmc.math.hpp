@@ -112,6 +112,7 @@ namespace arma {
     return cppbugs::log_approx(val);
   }
 
+  // Base
   template<typename T1>
   arma_inline
   const eOp<T1, eop_log_approx> log_approx(const Base<typename T1::elem_type,T1>& A) {
@@ -119,11 +120,38 @@ namespace arma {
     return eOp<T1, eop_log_approx>(A.get_ref());
   }
 
+  // BaseCube
   template<typename T1>
   arma_inline
   const eOpCube<T1, eop_log_approx> log_approx(const BaseCube<typename T1::elem_type,T1>& A) {
     arma_extra_debug_sigprint();
     return eOpCube<T1, eop_log_approx>(A.get_ref());
+  }
+}
+
+
+namespace arma {
+  class eop_lgamma : public eop_core<eop_lgamma> {};
+
+  template<> template<typename eT> arma_hot arma_pure arma_inline eT
+  eop_core<eop_lgamma>::process(const eT val, const eT  ) {
+    return boost::math::lgamma(val);
+  }
+
+  // Base
+  template<typename T1>
+  arma_inline
+  const eOp<T1, eop_lgamma> lgamma(const Base<typename T1::elem_type,T1>& A) {
+    arma_extra_debug_sigprint();
+    return eOp<T1, eop_lgamma>(A.get_ref());
+  }
+
+  // BaseCube
+  template<typename T1>
+  arma_inline
+  const eOpCube<T1, eop_lgamma> lgamma(const BaseCube<typename T1::elem_type,T1>& A) {
+    arma_extra_debug_sigprint();
+    return eOpCube<T1, eop_lgamma>(A.get_ref());
   }
 }
 
@@ -170,13 +198,13 @@ namespace cppbugs {
     return x*x;
   }
 
-  double log_gamma(const double x) {
+  double lgamma(const double x) {
     return boost::math::lgamma(x);
   }
 
   double factln_single(int n) {
     if(n > 100) {
-      return log_gamma(static_cast<double>(n) + 1);
+      return lgamma(static_cast<double>(n) + 1);
     }
     double ans(1);
     for (int i=n; i>1; i--) {
@@ -237,7 +265,7 @@ namespace cppbugs {
   double gamma_logp(const T& x, const U& alpha, const V& beta) {
     return any(x < 0 ) ?
       -std::numeric_limits<double>::infinity() :
-      accu(schur((alpha - 1.0),log_approx(x)) - schur(beta,x) - log_gamma(alpha) + schur(alpha,log_approx(beta)));
+      accu(schur((alpha - 1.0),log_approx(x)) - schur(beta,x) - lgamma(alpha) + schur(alpha,log_approx(beta)));
   }
 
   /*

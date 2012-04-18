@@ -52,5 +52,17 @@ namespace cppbugs {
     }
   };
 
+  template<typename T>
+  class ObservedGamma : public Observed<T> {
+  public:
+    ObservedGamma(const T& value): Observed<T>(value) {}
+
+    template<typename U, typename V>
+    ObservedGamma<T>& dgamma(const U& alpha, const V& beta) {
+      Stochastic::likelihood_functor = new GammaLikelihiood<T,U,V>(Observed<T>::value,alpha,beta);
+      return *this;
+    }
+  };
+
 } // namespace cppbugs
 #endif // MCMC_GAMMA_HPP
