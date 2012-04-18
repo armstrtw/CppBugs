@@ -38,20 +38,55 @@ namespace cppbugs {
 
   template<typename T>
   class Bernoulli : public DynamicStochastic<T> {
+
+    template<typename U>
+    void bernoulli_jump(RngBase& rng, U& value, const double scale) {
+      double jump_probability = 1.0 - pow(0.5,scale);
+      arma::uvec flips = arma::find(arma::randu<arma::vec>(value.n_elem) < jump_probability);
+      for(unsigned int i = 0; i < flips.n_elem; i++) {
+        value[ flips[i] ] = value[ flips[i] ] ? 0 : 1;
+      }
+    }
+
+    void bernoulli_jump(RngBase& rng, int& value, const double scale) {
+      double jump_probability = 1.0 - pow(0.5,scale);
+      if(rng.uniform() < jump_probability) {
+        value = value ? 0 : 1;
+      }
+    }
+
   public:
     Bernoulli(T& value): DynamicStochastic<T>(value) {}
 
+    /* original
     void jump(RngBase& rng) {
       double jump_probability = 1.0 - pow(0.5,DynamicStochastic<T>::scale_);
-      arma::uvec flips = find(arma::randu<arma::vec>(DynamicStochastic<T>::value.n_elem) < jump_probability);
+      arma::uvec flips = arma::find(arma::randu<arma::vec>(DynamicStochastic<T>::value.n_elem) < jump_probability);
       for(unsigned int i = 0; i < flips.n_elem; i++) {
         DynamicStochastic<T>::value[ flips[i] ] = DynamicStochastic<T>::value[ flips[i] ] ? 0 : 1;
       }
+    }
+    */
+
+    void jump(RngBase& rng) {
+      bernoulli_jump(rng, DynamicStochastic<T>::value, DynamicStochastic<T>::scale_);
     }
 
     template<typename U>
     Bernoulli<T>& dbern(const U& p) {
       Stochastic::likelihood_functor = new BernoulliLikelihiood<T,U>(DynamicStochastic<T>::value,p);
+      return *this;
+    }
+  };
+
+  template<typename T>
+  class ObservedBernoulli : public Observed<T> {
+  public:
+    ObservedBernoulli(const T& value): Observed<T>(value) {}
+
+    template<typename U>
+    ObservedBernoulli<T>& dbern(const U& p) {
+      Stochastic::likelihood_functor = new BernoulliLikelihiood<T,U>(Observed<T>::value,p);
       return *this;
     }
   };

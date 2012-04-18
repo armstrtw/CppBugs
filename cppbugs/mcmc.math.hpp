@@ -131,6 +131,7 @@ namespace arma {
 
 
 namespace arma {
+  // lgamma
   class eop_lgamma : public eop_core<eop_lgamma> {};
 
   template<> template<typename eT> arma_hot arma_pure arma_inline eT
@@ -153,6 +154,111 @@ namespace arma {
     arma_extra_debug_sigprint();
     return eOpCube<T1, eop_lgamma>(A.get_ref());
   }
+}
+
+
+namespace arma {
+
+  template<typename T1, typename T2>
+  arma_inline
+  const eGlue<T1, T2, eglue_schur>
+  schur(const Base<typename T1::elem_type,T1>& X, const Base<typename T1::elem_type,T2>& Y) {
+    arma_extra_debug_sigprint();
+    return eGlue<T1, T2, eglue_schur>(X.get_ref(), Y.get_ref());
+  }
+
+  //! element-wise multiplication of Base objects with different element types
+  template<typename T1, typename T2>
+  inline
+  const mtGlue<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, glue_mixed_schur>
+  schur
+  (
+   const Base< typename force_different_type<typename T1::elem_type, typename T2::elem_type>::T1_result, T1>& X,
+   const Base< typename force_different_type<typename T1::elem_type, typename T2::elem_type>::T2_result, T2>& Y
+   )
+  {
+    arma_extra_debug_sigprint();
+    typedef typename T1::elem_type eT1;
+    typedef typename T2::elem_type eT2;
+    typedef typename promote_type<eT1,eT2>::result out_eT;
+    promote_type<eT1,eT2>::check();
+    return mtGlue<out_eT, T1, T2, glue_mixed_schur>( X.get_ref(), Y.get_ref() );
+  }
+
+
+  //! Base * scalar
+  template<typename T1>
+  arma_inline
+  const eOp<T1, eop_scalar_times>
+  schur
+  (const Base<typename T1::elem_type,T1>& X, const typename T1::elem_type k)
+  {
+    arma_extra_debug_sigprint();
+    return eOp<T1, eop_scalar_times>(X.get_ref(),k);
+  }
+
+  //! scalar * Base
+  template<typename T1>
+  arma_inline
+  const eOp<T1, eop_scalar_times>
+  schur
+  (const typename T1::elem_type k, const Base<typename T1::elem_type,T1>& X)
+  {
+    arma_extra_debug_sigprint();
+    return eOp<T1, eop_scalar_times>(X.get_ref(),k);  // NOTE: order is swapped
+  }
+
+
+  /*
+  // primary template: yield second or third argument depending on first argument
+  template<bool C, typename Ta, typename Tb>
+  class IfThenElse;
+
+  // partial specialization: true yields second argument
+  template<typename Ta, typename Tb>
+  class IfThenElse<true, Ta, Tb> {
+  public:
+    typedef Ta ResultT;
+  };
+
+  // partial specialization: false yields third argument
+  template<typename Ta, typename Tb>
+  class IfThenElse<false, Ta, Tb> {
+  public:
+    typedef Tb ResultT;
+  };
+
+  // primary template for type promotion
+  template<typename T1, typename T2>
+  class Promotion {
+  public:
+    typedef typename
+    IfThenElse<(sizeof(T1)>sizeof(T2)),
+      T1,
+      typename IfThenElse<(sizeof(T1)<sizeof(T2)),
+      T2,
+      void
+      >::ResultT
+    >::ResultT ResultT;
+  };
+
+  // partial specialization for two identical types
+  template<typename T>
+  class Promotion<T,T> {
+  public:
+    typedef T ResultT;
+  };
+
+  template<typename T, typename U>
+  typename Promotion<const T,const U>::ResultT schur(const T x, const U y) { return x * y; }
+  */
+
+  //template<typename T> T schur(const T x, const T y) { return x * y; }
+  const double schur(const int x, const double y) { return x * y; }
+  const double schur(const double x, const int y) { return x * y; }
+  const double schur(const double& x, const double& y) { return x * y; }
+  const double schur(const int& x, const int& y) { return x * y; }
+
 }
 
 namespace cppbugs {
@@ -237,23 +343,19 @@ namespace cppbugs {
     return ans;
   }
 
+  /*
+  */
 
-  // basic
-  const double schur(const double x, const double y) { return x * y; }
-  const double schur(const int x, const double y) { return x * y; }
-  const double schur(const double x, const int  y) { return x * y; }
-
-  // arma
-  const arma::mat schur(const arma::mat& x, const double y) { return x * y; }
-  const arma::mat schur(const double x, const arma::mat& y) { return x * y; }
+  /*
   const arma::mat schur(const arma::mat& x, const arma::mat& y) { return x % y; }
   
   template<typename T, typename U>
   const arma::mat schur(const arma::Mat<T>& x, const arma::Mat<U>& y) { return x % y; }
+  */
 
   template<typename T, typename U, typename V>
   double normal_logp(const T& x, const U& mu, const V& tau) {
-    return accu(0.5*log_approx(0.5*tau/arma::math::pi()) - 0.5 * schur(tau, square(x - mu)));
+    return accu(0.5*log_approx(0.5*tau/arma::math::pi()) - 0.5 * arma::schur(tau, square(x - mu)));
   }
 
   template<typename T, typename U, typename V>
@@ -265,7 +367,7 @@ namespace cppbugs {
   double gamma_logp(const T& x, const U& alpha, const V& beta) {
     return any(x < 0 ) ?
       -std::numeric_limits<double>::infinity() :
-      accu(schur((alpha - 1.0),log_approx(x)) - schur(beta,x) - lgamma(alpha) + schur(alpha,log_approx(beta)));
+      accu(arma::schur((alpha - 1.0),log_approx(x)) - arma::schur(beta,x) - lgamma(alpha) + arma::schur(alpha,log_approx(beta)));
   }
 
   /*
@@ -280,7 +382,7 @@ namespace cppbugs {
     if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
       return -std::numeric_limits<double>::infinity();
     } else {
-      //return accu(schur(x,log(p)) + schur((n-x),log(1-p)) + factln(n) - factln(x) - factln(n-x));
+      //return accu(arma::schur(x,log(p)) + arma::schur((n-x),log(1-p)) + factln(n) - factln(x) - factln(n-x));
       return accu(x % log_approx(p) + (n-x) % log_approx(1-p) + factln(n) - factln(x) - factln(n-x));
     }
   }
@@ -299,7 +401,7 @@ namespace cppbugs {
     if( any(p <= 0 ) || any(p >= 1) || any(x < 0)  || any(x > 1) ) {
       return -std::numeric_limits<double>::infinity();
     } else {
-      return accu(schur(x,log_approx(p)) + schur((1-x), log_approx(1-p)));
+      return accu(arma::schur(x,log_approx(p)) + arma::schur((1-x), log_approx(1-p)));
     }
   }
 } // namespace cppbugs

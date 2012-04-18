@@ -22,6 +22,11 @@
 
 namespace cppbugs {
 
+  // needed for completeness
+  void jump_impl(RngBase& rng, int& value, const double scale) {
+    value += rng.normal() * scale;
+  }
+
   void jump_impl(RngBase& rng, double& value, const double scale) {
     value += rng.normal() * scale;
   }
