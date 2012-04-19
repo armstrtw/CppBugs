@@ -158,6 +158,66 @@ namespace arma {
 
 
 namespace arma {
+  // factln
+
+  double factln_single(int n) {
+    if(n > 100) {
+      return boost::math::lgamma(static_cast<double>(n) + 1);
+    }
+    double ans(1);
+    for (int i=n; i>1; i--) {
+      ans *= i;
+    }
+    // FIXME: can revert back for speed
+    // but this fun only updates things
+    // in the update table, so it should only be called
+    // a few times
+    // return log_approx(ans);
+    return std::log(ans);
+  }
+
+  double factln(const int i) {
+    static std::vector<double> factln_table;
+
+    if(i < 0) {
+      return -std::numeric_limits<double>::infinity();
+    }
+
+    if(factln_table.size() < static_cast<size_t>(i+1)) {
+      for(int j = factln_table.size(); j < (i+1); j++) {
+        factln_table.push_back(factln_single(j));
+      }
+    }
+    //return factln_table.at(i);
+    return factln_table[i];
+  }
+
+  class eop_factln : public eop_core<eop_factln> {};
+
+  template<> template<typename eT> arma_hot arma_pure arma_inline eT
+  eop_core<eop_factln>::process(const eT val, const eT  ) {
+    return factln(val);
+  }
+
+  // Base
+  template<typename T1>
+  arma_inline
+  const eOp<T1, eop_lgamma> factln(const Base<typename T1::elem_type,T1>& A) {
+    arma_extra_debug_sigprint();
+    return eOp<T1, eop_lgamma>(A.get_ref());
+  }
+
+  // BaseCube
+  template<typename T1>
+  arma_inline
+  const eOpCube<T1, eop_lgamma> factln(const BaseCube<typename T1::elem_type,T1>& A) {
+    arma_extra_debug_sigprint();
+    return eOpCube<T1, eop_lgamma>(A.get_ref());
+  }
+}
+
+
+namespace arma {
 
   template<typename T1, typename T2>
   arma_inline
@@ -208,52 +268,6 @@ namespace arma {
     return eOp<T1, eop_scalar_times>(X.get_ref(),k);  // NOTE: order is swapped
   }
 
-
-  /*
-  // primary template: yield second or third argument depending on first argument
-  template<bool C, typename Ta, typename Tb>
-  class IfThenElse;
-
-  // partial specialization: true yields second argument
-  template<typename Ta, typename Tb>
-  class IfThenElse<true, Ta, Tb> {
-  public:
-    typedef Ta ResultT;
-  };
-
-  // partial specialization: false yields third argument
-  template<typename Ta, typename Tb>
-  class IfThenElse<false, Ta, Tb> {
-  public:
-    typedef Tb ResultT;
-  };
-
-  // primary template for type promotion
-  template<typename T1, typename T2>
-  class Promotion {
-  public:
-    typedef typename
-    IfThenElse<(sizeof(T1)>sizeof(T2)),
-      T1,
-      typename IfThenElse<(sizeof(T1)<sizeof(T2)),
-      T2,
-      void
-      >::ResultT
-    >::ResultT ResultT;
-  };
-
-  // partial specialization for two identical types
-  template<typename T>
-  class Promotion<T,T> {
-  public:
-    typedef T ResultT;
-  };
-
-  template<typename T, typename U>
-  typename Promotion<const T,const U>::ResultT schur(const T x, const U y) { return x * y; }
-  */
-
-  //template<typename T> T schur(const T x, const T y) { return x * y; }
   const double schur(const int x, const double y) { return x * y; }
   const double schur(const double x, const int y) { return x * y; }
   const double schur(const double& x, const double& y) { return x * y; }
@@ -304,35 +318,9 @@ namespace cppbugs {
     return x*x;
   }
 
+  /*
   double lgamma(const double x) {
     return boost::math::lgamma(x);
-  }
-
-  double factln_single(int n) {
-    if(n > 100) {
-      return lgamma(static_cast<double>(n) + 1);
-    }
-    double ans(1);
-    for (int i=n; i>1; i--) {
-      ans *= i;
-    }
-    return log_approx(ans);
-  }
-
-  double factln(const int i) {
-    static std::vector<double> factln_table;
-
-    if(i < 0) {
-      return -std::numeric_limits<double>::infinity();
-    }
-
-    if(factln_table.size() < static_cast<size_t>(i+1)) {
-      for(int j = factln_table.size(); j < (i+1); j++) {
-        factln_table.push_back(factln_single(j));
-      }
-    }
-    //return factln_table.at(i);
-    return factln_table[i];
   }
 
   arma::mat factln(const arma::imat& x) {
@@ -342,6 +330,7 @@ namespace cppbugs {
     }
     return ans;
   }
+  */
 
   /*
   */
@@ -371,13 +360,6 @@ namespace cppbugs {
   }
 
   /*
-    double gamma_logp(mat& x, const double alpha, const double beta) {
-    return any(x < 0 ) ?
-    -std::numeric_limits<double>::infinity() :
-    (alpha - 1.0) * log(x) - beta * x - log_gamma(alpha) + alpha *log(beta);
-    }
-  */
-
   double binom_logp(const arma::ivec& x, const arma::ivec& n, const arma::vec& p) {
     if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
       return -std::numeric_limits<double>::infinity();
@@ -393,6 +375,15 @@ namespace cppbugs {
     } else {
       return accu(x * log(p) + (n-x) * log(1-p) + factln(n) - factln(x) - factln(n-x));
     }
+  }
+  */
+
+  template<typename T, typename U, typename V>
+  double binom_logp(const T& x, const U& n, const V& p) {
+    if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
+      return -std::numeric_limits<double>::infinity();
+    }
+    return accu(arma::schur(x,log_approx(p)) + arma::schur((n-x),log_approx(1-p)) + arma::factln(n) - arma::factln(x) - arma::factln(n-x));
   }
 
   template<typename T, typename U>
