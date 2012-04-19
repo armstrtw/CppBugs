@@ -23,6 +23,7 @@
 //#include <armadillo_bits/eop_aux.hpp>
 
 #include <boost/math/special_functions/gamma.hpp>
+#include <boost/math/special_functions/factorials.hpp>
 //#include <cppbugs/fastlog.h>
 //#include <cppbugs/fastexp.h>
 
@@ -160,22 +161,6 @@ namespace arma {
 namespace arma {
   // factln
 
-  double factln_single(int n) {
-    if(n > 100) {
-      return boost::math::lgamma(static_cast<double>(n) + 1);
-    }
-    double ans(1);
-    for (int i=n; i>1; i--) {
-      ans *= i;
-    }
-    // FIXME: can revert back for speed
-    // but this fun only updates things
-    // in the update table, so it should only be called
-    // a few times
-    // return log_approx(ans);
-    return std::log(ans);
-  }
-
   double factln(const int i) {
     static std::vector<double> factln_table;
 
@@ -183,12 +168,16 @@ namespace arma {
       return -std::numeric_limits<double>::infinity();
     }
 
+    if(i > 100) {
+      return boost::math::lgamma(static_cast<double>(i) + 1);
+    }
+
     if(factln_table.size() < static_cast<size_t>(i+1)) {
       for(int j = factln_table.size(); j < (i+1); j++) {
-        factln_table.push_back(factln_single(j));
+        factln_table.push_back(std::log(boost::math::factorial<double>(static_cast<double>(j))));
       }
     }
-    //return factln_table.at(i);
+    //for(auto v : factln_table) { std::cout << v << "|"; }  std::cout << std::endl;
     return factln_table[i];
   }
 
@@ -202,17 +191,17 @@ namespace arma {
   // Base
   template<typename T1>
   arma_inline
-  const eOp<T1, eop_lgamma> factln(const Base<typename T1::elem_type,T1>& A) {
+  const eOp<T1, eop_factln> factln(const Base<typename T1::elem_type,T1>& A) {
     arma_extra_debug_sigprint();
-    return eOp<T1, eop_lgamma>(A.get_ref());
+    return eOp<T1, eop_factln>(A.get_ref());
   }
 
   // BaseCube
   template<typename T1>
   arma_inline
-  const eOpCube<T1, eop_lgamma> factln(const BaseCube<typename T1::elem_type,T1>& A) {
+  const eOpCube<T1, eop_factln> factln(const BaseCube<typename T1::elem_type,T1>& A) {
     arma_extra_debug_sigprint();
-    return eOpCube<T1, eop_lgamma>(A.get_ref());
+    return eOpCube<T1, eop_factln>(A.get_ref());
   }
 }
 
@@ -383,6 +372,10 @@ namespace cppbugs {
     if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
       return -std::numeric_limits<double>::infinity();
     }
+    //std::cout << "arma::factln(n): " << arma::factln(n) << std::endl;
+    //std::cout << "arma::factln(x): " << std::endl << arma::factln(x) << std::endl;
+    //std::cout << "n-x: " << std::endl << n-x << std::endl;
+    //std::cout << "arma::factln(n-x): " << std::endl << arma::factln(n-x) << std::endl;
     return accu(arma::schur(x,log_approx(p)) + arma::schur((n-x),log_approx(1-p)) + arma::factln(n) - arma::factln(x) - arma::factln(n-x));
   }
 
