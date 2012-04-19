@@ -307,29 +307,9 @@ namespace cppbugs {
     return x*x;
   }
 
-  /*
-  double lgamma(const double x) {
-    return boost::math::lgamma(x);
+  static inline int square(int x) {
+    return x*x;
   }
-
-  arma::mat factln(const arma::imat& x) {
-    arma::mat ans; ans.copy_size(x);
-    for(size_t i = 0; i < x.n_elem; i++) {
-      ans[i] = factln(x[i]);
-    }
-    return ans;
-  }
-  */
-
-  /*
-  */
-
-  /*
-  const arma::mat schur(const arma::mat& x, const arma::mat& y) { return x % y; }
-  
-  template<typename T, typename U>
-  const arma::mat schur(const arma::Mat<T>& x, const arma::Mat<U>& y) { return x % y; }
-  */
 
   template<typename T, typename U, typename V>
   double normal_logp(const T& x, const U& mu, const V& tau) {
