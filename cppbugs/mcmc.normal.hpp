@@ -18,8 +18,6 @@
 #ifndef MCMC_NORMAL_HPP
 #define MCMC_NORMAL_HPP
 
-#include <functional>
-#include <cmath>
 #include <armadillo>
 #include <cppbugs/mcmc.dynamic.stochastic.hpp>
 #include <cppbugs/mcmc.observed.hpp>
@@ -34,7 +32,6 @@ namespace cppbugs {
   public:
     NormalLikelihiood(  const T& x,  const U& mu,  const V& tau): x_(x), mu_(mu), tau_(tau) {}
     inline double calc() const {
-      //return accu(0.5*log(0.5*tau_/arma::math::pi()) - 0.5 * tau_ * square(x_ - mu_));
       return normal_logp(x_,mu_,tau_);
     }
   };
@@ -62,7 +59,6 @@ namespace cppbugs {
       return *this;
     }
   };
-
 
 } // namespace cppbugs
 #endif // MCMC_NORMAL_HPP
