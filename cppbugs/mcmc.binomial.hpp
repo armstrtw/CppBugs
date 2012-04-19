@@ -18,10 +18,9 @@
 #ifndef MCMC_BINOMIAL_HPP
 #define MCMC_BINOMIAL_HPP
 
-
-#include <cmath>
 #include <armadillo>
-#include <cppbugs/mcmc.stochastic.hpp>
+#include <cppbugs/mcmc.dynamic.stochastic.hpp>
+#include <cppbugs/mcmc.observed.hpp>
 
 namespace cppbugs {
 
@@ -43,8 +42,8 @@ namespace cppbugs {
     Binomial(T& value): DynamicStochastic<T>(value) {}
 
     template<typename U, typename V>
-    Binomial<T>& dbinom(const T n, const arma::mat& p) {
-      Stochastic::likelihood_functor = new BinomialLikelihiood<T,U,V>(DynamicStochastic<T>::value, n, p);
+    Binomial<T>& dbinom(const U& n, const V& p) {
+      Stochastic::likelihood_functor = new BinomialLikelihiood<T,U,V>(DynamicStochastic<T>::value,n,p);
       return *this;
     }
   };
