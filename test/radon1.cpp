@@ -58,12 +58,25 @@ void read_csv(string fname, vector< vector<string> >& rows) {
   fin.close();
 }
 
+/* old
 mat county_to_groups(vector<string>& county) {
   vector<string> unique_counties(county);
   vector<string>::iterator unique_counties_end = unique(unique_counties.begin(), unique_counties.end());
   mat ans(county.size(),std::distance(unique_counties.begin(),unique_counties_end)); ans.fill(0);
   for(size_t i = 0; i < county.size(); i++) {
     ans(i,std::distance(unique_counties.begin(),find(unique_counties.begin(),unique_counties_end,county[i]))) = 1.0;
+  }
+  return ans;
+}
+*/
+
+uvec county_to_groups(vector<string>& county) {
+  vector<string> unique_counties(county);
+  vector<string>::iterator unique_counties_end = unique(unique_counties.begin(), unique_counties.end());
+  //uvec ans(county.size(),std::distance(unique_counties.begin(),unique_counties_end)); ans.fill(0);
+  uvec ans(county.size()); ans.fill(0);
+  for(size_t i = 0; i < county.size(); i++) {
+    ans(i) = std::distance(unique_counties.begin(),find(unique_counties.begin(),unique_counties_end,county[i]));
   }
   return ans;
 }
@@ -93,15 +106,15 @@ string file("/home/warmstrong/dvl/scripts/mcmc/radon/srrs.csv");
   }
 
   fixlog(level);
-  mat group(county_to_groups(county));
+  uvec group(county_to_groups(county));
 
-
-  vec a(randn<vec>(group.n_cols));
+  vec a(randn<vec>(group.max() + 1));
   double b, tau_y(1), sigma_y(1), mu_a, tau_a(1), sigma_a(1);
-  mat y_hat;
+  vec y_hat;
 
   std::function<void ()> model = [&]() {
-    y_hat = group * a + b * basement;
+    //y_hat = group * a + b * basement;
+    y_hat = a.elem(group) + b * basement;
     tau_y = pow(sigma_y, -2.0);
     tau_a = pow(sigma_a, -2.0);
   };
