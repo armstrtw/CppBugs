@@ -30,13 +30,12 @@ namespace cppbugs {
   class DynamicStochastic : public Dynamic<T>, public Stochastic  {
   protected:
     bool observed_;
-    double accepted_,rejected_,scale_;
+    double accepted_,rejected_,scale_,target_ar_;
 
     double tune_factor(const double acceptance_ratio) {
-      const double univariate_target_ar = 0.6;
       const double thresh = 0.1;
       const double dilution = 1.0;
-      double diff = acceptance_ratio - univariate_target_ar;
+      double diff = acceptance_ratio - target_ar_;
       return 1.0 + diff * dilution * static_cast<double>(fabs(diff) > thresh);
     }
   public:
@@ -44,6 +43,10 @@ namespace cppbugs {
       const double scale_num = 2.38;
       double ideal_scale = sqrt(scale_num / pow(dim_size(Dynamic<T>::value),2));
       scale_ = ideal_scale > 1.0 ? 1.0 : ideal_scale;
+
+      // heuristic to set the target acceptance ratio based on the size of the object
+      // limiting the target ar to the theoretical asymptotic minimum
+      target_ar_ = std::max(1/log2(dim_size(Dynamic<T>::value) + 3),0.234);
     }
     virtual ~DynamicStochastic() {}
     void jump(RngBase& rng) { jump_impl(rng,Dynamic<T>::value,scale_); }
