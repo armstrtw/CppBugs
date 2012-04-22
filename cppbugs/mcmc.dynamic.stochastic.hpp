@@ -31,13 +31,6 @@ namespace cppbugs {
   protected:
     bool observed_;
     double accepted_,rejected_,scale_,target_ar_;
-
-    double tune_factor(const double acceptance_ratio) {
-      const double thresh = 0.1;
-      const double dilution = 1.0;
-      double diff = acceptance_ratio - target_ar_;
-      return 1.0 + diff * dilution * static_cast<double>(fabs(diff) > thresh);
-    }
   public:
     DynamicStochastic(T& value): Dynamic<T>(value), accepted_(0), rejected_(0) {
       const double scale_num = 2.38;
@@ -45,7 +38,8 @@ namespace cppbugs {
       scale_ = ideal_scale > 1.0 ? 1.0 : ideal_scale;
 
       // heuristic to set the target acceptance ratio based on the size of the object
-      // limiting the target ar to the theoretical asymptotic minimum
+      // limiting the target ar to the theoretical asymptotic minimum of 0.234
+      // http://www.stat.columbia.edu/~gelman/research/published/theory7.ps
       target_ar_ = std::max(1/log2(dim_size(Dynamic<T>::value) + 3),0.234);
     }
     virtual ~DynamicStochastic() {}
@@ -53,10 +47,17 @@ namespace cppbugs {
     void accept() { accepted_ += 1; }
     void reject() { rejected_ += 1; }
     void tune() {
-      double ar_ratio = accepted_ / (accepted_ + rejected_);
-      scale_ *= tune_factor(ar_ratio);
+      const double thresh = 0.1;
+      const double dilution = 1.0;
+
+      double acceptance_ratio = accepted_ / (accepted_ + rejected_);
       accepted_ = 0;
       rejected_ = 0;
+
+      double diff = acceptance_ratio - target_ar_;
+      if(std::abs(diff) > thresh) {
+        scale_ *= (1.0 + diff * dilution);
+      }
     }
     // in Dynamic: void preserve()
     // in Dynamic: void revert()
