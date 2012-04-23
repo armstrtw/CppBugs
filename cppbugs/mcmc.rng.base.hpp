@@ -15,29 +15,20 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_RNG_HPP
-#define MCMC_RNG_HPP
+#ifndef MCMC_RNG_BASE_HPP
+#define MCMC_RNG_BASE_HPP
 
-#include <boost/random.hpp>
-#include <cppbugs/mcmc.rng.base.hpp>
 
 namespace cppbugs {
 
-  template<typename T>
-  class SpecializedRng : public RngBase {
-    T generator_;
-    boost::normal_distribution<double> normal_rng_dist_;
-    boost::uniform_real<double> uniform_rng_dist_;
-    boost::variate_generator<T&, boost::normal_distribution<double> > normal_rng_;
-    boost::variate_generator<T&, boost::uniform_real<double> > uniform_rng_;
+  class RngBase {
   public:
-    SpecializedRng(): RngBase(),
-                      normal_rng_dist_(0, 1), uniform_rng_dist_(0, 1),
-                      normal_rng_(generator_, normal_rng_dist_),
-                      uniform_rng_(generator_, uniform_rng_dist_) {}
-    double normal() { return normal_rng_(); }
-    double uniform() { return uniform_rng_(); }
+    RngBase() {}
+    virtual double normal() = 0;
+    virtual double uniform() = 0;
+    //virtual int poisson(n) = 0;
+    // etc...
   };
 
 } // namespace cppbugs
-#endif // MCMC_RNG_HPP
+#endif // MCMC_RNG_BASE_HPP
