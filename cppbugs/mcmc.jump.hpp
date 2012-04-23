@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#include <cppbugs/mcmc.rng.hpp>
+#include <cppbugs/mcmc.rng.base.hpp>
 
 #ifndef MCMC_JUMP_HPP
 #define MCMC_JUMP_HPP
