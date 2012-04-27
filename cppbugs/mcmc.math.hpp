@@ -329,7 +329,7 @@ namespace cppbugs {
     const double one = 1.0;
     return any(x <= 0 ) || any(x >= 1 ) || any(alpha <= 0) || any(beta <= 0) ?
       -std::numeric_limits<double>::infinity() :
-      accu((lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta)) + (alpha-one)*log_approx(x) + (beta-one)*log_approx(one-x));
+      accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + (alpha-one)*log_approx(x) + (beta-one)*log_approx(one-x));
   }
 
   /*
