@@ -332,40 +332,16 @@ namespace cppbugs {
       accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + (alpha-one)*log_approx(x) + (beta-one)*log_approx(one-x));
   }
 
-  /*
-  double binom_logp(const arma::ivec& x, const arma::ivec& n, const arma::vec& p) {
-    if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
-      return -std::numeric_limits<double>::infinity();
-    } else {
-      //return accu(arma::schur(x,log(p)) + arma::schur((n-x),log(1-p)) + factln(n) - factln(x) - factln(n-x));
-      return accu(x % log_approx(p) + (n-x) % log_approx(1-p) + factln(n) - factln(x) - factln(n-x));
-    }
-  }
-
-  double binom_logp(const int x, const int n, const double p) {
-    if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
-      return -std::numeric_limits<double>::infinity();
-    } else {
-      return accu(x * log(p) + (n-x) * log(1-p) + factln(n) - factln(x) - factln(n-x));
-    }
-  }
-  */
-
   template<typename T, typename U, typename V>
   double binom_logp(const T& x, const U& n, const V& p) {
     if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
       return -std::numeric_limits<double>::infinity();
     }
-    //std::cout << "arma::factln(n): " << arma::factln(n) << std::endl;
-    //std::cout << "arma::factln(x): " << std::endl << arma::factln(x) << std::endl;
-    //std::cout << "n-x: " << std::endl << n-x << std::endl;
-    //std::cout << "arma::factln(n-x): " << std::endl << arma::factln(n-x) << std::endl;
     return accu(arma::schur(x,log_approx(p)) + arma::schur((n-x),log_approx(1-p)) + arma::factln(n) - arma::factln(x) - arma::factln(n-x));
   }
 
   template<typename T, typename U>
   double bernoulli_logp(const T& x, const U& p) {
-
     if( any(p <= 0 ) || any(p >= 1) || any(x < 0)  || any(x > 1) ) {
       return -std::numeric_limits<double>::infinity();
     } else {
