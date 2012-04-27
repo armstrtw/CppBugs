@@ -324,6 +324,14 @@ namespace cppbugs {
       accu(arma::schur((alpha - 1.0),log_approx(x)) - arma::schur(beta,x) - lgamma(alpha) + arma::schur(alpha,log_approx(beta)));
   }
 
+  template<typename T, typename U, typename V>
+  double beta_logp(const T& x, const U& alpha, const V& beta) {
+    const double one = 1.0;
+    return any(x <= 0 ) || any(x >= 1 ) || any(alpha <= 0) || any(beta <= 0) ?
+      -std::numeric_limits<double>::infinity() :
+      accu((lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta)) + (alpha-one)*log_approx(x) + (beta-one)*log_approx(one-x));
+  }
+
   /*
   double binom_logp(const arma::ivec& x, const arma::ivec& n, const arma::vec& p) {
     if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {

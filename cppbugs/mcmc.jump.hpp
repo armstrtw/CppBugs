@@ -40,6 +40,15 @@ namespace cppbugs {
     value = new_value;
   }
 
+  void bounded_jump_impl(RngBase& rng, double& value, const double scale, const double lower, const double upper) {
+    double new_value;
+    do {
+      new_value = value + rng.normal() * scale;
+    } while (new_value <= lower || new_value >= upper);
+
+    value = new_value;
+  }
+
   template<typename T>
   void jump_impl(RngBase& rng, T& value, const double scale) {
     for(size_t i = 0; i < value.n_elem; i++) {
@@ -51,6 +60,13 @@ namespace cppbugs {
   void positive_jump_impl(RngBase& rng, T& value, const double scale) {
     for(size_t i = 0; i < value.n_elem; i++) {
       positive_jump_impl(rng, value[i], scale);
+    }
+  }
+
+  template<typename T>
+  void bounded_jump_impl(RngBase& rng, T& value, const double scale, const double lower, const double upper) {
+    for(size_t i = 0; i < value.n_elem; i++) {
+      bounded_jump_impl(rng, value[i], scale, lower, upper);
     }
   }
 
