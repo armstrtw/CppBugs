@@ -18,6 +18,7 @@
 #ifndef MCMC_MATH_HPP
 #define MCMC_MATH_HPP
 
+#include <stdexcept>
 #include <cmath>
 #include <armadillo>
 #include <boost/math/special_functions/gamma.hpp>
@@ -348,5 +349,20 @@ namespace cppbugs {
       return accu(arma::schur(x,log_approx(p)) + arma::schur((1-x), log_approx(1-p)));
     }
   }
+
+  template<typename T, typename U, typename V>
+  void dimension_check(const T& x, const U& hyper1, const V& hyper2) {
+    if(dim_size(hyper1) > dim_size(x) || dim_size(hyper2) > dim_size(x)) {
+      throw std::logic_error("ERROR: dimensions of hyperparmeters are larger than the stochastic variable itself (is this really what you wanted to do?)");
+    }
+  }
+
+  template<typename T, typename U>
+  void dimension_check(const T& x, const U& hyper1) {
+    if(dim_size(hyper1) > dim_size(x)) {
+      throw std::logic_error("ERROR: dimensions of hyperparmeters are larger than the stochastic variable itself (is this really what you wanted to do?)");
+    }
+  }
+
 } // namespace cppbugs
 #endif // MCMC_STOCHASTIC_HPP

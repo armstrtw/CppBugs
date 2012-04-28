@@ -30,7 +30,7 @@ namespace cppbugs {
     const T& x_;
     const U& p_;
   public:
-    BernoulliLikelihiood(const T& x, const U& p): x_(x), p_(p) {}
+    BernoulliLikelihiood(const T& x, const U& p): x_(x), p_(p) { dimension_check(x_, p_); }
     inline double calc() const {
       return bernoulli_logp(x_,p_);
     }

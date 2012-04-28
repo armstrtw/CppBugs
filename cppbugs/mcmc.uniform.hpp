@@ -31,7 +31,7 @@ namespace cppbugs {
     const U& lower_;
     const V& upper_;
   public:
-    UniformLikelihiood(const T& x,  const U& lower,  const V& upper): x_(x), lower_(lower), upper_(upper) {}
+    UniformLikelihiood(const T& x,  const U& lower,  const V& upper): x_(x), lower_(lower), upper_(upper) { dimension_check(x_, lower_, upper_); }
     inline double calc() const {
       return uniform_logp(x_,lower_,upper_);
     }

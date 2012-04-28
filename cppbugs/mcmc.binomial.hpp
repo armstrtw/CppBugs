@@ -30,7 +30,7 @@ namespace cppbugs {
     const U& n_;
     const V& p_;
   public:
-    BinomialLikelihiood(const T& x,  const U& n,  const V& p): x_(x), n_(n), p_(p) {}
+    BinomialLikelihiood(const T& x,  const U& n,  const V& p): x_(x), n_(n), p_(p) { dimension_check(x_, n_, p_); }
     inline double calc() const {
       return binom_logp(x_,n_,p_);
     }

@@ -30,7 +30,7 @@ namespace cppbugs {
     const U& mu_;
     const V& tau_;
   public:
-    NormalLikelihiood(  const T& x,  const U& mu,  const V& tau): x_(x), mu_(mu), tau_(tau) {}
+    NormalLikelihiood(  const T& x,  const U& mu,  const V& tau): x_(x), mu_(mu), tau_(tau) { dimension_check(x_, mu_, tau_); }
     inline double calc() const {
       return normal_logp(x_,mu_,tau_);
     }

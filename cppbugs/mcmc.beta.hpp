@@ -30,7 +30,7 @@ namespace cppbugs {
     const U& alpha_;
     const V& beta_;
   public:
-    BetaLikelihiood(  const T& x,  const U& alpha,  const V& beta): x_(x), alpha_(alpha), beta_(beta) {}
+    BetaLikelihiood(  const T& x,  const U& alpha,  const V& beta): x_(x), alpha_(alpha), beta_(beta) { dimension_check(x_, alpha_, beta_); }
     inline double calc() const {
       return beta_logp(x_,alpha_,beta_);
     }
