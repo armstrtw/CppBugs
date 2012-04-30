@@ -20,6 +20,7 @@
 
 #include <list>
 #include <cppbugs/mcmc.specialized.hpp>
+#include <cppbugs/mcmc.math.hpp>
 
 namespace cppbugs {
 

@@ -19,7 +19,7 @@
 #define MCMC_DYNAMIC_STOCHASTIC_HPP
 
 #include <armadillo>
-#include <cppbugs/mcmc.specialized.hpp>
+#include <cppbugs/mcmc.dynamic.hpp>
 #include <cppbugs/mcmc.stochastic.hpp>
 #include <cppbugs/mcmc.jump.hpp>
 #include <cppbugs/mcmc.math.hpp>
