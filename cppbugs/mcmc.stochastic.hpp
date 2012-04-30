@@ -25,6 +25,7 @@ namespace cppbugs {
 
   class Likelihiood {
   public:
+    virtual ~Likelihiood() {}
     virtual double calc() const = 0;
   };
 
