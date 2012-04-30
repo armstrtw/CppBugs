@@ -37,6 +37,7 @@ namespace cppbugs {
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
     void tally() { if(MCMCSpecialized<T>::save_history_) { MCMCSpecialized<T>::history.push_back(value); } }
+    double size() const { return dim_size(value); }
   };
 
 } // namespace cppbugs

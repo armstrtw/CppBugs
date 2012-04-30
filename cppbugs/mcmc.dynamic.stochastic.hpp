@@ -66,6 +66,7 @@ namespace cppbugs {
     bool isStochastic() const { return true; }
     bool isObserved() const { return false; }
     void setScale(const double scale) { scale_ = scale; }
+    double getScale() const { return scale_; }
   };
 
 } // namespace cppbugs

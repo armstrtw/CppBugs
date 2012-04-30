@@ -37,6 +37,8 @@ namespace cppbugs {
     virtual bool isStochastic() const = 0;
     virtual bool isObserved() const = 0;
     virtual void setScale(const double scale) = 0;
+    virtual double getScale() const = 0;
+    virtual double size() const = 0;
   };
 
 } // namespace cppbugs
