@@ -308,6 +308,16 @@ namespace cppbugs {
     return x*x;
   }
 
+  double mahalanobis(const arma::vec& x, const arma::vec& mu, const arma::mat& sigma) {
+    const arma::vec err = x - mu;
+    return arma::as_scalar(err.t() * sigma.i() * err);
+  }
+
+  double mahalanobis(const arma::rowvec& x, const arma::rowvec& mu, const arma::mat& sigma) {
+    const arma::rowvec err = x - mu;
+    return arma::as_scalar(err * sigma.i() * err.t());
+  }
+
   template<typename T, typename U, typename V>
   double normal_logp(const T& x, const U& mu, const V& tau) {
     return accu(0.5*log_approx(0.5*tau/arma::math::pi()) - 0.5 * arma::schur(tau, square(x - mu)));
@@ -348,6 +358,13 @@ namespace cppbugs {
     } else {
       return accu(arma::schur(x,log_approx(p)) + arma::schur((1-x), log_approx(1-p)));
     }
+  }
+
+  // sigma denotes cov matrix rather than precision matrix
+  template<typename T,typename U>
+  double multivariate_normal_sigma_logp(const T& x, const U& mu, const arma::mat& sigma) {
+    const double log_2pi = log(2 * arma::math::pi());
+    return -accu(x.n_cols * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
   }
 
   template<typename T, typename U, typename V>
