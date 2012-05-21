@@ -364,6 +364,11 @@ namespace cppbugs {
   template<typename T,typename U>
   double multivariate_normal_sigma_logp(const T& x, const U& mu, const arma::mat& sigma) {
     const double log_2pi = log(2 * arma::math::pi());
+
+    // non-positive definite test via eigenvalues
+    if(any(eig_sym(sigma) < 0)) { return -std::numeric_limits<double>::infinity(); }
+
+    // otherwise calc logp
     return -accu(x.n_cols * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
   }
 
