@@ -35,8 +35,7 @@ namespace cppbugs {
   template<class RNG>
   class MCModel {
   private:
-    double accepted_;
-    double rejected_;
+    double accepted_,rejected_,logp_value_,old_logp_value_;
     SpecializedRng<RNG> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_nodes, dynamic_nodes;
     std::vector<Likelihiood*> logp_functors;
@@ -50,7 +49,7 @@ namespace cppbugs {
     void tally() { for(auto v : dynamic_nodes) { v->tally(); } }
     static bool bad_logp(const double value) { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), update(update_) {}
+    MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), logp_value_(-std::numeric_limits<double>::infinity()), old_logp_value_(-std::numeric_limits<double>::infinity()), update(update_) {}
     ~MCModel() {
       // use data_node_map as delete list
       // only objects allocated by this class are inserted thre
@@ -101,6 +100,11 @@ namespace cppbugs {
       return ans;
     }
 
+    void resetAcceptanceRatio() {
+      accepted_ = 0;
+      rejected_ = 0;
+    }
+
     void tune(int iterations, int tuning_step) {
       double logp_value,old_logp_value;
       logp_value  = -std::numeric_limits<double>::infinity();
@@ -130,28 +134,61 @@ namespace cppbugs {
       }
     }
 
-    void run(int iterations, int burn, int thin) {
-      double logp_value,old_logp_value;
-      logp_value  = -std::numeric_limits<double>::infinity();
-      old_logp_value = -std::numeric_limits<double>::infinity();
-      for(int i = 1; i <= (iterations + burn); i++) {
-        old_logp_value = logp_value;
-        preserve();
-        jump();
-        update();
-        logp_value = logp();
-        if(reject(logp_value, old_logp_value)) {
-          revert();
-          logp_value = old_logp_value;
-          rejected_ += 1;
-        } else {
-          accepted_ += 1;
+    void step() {
+      old_logp_value_ = logp_value_;
+      preserve();
+      jump();
+      update();
+      logp_value_ = logp();
+      if(reject(logp_value_, old_logp_value_)) {
+        revert();
+        logp_value_ = old_logp_value_;
+        rejected_ += 1;
+      } else {
+        accepted_ += 1;
+      }
+    }
+
+    void tune_global(int iterations, int tuning_step) {
+      const double thresh = 0.1;
+      // FIXME: this should possibly related to the overall size/dimension
+      // of the parmaeters to be estimtated, as there is somewhat of a leverage effect
+      // via the number of parameters
+      const double dilution = 0.10;
+      double total_size = 0;
+
+      for(size_t i = 0; i < dynamic_nodes.size(); i++) {
+        if(dynamic_nodes[i]->isStochastic()) {
+          total_size += dynamic_nodes[i]->size();
         }
+      }
+      double target_ar = std::max(1/log2(total_size + 3), 0.234);
+      for(int i = 1; i <= iterations; i++) {
+        step();
+        if(i % tuning_step == 0) {
+          double diff = acceptance_ratio() - target_ar;
+          resetAcceptanceRatio();
+          if(std::abs(diff) > thresh) {
+            double adj_factor = (1.0 + diff * dilution);
+            for(size_t i = 0; i < dynamic_nodes.size(); i++) {
+              dynamic_nodes[i]->setScale(dynamic_nodes[i]->getScale() * adj_factor);
+            }
+          }
+        }
+      }
+    }
+
+    void run(int iterations, int burn, int thin) {
+      if(logp()==-std::numeric_limits<double>::infinity()) {
+        throw std::logic_error("ERROR: cannot start from a logp of -Inf.");
+      }
+
+      for(int i = 1; i <= (iterations + burn); i++) {
+        step();
         if(i > burn && (i % thin == 0)) {
           tally();
         }
       }
-
     }
 
     void sample(int iterations, int burn, int adapt, int thin) {
@@ -165,8 +202,13 @@ namespace cppbugs {
       // setup logp's etc.
       initChain();
 
+      if(logp()==-std::numeric_limits<double>::infinity()) {
+        throw std::logic_error("ERROR: cannot start from a logp of -Inf.");
+      }
+
       // tuning phase
       tune(adapt,static_cast<int>(adapt/100));
+      if(true) { tune_global(adapt,static_cast<int>(adapt/100)); }
 
       // sampling
       run(iterations, burn, thin);
