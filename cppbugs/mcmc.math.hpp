@@ -361,8 +361,7 @@ namespace cppbugs {
   }
 
   // sigma denotes cov matrix rather than precision matrix
-  template<typename T,typename U>
-  double multivariate_normal_sigma_logp(const T& x, const U& mu, const arma::mat& sigma) {
+  double multivariate_normal_sigma_logp(const arma::rowvec& x, const arma::rowvec& mu, const arma::mat& sigma) {
     const double log_2pi = log(2 * arma::math::pi());
     arma::mat R(arma::zeros<arma::mat>(sigma.n_cols,sigma.n_cols));
 
@@ -370,7 +369,19 @@ namespace cppbugs {
     if(chol(R,sigma) == false) { return -std::numeric_limits<double>::infinity(); }
 
     // otherwise calc logp
-    return -accu(x.n_cols * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
+    return -accu(x.n_elem * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
+  }
+
+  // sigma denotes cov matrix rather than precision matrix
+  double multivariate_normal_sigma_logp(const arma::vec& x, const arma::vec& mu, const arma::mat& sigma) {
+    const double log_2pi = log(2 * arma::math::pi());
+    arma::mat R(arma::zeros<arma::mat>(sigma.n_cols,sigma.n_cols));
+
+    // non-positive definite test via chol
+    if(chol(R,sigma) == false) { return -std::numeric_limits<double>::infinity(); }
+
+    // otherwise calc logp
+    return -accu(x.n_elem * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
   }
 
   template<typename T, typename U, typename V>
