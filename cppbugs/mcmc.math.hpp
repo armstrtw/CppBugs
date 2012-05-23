@@ -261,18 +261,8 @@ namespace arma {
 
 }
 
+// Stochastic/Math related functions
 namespace cppbugs {
-
-  // Stochastic/Math related functions
-
-  template<typename U>
-  double accu(const U&  x) {
-    return arma::accu(x);
-  }
-
-  double accu(const double x) {
-    return x;
-  }
 
   double dim_size(const double x) {
     return 1;
@@ -320,19 +310,19 @@ namespace cppbugs {
 
   template<typename T, typename U, typename V>
   double normal_logp(const T& x, const U& mu, const V& tau) {
-    return accu(0.5*log_approx(0.5*tau/arma::math::pi()) - 0.5 * arma::schur(tau, square(x - mu)));
+    return arma::accu(0.5*log_approx(0.5*tau/arma::math::pi()) - 0.5 * arma::schur(tau, square(x - mu)));
   }
 
   template<typename T, typename U, typename V>
   double uniform_logp(const T& x, const U& lower, const V& upper) {
-    return (any(x < lower) || any(x > upper)) ? -std::numeric_limits<double>::infinity() : -accu(log_approx(upper - lower));
+    return (any(x < lower) || any(x > upper)) ? -std::numeric_limits<double>::infinity() : -arma::accu(log_approx(upper - lower));
   }
 
   template<typename T, typename U, typename V>
   double gamma_logp(const T& x, const U& alpha, const V& beta) {
     return any(x < 0 ) ?
       -std::numeric_limits<double>::infinity() :
-      accu(arma::schur((alpha - 1.0),log_approx(x)) - arma::schur(beta,x) - lgamma(alpha) + arma::schur(alpha,log_approx(beta)));
+      arma::accu(arma::schur((alpha - 1.0),log_approx(x)) - arma::schur(beta,x) - lgamma(alpha) + arma::schur(alpha,log_approx(beta)));
   }
 
   template<typename T, typename U, typename V>
@@ -340,7 +330,7 @@ namespace cppbugs {
     const double one = 1.0;
     return any(x <= 0 ) || any(x >= 1 ) || any(alpha <= 0) || any(beta <= 0) ?
       -std::numeric_limits<double>::infinity() :
-      accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + (alpha-one)*log_approx(x) + (beta-one)*log_approx(one-x));
+      arma::accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + (alpha-one)*log_approx(x) + (beta-one)*log_approx(one-x));
   }
 
   template<typename T, typename U, typename V>
@@ -348,7 +338,7 @@ namespace cppbugs {
     if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
       return -std::numeric_limits<double>::infinity();
     }
-    return accu(arma::schur(x,log_approx(p)) + arma::schur((n-x),log_approx(1-p)) + arma::factln(n) - arma::factln(x) - arma::factln(n-x));
+    return arma::accu(arma::schur(x,log_approx(p)) + arma::schur((n-x),log_approx(1-p)) + arma::factln(n) - arma::factln(x) - arma::factln(n-x));
   }
 
   template<typename T, typename U>
@@ -356,7 +346,7 @@ namespace cppbugs {
     if( any(p <= 0 ) || any(p >= 1) || any(x < 0)  || any(x > 1) ) {
       return -std::numeric_limits<double>::infinity();
     } else {
-      return accu(arma::schur(x,log_approx(p)) + arma::schur((1-x), log_approx(1-p)));
+      return arma::accu(arma::schur(x,log_approx(p)) + arma::schur((1-x), log_approx(1-p)));
     }
   }
 
@@ -369,7 +359,7 @@ namespace cppbugs {
     if(chol(R,sigma) == false) { return -std::numeric_limits<double>::infinity(); }
 
     // otherwise calc logp
-    return -accu(x.n_elem * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
+    return -arma::accu(x.n_elem * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
   }
 
   // sigma denotes cov matrix rather than precision matrix
@@ -381,7 +371,7 @@ namespace cppbugs {
     if(chol(R,sigma) == false) { return -std::numeric_limits<double>::infinity(); }
 
     // otherwise calc logp
-    return -accu(x.n_elem * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
+    return -arma::accu(x.n_elem * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
   }
 
   template<typename T, typename U, typename V>
