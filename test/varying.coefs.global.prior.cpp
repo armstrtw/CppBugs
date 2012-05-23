@@ -51,8 +51,8 @@ int main() {
   }
 
   mat b(randn<mat>(J,NC));
-  mat b_mu(randn<vec>(1,NC));
-  mat b_tau(randu<vec>(1,NC));
+  mat b_mu(randn<mat>(1,NC));
+  mat b_tau(randu<mat>(1,NC));
   mat b_mu_full_rnk;
   mat b_tau_full_rnk;
   double tau_y(1);
