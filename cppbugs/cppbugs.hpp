@@ -19,12 +19,12 @@
 #define CPPBUGS_HPP
 
 #include <cppbugs/mcmc.deterministic.hpp>
-#include <cppbugs/mcmc.normal.hpp>
-#include <cppbugs/mcmc.uniform.hpp>
-#include <cppbugs/mcmc.gamma.hpp>
-#include <cppbugs/mcmc.beta.hpp>
-#include <cppbugs/mcmc.binomial.hpp>
-#include <cppbugs/mcmc.bernoulli.hpp>
 #include <cppbugs/mcmc.model.hpp>
+#include <cppbugs/distributions/mcmc.normal.hpp>
+#include <cppbugs/distributions/mcmc.uniform.hpp>
+#include <cppbugs/distributions/mcmc.gamma.hpp>
+#include <cppbugs/distributions/mcmc.beta.hpp>
+#include <cppbugs/distributions/mcmc.binomial.hpp>
+#include <cppbugs/distributions/mcmc.bernoulli.hpp>
 
 #endif // CPPBUGS_HPP

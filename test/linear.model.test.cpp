@@ -1,12 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <armadillo>
-#include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
-#include <cppbugs/mcmc.model.hpp>
-#include <cppbugs/mcmc.deterministic.hpp>
-#include <cppbugs/mcmc.normal.hpp>
-#include <cppbugs/mcmc.uniform.hpp>
 
 using namespace arma;
 using namespace cppbugs;
