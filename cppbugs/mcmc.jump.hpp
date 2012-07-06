@@ -24,7 +24,7 @@ namespace cppbugs {
 
   // needed for completeness
   void jump_impl(RngBase& rng, int& value, const double scale) {
-    value += rng.normal() * scale;
+    value += lrint(rng.normal() * scale);
   }
 
   void jump_impl(RngBase& rng, double& value, const double scale) {
@@ -52,7 +52,7 @@ namespace cppbugs {
   template<typename T>
   void jump_impl(RngBase& rng, T& value, const double scale) {
     for(size_t i = 0; i < value.n_elem; i++) {
-      value[i] += rng.normal() * scale;
+      jump_impl(rng, value[i], scale);
     }
   }
 
