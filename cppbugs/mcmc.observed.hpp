@@ -29,7 +29,7 @@ namespace cppbugs {
     const T& value;
     Observed(const T& shape): MCMCSpecialized<T>(), value(shape) {}
 
-    void jump(RngBase& rng) {}
+    void jump(RngBase&) {}
     void accept() {}
     void reject() {}
     void tune() {}
@@ -39,7 +39,7 @@ namespace cppbugs {
     bool isDeterministc() const { return false; }
     bool isStochastic() const { return true; }
     bool isObserved() const { return true; }
-    void setScale(const double scale) {}
+    void setScale(const double) {}
     double getScale() const { return 0; }
     double size() const { return 0; }
   };

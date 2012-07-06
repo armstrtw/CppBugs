@@ -26,7 +26,7 @@ namespace cppbugs {
   class Deterministic : public Dynamic<T> {
   public:
     Deterministic(T& value): Dynamic<T>(value) {}
-    void jump(RngBase& rng) {}
+    void jump(RngBase&) {}
     void accept() {}
     void reject(){}
     void tune() {}
@@ -36,7 +36,7 @@ namespace cppbugs {
     bool isDeterministc() const { return true; }
     bool isStochastic() const { return false; }
     bool isObserved() const { return false; }
-    void setScale(const double scale) {}
+    void setScale(const double) {}
     double getScale() const { return 0;}
   };
 
