@@ -254,25 +254,25 @@ namespace arma {
     return eOp<T1, eop_scalar_times>(X.get_ref(),k);  // NOTE: order is swapped
   }
 
-  const double schur(const int x, const double y) { return x * y; }
-  const double schur(const double x, const int y) { return x * y; }
-  const double schur(const double& x, const double& y) { return x * y; }
-  const double schur(const int& x, const int& y) { return x * y; }
+  double schur(const int x, const double y) { return x * y; }
+  double schur(const double x, const int y) { return x * y; }
+  double schur(const double& x, const double& y) { return x * y; }
+  double schur(const int& x, const int& y) { return x * y; }
 
 }
 
 // Stochastic/Math related functions
 namespace cppbugs {
 
-  double dim_size(const double x) {
+  double dim_size(const double) {
     return 1;
   }
 
-  double dim_size(const int x) {
+  double dim_size(const int) {
     return 1;
   }
 
-  double dim_size(const bool x) {
+  double dim_size(const bool) {
     return 1;
   }
 
