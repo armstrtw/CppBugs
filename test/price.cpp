@@ -11,6 +11,7 @@ using std::cout;
 using std::endl;
 
 int main() {
+  const double zero(0), one_e1(0.1), one_e3(0.001);
 
   // setup data
   double ageraw[] = {13, 14, 14,12, 9, 15, 10, 14, 9, 14, 13, 12, 9, 10, 15, 11, 15, 11, 7,
@@ -37,9 +38,9 @@ int main() {
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.track<Normal>(a).dnorm(0.0, 0.0001);
-  m.track<Normal>(b).dnorm(0.0, 0.0001);
-  m.track<Gamma>(tau).dgamma(0.1, 0.1);
+  m.track<Normal>(a).dnorm(zero, one_e3);
+  m.track<Normal>(b).dnorm(zero, one_e3);
+  m.track<Gamma>(tau).dgamma(one_e1,one_e1);
   m.track<ObservedNormal>(price).dnorm(y_hat,tau);
 
   int iterations = 1e5;

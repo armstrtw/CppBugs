@@ -11,6 +11,8 @@ using std::cout;
 using std::endl;
 
 int main() {
+  const double zero(0),one_hundred(100),one_e3(0.001);
+
   const unsigned int NR = 100;
   const unsigned int NC = 2;
   const unsigned int J = 3;
@@ -71,9 +73,9 @@ int main() {
   MCModel<boost::minstd_rand> m(model);
 
   m.track<Normal>(b).dnorm(b_mu_full_rnk,b_tau_full_rnk);
-  m.track<Normal>(b_mu).dnorm(0.0,0.001);
-  m.track<Uniform>(b_tau).dunif(0,100);
-  m.track<Uniform>(tau_y).dunif(0,100);
+  m.track<Normal>(b_mu).dnorm(zero,one_e3);
+  m.track<Uniform>(b_tau).dunif(zero,one_hundred);
+  m.track<Uniform>(tau_y).dunif(zero,one_hundred);
   m.track<ObservedNormal>(y_const).dnorm(y_hat,tau_y);
   m.track<Deterministic>(rsq);
 

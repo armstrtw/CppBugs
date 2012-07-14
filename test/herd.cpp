@@ -34,9 +34,11 @@ using std::cout;
 using std::endl;
 
 int main() {
+  const double zero(0),one_hundred(100),one_thousand(1000), one_e3(0.001);
+
   int incidence_raw[] = {2,3,4,0,3,1,1,8,2,0,2,2,0,2,0,5,0,0,1,3,0,0,1,8,1,3,0,12,2,0,0,0,1,1,0,2,0,5,3,1,2,1,0,0,1,2,0,0,11,0,0,0,1,1,1,0};
   int size_raw[] = {14,12,9,5,22,18,21,22,16,16,20,10,10,9,6,18,25,24,4,17,17,18,20,16,10,9,5,34,9,6,8,6,22,22,18,22,25,27,22,22,10,8,6,5,21,24,19,23,19,2,3,2,19,15,15,15};
-  int herd_raw[] = {1,1,1,1,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,8,9,9,9,9,10,10,10,10,11,11,11,11,12,12,12,12,13,13,13,13,14,14,14,14,15,15,15,15};
+  unsigned int herd_raw[] = {1,1,1,1,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7,8,9,9,9,9,10,10,10,10,11,11,11,11,12,12,12,12,13,13,13,13,14,14,14,14,15,15,15,15};
   double period2_raw[] = {0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0};
   double period3_raw[] = {0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0};
   double period4_raw[] = {0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1};
@@ -46,16 +48,10 @@ int main() {
 
   const ivec incidence(incidence_raw,N);
   const ivec size(size_raw,N);
-  ivec herd(herd_raw,N); herd -= 1;
+  uvec herd(herd_raw,N); herd -= 1;
   const vec period2(period2_raw,N);
   const vec period3(period3_raw,N);
   const vec period4(period4_raw,N);
-  mat indicator_matrix(N,N_herd);
-  indicator_matrix.fill(0.0);
-  for(unsigned int i = 0; i < herd.n_elem; i++) {
-    indicator_matrix(i,herd[i]) = 1.0;
-  }
-
 
   double b0(0), b_period2(0), b_period3(0), b_period4(0), tau_overdisp(1), tau_b_herd(1);
   double sigma_overdisp, sigma_b_herd;
@@ -64,21 +60,21 @@ int main() {
   vec phi(N);
 
   std::function<void ()> model = [&]() {
-    phi = b0 + b_period2*period2 + b_period3*period3 + b_period4*period4 + indicator_matrix*b_herd + overdisp;
+    phi = b0 + b_period2*period2 + b_period3*period3 + b_period4*period4 + b_herd.elem(herd) + overdisp;
     phi = 1/(1+exp(-phi));
     sigma_overdisp = 1/sqrt(tau_overdisp);
     sigma_b_herd = 1/sqrt(tau_b_herd);
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.track<Normal>(b0).dnorm(0,0.001);
-  m.track<Normal>(b_period2).dnorm(0,0.001);
-  m.track<Normal>(b_period3).dnorm(0,0.001);
-  m.track<Normal>(b_period4).dnorm(0,0.001);
-  m.track<Uniform>(tau_overdisp).dunif(0,1000);
-  m.track<Uniform>(tau_b_herd).dunif(0,100);
-  m.track<Normal>(b_herd).dnorm(0, tau_b_herd);
-  m.track<Normal>(overdisp).dnorm(0,tau_overdisp);
+  m.track<Normal>(b0).dnorm(zero,one_e3);
+  m.track<Normal>(b_period2).dnorm(zero,one_e3);
+  m.track<Normal>(b_period3).dnorm(zero,one_e3);
+  m.track<Normal>(b_period4).dnorm(zero,one_e3);
+  m.track<Uniform>(tau_overdisp).dunif(zero,one_thousand);
+  m.track<Uniform>(tau_b_herd).dunif(zero,one_hundred);
+  m.track<Normal>(b_herd).dnorm(zero, tau_b_herd);
+  m.track<Normal>(overdisp).dnorm(zero,tau_overdisp);
   m.track<ObservedBinomial>(incidence).dbinom(size,phi);
   m.track<Deterministic>(sigma_overdisp);
   m.track<Deterministic>(sigma_b_herd);
