@@ -330,7 +330,7 @@ namespace cppbugs {
     const double one = 1.0;
     return any(x <= 0 ) || any(x >= 1 ) || any(alpha <= 0) || any(beta <= 0) ?
       -std::numeric_limits<double>::infinity() :
-      arma::accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + (alpha-one)*log_approx(x) + (beta-one)*log_approx(one-x));
+      arma::accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + arma::schur((alpha-one),log_approx(x)) + arma::schur((beta-one),log_approx(one-x)));
   }
 
   template<typename T, typename U, typename V>
