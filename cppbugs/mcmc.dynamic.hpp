@@ -31,10 +31,6 @@ namespace cppbugs {
     T old_value;
     Dynamic(T& shape): MCMCSpecialized<T>(), value(shape), old_value(shape) {}
 
-    static int sum_dims(const double& value) { return 1; }
-    static int sum_dims(const arma::mat& value) { return value.n_elem; }
-    static int sum_dims(const arma::ivec& value) { return value.n_elem; }
-
     void preserve() { old_value = value; }
     void revert() { value = old_value; }
     void tally() { if(MCMCSpecialized<T>::save_history_) { MCMCSpecialized<T>::history.push_back(value); } }
