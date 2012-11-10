@@ -333,6 +333,34 @@ namespace cppbugs {
       arma::accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + arma::schur((alpha-one),log_approx(x)) + arma::schur((beta-one),log_approx(one-x)));
   }
 
+  double categorical_logp(const arma::ivec& x, const arma::mat& p) {
+    if(any(p <= 0) || any(p >= 1) || any(x < 0) || any(x >= p.n_cols)) {
+      return -std::numeric_limits<double>::infinity();
+    }
+    // replace w/ call to p.elems later
+    double ans(0);
+    for(unsigned int i = 0; i < x.n_rows; i++) {
+      ans += log_approx(p(i,x[i]));
+    }
+    return ans;
+  }
+
+  double categorical_logp(const arma::ivec& x, const arma::vec& p) {
+    if(any(p <= 0) || any(p >= 1) || any(x < 0) || any(x >= p.n_elem)) {
+      return -std::numeric_limits<double>::infinity();
+    }
+    // replace w/ call to p.elems later
+    double ans(0);
+    for(unsigned int i = 0; i < x.n_rows; i++) {
+      ans += log_approx(p(x[i]));
+    }
+    return ans;
+  }
+
+  double categorical_logp(const int x, const arma::vec& p) {
+    return log_approx(p[x]);
+  }
+
   template<typename T, typename U, typename V>
   double binom_logp(const T& x, const U& n, const V& p) {
     if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {

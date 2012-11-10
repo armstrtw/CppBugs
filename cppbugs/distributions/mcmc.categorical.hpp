@@ -15,20 +15,49 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef CPPBUGS_HPP
-#define CPPBUGS_HPP
+#ifndef MCMC_CATEGORICAL_HPP
+#define MCMC_CATEGORICAL_HPP
 
-#include <cppbugs/mcmc.deterministic.hpp>
-#include <cppbugs/mcmc.model.hpp>
-#include <cppbugs/distributions/mcmc.normal.hpp>
-#include <cppbugs/distributions/mcmc.uniform.hpp>
-#include <cppbugs/distributions/mcmc.gamma.hpp>
-#include <cppbugs/distributions/mcmc.exponential.hpp>
-#include <cppbugs/distributions/mcmc.exponential.censored.hpp>
-#include <cppbugs/distributions/mcmc.beta.hpp>
-#include <cppbugs/distributions/mcmc.binomial.hpp>
-#include <cppbugs/distributions/mcmc.bernoulli.hpp>
-#include <cppbugs/distributions/mcmc.discrete.hpp>
-#include <cppbugs/distributions/mcmc.categorical.hpp>
+#include <armadillo>
+#include <cppbugs/mcmc.dynamic.stochastic.hpp>
+#include <cppbugs/mcmc.observed.hpp>
 
-#endif // CPPBUGS_HPP
+namespace cppbugs {
+
+  template <typename T,typename U>
+  class CategoricalLikelihiood : public Likelihiood {
+    const T& x_;
+    const U& p_;
+  public:
+    CategoricalLikelihiood(const T& x,  const U& p): x_(x), p_(p) {}
+    inline double calc() const {
+      return categorical_logp(x_,p_);
+    }
+  };
+
+  template<typename T>
+  class Categorical : public DynamicStochastic<T> {
+  public:
+    Categorical(T& value): DynamicStochastic<T>(value) {}
+
+    template<typename U>
+    Categorical<T>& dcat(const U& p) {
+      Stochastic::likelihood_functor = new CategoricalLikelihiood<T,U>(DynamicStochastic<T>::value,p);
+      return *this;
+    }
+  };
+
+  template<typename T>
+  class ObservedCategorical : public Observed<T> {
+  public:
+    ObservedCategorical(const T& value): Observed<T>(value) {}
+
+    template<typename U>
+    ObservedCategorical<T>& dcat(const U& p) {
+      Stochastic::likelihood_functor = new CategoricalLikelihiood<T,U>(Observed<T>::value, p);
+      return *this;
+    }
+  };
+
+} // namespace cppbugs
+#endif // MCMC_CATEGORICAL_HPP
