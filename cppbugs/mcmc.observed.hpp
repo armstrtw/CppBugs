@@ -35,10 +35,6 @@ namespace cppbugs {
     void tune() {}
     void preserve() {}
     void revert() {}
-    void tally() {}
-    bool isDeterministc() const { return false; }
-    bool isStochastic() const { return true; }
-    bool isObserved() const { return true; }
     void setScale(const double scale) {}
     double getScale() const { return 0; }
     double size() const { return 0; }

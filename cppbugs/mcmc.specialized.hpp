@@ -26,34 +26,8 @@ namespace cppbugs {
 
   template<typename T>
   class MCMCSpecialized : public MCMCObject {
-  protected:
-    bool save_history_;
   public:
-    std::list<T> history;
-    MCMCSpecialized(): MCMCObject(), save_history_(true) {}
-
-    static void fill(arma::ivec& x) { x.fill(0); }
-    static void fill(arma::mat& x) { x.fill(0); }
-    static void fill(double& x) { x = 0; }
-    static void fill(int& x) { x = 0; }
-
-    T mean() const {
-      if(history.size() == 0) {
-        return T();
-      }
-
-      T ans(*history.begin());
-      fill(ans);
-      for(typename std::list<T>::const_iterator it = history.begin(); it != history.end(); it++) {
-        ans += *it;
-      }
-      ans /= static_cast<double>(history.size());
-      return ans;
-    }
-    void setSaveHistory(const bool save_history) {
-      save_history_ = save_history;
-    }
+    MCMCSpecialized(): MCMCObject() {}
   };
-
 } // namespace cppbugs
 #endif //MCMC_SPECIALIZED_HPP

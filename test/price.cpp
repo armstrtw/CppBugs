@@ -32,16 +32,21 @@ int main() {
 
 
   double a, b, tau;
-  mat y_hat;
+  mat y_hat = a + b * age;
   std::function<void ()> model = [&]() {
     y_hat = a + b * age;
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.track<Normal>(a).dnorm(zero, one_e3);
-  m.track<Normal>(b).dnorm(zero, one_e3);
-  m.track<Gamma>(tau).dgamma(one_e1,one_e1);
-  m.track<ObservedNormal>(price).dnorm(y_hat,tau);
+  m.link<Normal>(a, zero, one_e3);
+  m.link<Normal>(b, zero, one_e3);
+  m.link<Gamma>(tau, one_e1, one_e1);
+  m.link<ObservedNormal>(price, y_hat, tau);
+
+  // things to track
+  vector<double> a_hist, b_hist;
+  m.track(a,a_hist);
+  m.track(b,b_hist);
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 5);
@@ -49,10 +54,10 @@ int main() {
   cout << "err sd: " << stddev(err,0) << endl;;
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;
 
-  cout << "a: " << m.getNode(a).mean() << endl;
-  cout << "b: " << m.getNode(b).mean() << endl;
-  cout << "tau: " << m.getNode(tau).mean() << endl;
-  cout << "samples: " << m.getNode(b).history.size() << endl;
+  // cout << "a: " << m.getNode(a).mean() << endl;
+  // cout << "b: " << m.getNode(b).mean() << endl;
+  // cout << "tau: " << m.getNode(tau).mean() << endl;
+  // cout << "samples: " << m.getNode(b).history.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
 };

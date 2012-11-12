@@ -25,40 +25,24 @@
 
 namespace cppbugs {
 
-  template <typename T,typename U, typename V>
-  class UniformLikelihiood : public Likelihiood {
-    const T& x_;
+  template<typename T, typename U, typename V>
+  class Uniform : public DynamicStochastic<T> {
+  private:
     const U& lower_;
     const V& upper_;
   public:
-    UniformLikelihiood(const T& x,  const U& lower,  const V& upper): x_(x), lower_(lower), upper_(upper) { dimension_check(x_, lower_, upper_); }
-    inline double calc() const {
-      return uniform_logp(x_,lower_,upper_);
-    }
+    Uniform(T& value, const U& lower, const V& upper): DynamicStochastic<T>(value), lower_(lower), upper_(upper) { dimension_check(value, lower_, upper_); }
+    const double loglik() const { return uniform_logp(DynamicStochastic<T>::value,lower_,upper_); }
   };
 
-  template<typename T>
-  class Uniform : public DynamicStochastic<T> {
-  public:
-    Uniform(T& value): DynamicStochastic<T>(value) {}
-
-    template<typename U, typename V>
-    Uniform<T>& dunif(const U& lower, const V& upper) {
-      Stochastic::likelihood_functor = new UniformLikelihiood<T,U,V>(DynamicStochastic<T>::value,lower,upper);
-      return *this;
-    }
-  };
-
-  template<typename T>
+  template<typename T, typename U, typename V>
   class ObservedUniform : public Observed<T> {
+  private:
+    const U& lower_;
+    const V& upper_;
   public:
-    ObservedUniform(const T& value): Observed<T>(value) {}
-
-    template<typename U, typename V>
-    ObservedUniform<T>& dunif(const U& lower, const V& upper) {
-      Stochastic::likelihood_functor = new UniformLikelihiood<T,U,V>(Observed<T>::value,lower,upper);
-      return *this;
-    }
+    ObservedUniform(const T& value, const U& lower, const V& upper): Observed<T>(value), lower_(lower), upper_(upper) { dimension_check(value, lower_, upper_); }
+    const double loglik() const { return uniform_logp(Observed<T>::value,lower_,upper_); }
   };
 
 

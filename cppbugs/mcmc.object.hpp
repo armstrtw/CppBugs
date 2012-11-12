@@ -32,10 +32,9 @@ namespace cppbugs {
     virtual void tune() = 0;
     virtual void preserve() = 0;
     virtual void revert() = 0;
-    virtual void tally() = 0;
-    virtual bool isDeterministc() const = 0;
-    virtual bool isStochastic() const = 0;
-    virtual bool isObserved() const = 0;
+    // virtual bool isDeterministc() const = 0;
+    // virtual bool isStochastic() const = 0;
+    // virtual bool isObserved() const = 0;
     virtual void setScale(const double scale) = 0;
     virtual double getScale() const = 0;
     virtual double size() const = 0;

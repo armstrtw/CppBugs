@@ -27,6 +27,7 @@
 #include <cppbugs/mcmc.rng.hpp>
 #include <cppbugs/mcmc.object.hpp>
 #include <cppbugs/mcmc.stochastic.hpp>
+#include <cppbugs/mcmc.observed.hpp>
 
 namespace cppbugs {
   typedef std::map<void*,MCMCObject*> vmc_map;
@@ -38,7 +39,7 @@ namespace cppbugs {
     double accepted_,rejected_,logp_value_,old_logp_value_;
     SpecializedRng<RNG> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_nodes, dynamic_nodes;
-    std::vector<Likelihiood*> logp_functors;
+    std::vector<Stochastic*> stochastic_nodes;
     std::function<void ()> update;
     vmc_map data_node_map;
 
@@ -46,7 +47,7 @@ namespace cppbugs {
     void preserve() { for(auto v : dynamic_nodes) { v->preserve(); } }
     void revert() { for(auto v : dynamic_nodes) { v->revert(); } }
     void set_scale(const double scale) { for(auto v : jumping_nodes) { v->setScale(scale); } }
-    void tally() { for(auto v : dynamic_nodes) { v->tally(); } }
+    //void tally() { for(auto v : dynamic_nodes) { v->tally(); } }
     static bool bad_logp(const double value) { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), logp_value_(-std::numeric_limits<double>::infinity()), old_logp_value_(-std::numeric_limits<double>::infinity()), update(update_) {}
@@ -59,31 +60,6 @@ namespace cppbugs {
       }
     }
 
-    void addStochcasticNode(MCMCObject* node) {
-      Stochastic* sp = dynamic_cast<Stochastic*>(node);
-      // FIXME: this should throw if sp->getLikelihoodFunctor() returns null
-      if(sp && sp->getLikelihoodFunctor() ) { logp_functors.push_back(sp->getLikelihoodFunctor()); }
-    }
-
-    void initChain() {
-      logp_functors.clear();
-      jumping_nodes.clear();
-
-      for(auto node : mcmcObjects) {
-        addStochcasticNode(node);
-
-        if(node->isStochastic() && !node->isObserved()) {
-          jumping_nodes.push_back(node);
-        }
-
-        if(!node->isObserved()) {
-          dynamic_nodes.push_back(node);
-        }
-      }
-      // init values
-      update();
-    }
-
     double acceptance_ratio() const {
       return accepted_ / (accepted_ + rejected_);
     }
@@ -92,10 +68,10 @@ namespace cppbugs {
       return bad_logp(value) || log(rng_.uniform()) > (value - old_logp) ? true : false;
     }
 
-    double logp() const {
+    const double logp() const {
       double ans(0);
-      for(auto f : logp_functors) {
-        ans += f->calc();
+      for(auto node : stochastic_nodes) {
+        ans += node->loglik();
       }
       return ans;
     }
@@ -158,7 +134,7 @@ namespace cppbugs {
       double total_size = 0;
 
       for(size_t i = 0; i < dynamic_nodes.size(); i++) {
-        if(dynamic_nodes[i]->isStochastic()) {
+        if(dynamic_cast<Stochastic*>(dynamic_nodes[i])) {
           total_size += dynamic_nodes[i]->size();
         }
       }
@@ -185,9 +161,7 @@ namespace cppbugs {
 
       for(int i = 1; i <= (iterations + burn); i++) {
         step();
-        if(i > burn && (i % thin == 0)) {
-          tally();
-        }
+        //if(i > burn && (i % thin == 0)) { tally(); }
       }
     }
 
@@ -199,8 +173,7 @@ namespace cppbugs {
         return;
       }
 
-      // setup logp's etc.
-      initChain();
+      update();
 
       if(logp()==-std::numeric_limits<double>::infinity()) {
         throw std::logic_error("ERROR: cannot start from a logp of -Inf.");
@@ -214,27 +187,65 @@ namespace cppbugs {
       run(iterations, burn, thin);
     }
 
-    template<template<typename> class MCTYPE, typename T>
-    MCTYPE<T>& track(T& x) {
-      MCTYPE<T>* node = new MCTYPE<T>(x);
-      mcmcObjects.push_back(node);
+    // push into specific lists here
+    // b/c we can use this cast:
+    // if(dynamic_cast<Observed<T>* >(node))
+    // as a proxy for the old isObserved() function
+    template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
+    MCTYPE<T, U, V>& link(T& x, const U& a, const V& b) {
+      MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, a, b);
+
+      // test object for traits
+      Stochastic* sp = dynamic_cast<Stochastic*>(node);
+      Observed<T>* op = dynamic_cast<Observed<T>* >(node);
+      Dynamic<T>* dp = dynamic_cast<Dynamic<T>* >(node);
+
+      if(sp) {
+        stochastic_nodes.push_back(node);
+        if(node->loglik()==-std::numeric_limits<double>::infinity()) {
+          // throw
+        }
+      }
+
+      // only jump stochastics which are not observed
+      if(sp && op == NULL) jumping_nodes.push_back(node);
+      if(dp) dynamic_nodes.push_back(node);
+
       data_node_map[(void*)(&x)] = node;
+
       return *node;
     }
 
-    template<template<typename> class MCTYPE, typename T>
-    MCTYPE<T>& track(const T& x) {
-      MCTYPE<T>* node = new MCTYPE<T>(x);
-      mcmcObjects.push_back(node);
+    template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
+    MCTYPE<T, U, V>& link(const T& x, const U& a, const V& b) {
+      MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, a, b);
+
+      // test object for traits
+      Stochastic* sp = dynamic_cast<Stochastic*>(node);
+      Observed<T>* op = dynamic_cast<Observed<T>*>(node);
+      Dynamic<T>* dp = dynamic_cast<Dynamic<T>*>(node);
+
+      if(sp) {
+        stochastic_nodes.push_back(node);
+        if(sp->loglik()==-std::numeric_limits<double>::infinity()) {
+          // throw
+        }
+      }
+
+      // only jump stochastics which are not observed
+      if(sp && op == NULL) jumping_nodes.push_back(node);
+      if(dp) dynamic_nodes.push_back(node);
+
       data_node_map[(void*)(&x)] = node;
+
       return *node;
     }
 
-    // allows node to be added without being put on the delete list
-    // for those who want full control of their memory...
-    void track(MCMCObject* node) {
-      mcmcObjects.push_back(node);
-    }
+    // // allows node to be added without being put on the delete list
+    // // for those who want full control of their memory...
+    // void track(MCMCObject* node) {
+    //   mcmcObjects.push_back(node);
+    // }
 
     template<typename T>
     MCMCSpecialized<T>& getNode(const T& x) {
