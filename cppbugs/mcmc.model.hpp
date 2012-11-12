@@ -28,6 +28,7 @@
 #include <cppbugs/mcmc.object.hpp>
 #include <cppbugs/mcmc.stochastic.hpp>
 #include <cppbugs/mcmc.observed.hpp>
+#include <cppbugs/mcmc.tracked.hpp>
 
 namespace cppbugs {
   typedef std::map<void*,MCMCObject*> vmc_map;
@@ -40,6 +41,7 @@ namespace cppbugs {
     SpecializedRng<RNG> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_nodes, dynamic_nodes;
     std::vector<Stochastic*> stochastic_nodes;
+    std::vector<MCMCTracked*> tracked_nodes;
     std::function<void ()> update;
     vmc_map data_node_map;
 
@@ -47,7 +49,7 @@ namespace cppbugs {
     void preserve() { for(auto v : dynamic_nodes) { v->preserve(); } }
     void revert() { for(auto v : dynamic_nodes) { v->revert(); } }
     void set_scale(const double scale) { for(auto v : jumping_nodes) { v->setScale(scale); } }
-    //void tally() { for(auto v : dynamic_nodes) { v->tally(); } }
+    void tally() { for(auto v : tracked_nodes) { v->track(); } }
     static bool bad_logp(const double value) { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
     MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), logp_value_(-std::numeric_limits<double>::infinity()), old_logp_value_(-std::numeric_limits<double>::infinity()), update(update_) {}
@@ -161,7 +163,7 @@ namespace cppbugs {
 
       for(int i = 1; i <= (iterations + burn); i++) {
         step();
-        //if(i > burn && (i % thin == 0)) { tally(); }
+        if(i > burn && (i % thin == 0)) { tally(); }
       }
     }
 
@@ -241,24 +243,18 @@ namespace cppbugs {
       return *node;
     }
 
+    template<template<typename U,class Alloc = std::allocator<U> > class CONTAINER, typename T>
+    CONTAINER<T>& track(const T& x) {
+      MCMCTrackedT<T,CONTAINER>* node = new MCMCTrackedT<T,CONTAINER>(x);
+      tracked_nodes.push_back(node);
+      return node->history;
+    }
+
     // // allows node to be added without being put on the delete list
     // // for those who want full control of their memory...
     // void track(MCMCObject* node) {
     //   mcmcObjects.push_back(node);
     // }
-
-    template<typename T>
-    MCMCSpecialized<T>& getNode(const T& x) {
-      vmc_map_iter iter = data_node_map.find((void*)(&x));
-      if(iter == data_node_map.end()) {
-        throw std::logic_error("node not found.");
-      }
-      MCMCSpecialized<T>* ans = dynamic_cast<MCMCSpecialized<T>*>(iter->second);
-      if(ans == nullptr) {
-        throw std::logic_error("invalid node conversion.");
-      }
-      return *ans;
-    }
   };
 } // namespace cppbugs
 #endif // MCMC_MODEL_HPP

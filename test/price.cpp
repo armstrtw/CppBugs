@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <functional>
 #include <armadillo>
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
@@ -44,9 +45,9 @@ int main() {
   m.link<ObservedNormal>(price, y_hat, tau);
 
   // things to track
-  vector<double> a_hist, b_hist;
-  m.track(a,a_hist);
-  m.track(b,b_hist);
+  std::vector<double>& a_hist = m.track<std::vector>(a);
+  std::vector<double>& b_hist = m.track<std::vector>(b);
+  std::vector<double>& tau_hist = m.track<std::vector>(tau);
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 5);
@@ -54,10 +55,10 @@ int main() {
   cout << "err sd: " << stddev(err,0) << endl;;
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;
 
-  // cout << "a: " << m.getNode(a).mean() << endl;
-  // cout << "b: " << m.getNode(b).mean() << endl;
-  // cout << "tau: " << m.getNode(tau).mean() << endl;
-  // cout << "samples: " << m.getNode(b).history.size() << endl;
+  cout << "a: " << std::accumulate(a_hist.begin(),a_hist.end(),0.) / a_hist.size() << endl;
+  cout << "b: " << std::accumulate(b_hist.begin(),b_hist.end(),0.) / b_hist.size() << endl;
+  cout << "tau: " << std::accumulate(tau_hist.begin(),tau_hist.end(),0.) / tau_hist.size() << endl;
+  cout << "samples: " << a_hist.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
 };
