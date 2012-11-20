@@ -24,7 +24,7 @@ int main() {
   X.col(0).fill(1.0);
 
   // create fake groups
-  ivec groups(NR);
+  uvec groups(NR);
   for(unsigned int i = 0; i < NR; i++) {
     groups[i] = i % J;
   }
@@ -46,24 +46,19 @@ int main() {
   vec err = y - X*coefs;
 
   vec rowdup(ones<vec>(J));
-  mat permutation_matrix(NR,J);
-  permutation_matrix.fill(0.0);
-  for(unsigned int i = 0; i < groups.n_elem; i++) {
-    permutation_matrix(i,groups[i]) = 1.0;
-  }
 
   mat b(randn<mat>(J,NC));
   mat b_mu(randn<mat>(1,NC));
   mat b_tau(randu<mat>(1,NC));
-  mat b_mu_full_rnk;
-  mat b_tau_full_rnk;
+  mat b_mu_full_rnk = rowdup * b_mu;
+  mat b_tau_full_rnk = rowdup * b_tau;
   double tau_y(1);
-  mat y_hat;
+  mat y_hat = sum(X % b.rows(groups),1);
   double rsq;
 
 
   std::function<void ()> model = [&]() {
-    y_hat = sum(X % (permutation_matrix * b),1);
+    y_hat = sum(X % b.rows(groups),1);
     rsq = as_scalar(1 - var(y - y_hat) / var(y));
 
     b_mu_full_rnk = rowdup * b_mu;
@@ -72,12 +67,23 @@ int main() {
 
   MCModel<boost::minstd_rand> m(model);
 
-  m.track<Normal>(b).dnorm(b_mu_full_rnk,b_tau_full_rnk);
-  m.track<Normal>(b_mu).dnorm(zero,one_e3);
-  m.track<Uniform>(b_tau).dunif(zero,one_hundred);
-  m.track<Uniform>(tau_y).dunif(zero,one_hundred);
-  m.track<ObservedNormal>(y_const).dnorm(y_hat,tau_y);
-  m.track<Deterministic>(rsq);
+  m.link<Normal>(b, b_mu_full_rnk, b_tau_full_rnk);
+  m.link<Normal>(b_mu, zero,one_e3);
+  m.link<Uniform>(b_tau, zero,one_hundred);
+  m.link<Uniform>(tau_y, zero,one_hundred);
+  m.link<Deterministic>(y_hat);
+  m.link<Deterministic>(b_mu_full_rnk);
+  m.link<Deterministic>(b_tau_full_rnk);
+  m.link<ObservedNormal>(y_const, y_hat, tau_y);
+  m.link<Deterministic>(rsq);
+
+  // things to track
+  std::vector<mat>& b_hist = m.track<std::vector>(b);
+  std::vector<mat>& b_mu_hist = m.track<std::vector>(b_mu);
+  std::vector<mat>& b_tau_hist = m.track<std::vector>(b_tau);
+  std::vector<double>& tau_y_hist = m.track<std::vector>(tau_y);
+  std::vector<double>& rsq_hist = m.track<std::vector>(rsq);
+
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
@@ -85,12 +91,12 @@ int main() {
   cout << "err sd: " << stddev(err,0) << endl;;
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;
 
-  cout << "b: " << endl << m.getNode(b).mean();
-  cout << "b_mu: " << endl << m.getNode(b_mu).mean();
-  cout << "b_tau: " << endl << m.getNode(b_tau).mean();
-  cout << "tau_y: " << m.getNode(tau_y).mean() << endl;
-  cout << "R^2: " << m.getNode(rsq).mean() << endl;
-  cout << "samples: " << m.getNode(b).history.size() << endl;
+  cout << "b: " << endl << mean(b_hist.begin(),b_hist.end());
+  cout << "b_mu: " << endl << mean(b_mu_hist.begin(),b_mu_hist.end());
+  cout << "b_tau: " << endl << mean(b_tau_hist.begin(),b_tau_hist.end());
+  cout << "tau_y: " << mean(tau_y_hist.begin(),tau_y_hist.end()) << endl;
+  cout << "R^2: " << mean(rsq_hist.begin(),rsq_hist.end()) << endl;
+  cout << "samples: " << b_hist.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
 };

@@ -10,7 +10,7 @@ int adapt_ = as<int>(adapt);
 int thin_ = as<int>(thin);
 
 vec b = randn<vec>(X.n_cols);
-mat y_hat;
+mat y_hat = X * b;
 double rsq(0);
 double tau_y(1);
 
@@ -20,11 +20,20 @@ std::function<void ()> model = [&]() {
 };
 
 MCModel<boost::minstd_rand> m(model);
-m.track<Normal>(b).dnorm(0.0, 0.0001);
-m.track<Gamma>(tau_y).dgamma(0.1,0.1);
-m.track<ObservedNormal>(y).dnorm(y_hat,tau_y);
-m.track<Deterministic>(rsq);
+m.link<Normal>(b, 0.0, 0.0001);
+m.link<Gamma>(tau_y, 0.1, 0.1);
+m.link<Deterministic>(y_hat);
+m.link<ObservedNormal>(y, y_hat, tau_y);
+m.link<Deterministic>(rsq);
+
+// things to track
+std::vector<vec>& b_hist = m.track<std::vector>(b);
+std::vector<double>& rsq_hist = m.track<std::vector>(rsq);
+
 
 m.sample(iterations_, burn_, adapt_, thin_);
 
-return Rcpp::List::create(Rcpp::Named("b", m.getNode(b).mean()), Rcpp::Named("ar", m.acceptance_ratio()), Rcpp::Named("rsq", m.getNode(rsq).mean()));
+return Rcpp::List::create(Rcpp::Named("b", mean(b_hist.begin(),b_hist.end())),
+                          Rcpp::Named("rsq", mean(rsq_hist.begin(),rsq_hist.end())),
+                          Rcpp::Named("ar", m.acceptance_ratio()));
+                          

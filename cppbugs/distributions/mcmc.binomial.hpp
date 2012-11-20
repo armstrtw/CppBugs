@@ -25,39 +25,23 @@
 namespace cppbugs {
 
   template <typename T,typename U, typename V>
-  class BinomialLikelihiood : public Likelihiood {
-    const T& x_;
+  class Binomial : public DynamicStochastic<T> {
+  private:
     const U& n_;
     const V& p_;
   public:
-    BinomialLikelihiood(const T& x,  const U& n,  const V& p): x_(x), n_(n), p_(p) { dimension_check(x_, n_, p_); }
-    inline double calc() const {
-      return binom_logp(x_,n_,p_);
-    }
+    Binomial(T& value, const U& n, const V& p): DynamicStochastic<T>(value), n_(n), p_(p) { dimension_check(value, n_, p_); }
+    const double loglik() const { return binom_logp(DynamicStochastic<T>::value, n_, p_); }
   };
 
-  template<typename T>
-  class Binomial : public DynamicStochastic<T> {
-  public:
-    Binomial(T& value): DynamicStochastic<T>(value) {}
-
-    template<typename U, typename V>
-    Binomial<T>& dbinom(const U& n, const V& p) {
-      Stochastic::likelihood_functor = new BinomialLikelihiood<T,U,V>(DynamicStochastic<T>::value,n,p);
-      return *this;
-    }
-  };
-
-  template<typename T>
+  template <typename T,typename U, typename V>
   class ObservedBinomial : public Observed<T> {
+  private:
+    const U& n_;
+    const V& p_;
   public:
-    ObservedBinomial(const T& value): Observed<T>(value) {}
-
-    template<typename U, typename V>
-    ObservedBinomial<T>& dbinom(const U& n, const V& p) {
-      Stochastic::likelihood_functor = new BinomialLikelihiood<T,U,V>(Observed<T>::value, n, p);
-      return *this;
-    }
+    ObservedBinomial(const T& value, const U& n, const V& p): Observed<T>(value), n_(n), p_(p) { dimension_check(value, n_, p_); }
+    const double loglik() const { return binom_logp(Observed<T>::value, n_, p_); }
   };
 
 } // namespace cppbugs

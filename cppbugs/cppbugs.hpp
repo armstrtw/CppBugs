@@ -20,16 +20,16 @@
 
 #include <cppbugs/mcmc.deterministic.hpp>
 #include <cppbugs/mcmc.model.hpp>
+#include <cppbugs/mcmc.summary.stats.hpp>
 #include <cppbugs/distributions/mcmc.normal.hpp>
 #include <cppbugs/distributions/mcmc.uniform.hpp>
 #include <cppbugs/distributions/mcmc.gamma.hpp>
-
-// #include <cppbugs/distributions/mcmc.exponential.hpp>
+#include <cppbugs/distributions/mcmc.exponential.hpp>
 // #include <cppbugs/distributions/mcmc.exponential.censored.hpp>
-// #include <cppbugs/distributions/mcmc.beta.hpp>
-// #include <cppbugs/distributions/mcmc.binomial.hpp>
-// #include <cppbugs/distributions/mcmc.bernoulli.hpp>
+#include <cppbugs/distributions/mcmc.beta.hpp>
+#include <cppbugs/distributions/mcmc.binomial.hpp>
+#include <cppbugs/distributions/mcmc.bernoulli.hpp>
 // #include <cppbugs/distributions/mcmc.discrete.hpp>
-// #include <cppbugs/distributions/mcmc.categorical.hpp>
+#include <cppbugs/distributions/mcmc.categorical.hpp>
 
 #endif // CPPBUGS_HPP

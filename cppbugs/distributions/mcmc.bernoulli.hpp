@@ -26,21 +26,12 @@
 namespace cppbugs {
 
   template <typename T,typename U>
-  class BernoulliLikelihiood : public Likelihiood {
-    const T& x_;
-    const U& p_;
-  public:
-    BernoulliLikelihiood(const T& x, const U& p): x_(x), p_(p) { dimension_check(x_, p_); }
-    inline double calc() const {
-      return bernoulli_logp(x_,p_);
-    }
-  };
-
-  template<typename T>
   class Bernoulli : public DynamicStochastic<T> {
+  private:
+    const U& p_;
 
-    template<typename U>
-    void bernoulli_jump(RngBase& rng, U& value, const double scale) {
+    template<typename V>
+    void bernoulli_jump(RngBase& rng, V& value, const double scale) {
       double jump_probability = 1.0 - pow(0.5,scale);
       arma::uvec flips = arma::find(arma::randu<arma::vec>(value.n_elem) < jump_probability);
       for(unsigned int i = 0; i < flips.n_elem; i++) {
@@ -63,29 +54,20 @@ namespace cppbugs {
     }
 
   public:
-    Bernoulli(T& value): DynamicStochastic<T>(value) {}
-
+    Bernoulli(T& value, const U& p): DynamicStochastic<T>(value), p_(p) { dimension_check(value, p_); }
     void jump(RngBase& rng) {
       bernoulli_jump(rng, DynamicStochastic<T>::value, DynamicStochastic<T>::scale_);
     }
-
-    template<typename U>
-    Bernoulli<T>& dbern(const U& p) {
-      Stochastic::likelihood_functor = new BernoulliLikelihiood<T,U>(DynamicStochastic<T>::value,p);
-      return *this;
-    }
+    const double loglik() const { return bernoulli_logp(DynamicStochastic<T>::value, p_); }
   };
 
-  template<typename T>
+  template <typename T,typename U>
   class ObservedBernoulli : public Observed<T> {
+  private:
+    const U& p_;
   public:
-    ObservedBernoulli(const T& value): Observed<T>(value) {}
-
-    template<typename U>
-    ObservedBernoulli<T>& dbern(const U& p) {
-      Stochastic::likelihood_functor = new BernoulliLikelihiood<T,U>(Observed<T>::value,p);
-      return *this;
-    }
+    ObservedBernoulli(const T& value, const U& p): Observed<T>(value), p_(p) { dimension_check(Observed<T>::value, p_); }
+    const double loglik() const { return bernoulli_logp(Observed<T>::value, p_); }
   };
 } // namespace cppbugs
 #endif // MCMC_BERNOULLI_HPP

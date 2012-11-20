@@ -39,38 +39,36 @@ int main() {
   vec b(randn<vec>(4));
   vec b_herd(randn<vec>(N_herd));
   vec overdisp(randn<vec>(N));
-  vec phi;
+  vec phi(1/(1+exp(-(fixed*b + b_herd.elem(herd) + overdisp))));
   double tau_overdisp(1), tau_b_herd(1), sigma_overdisp(1), sigma_b_herd(1);
 
   std::function<void ()> model = [&]() {
     phi = fixed*b + b_herd.elem(herd) + overdisp;
     phi = 1/(1+exp(-phi));
-    sigma_overdisp = 1/sqrt(tau_overdisp);
-    sigma_b_herd = 1/sqrt(tau_b_herd);
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.track<Normal>(b).dnorm(zero,one_e3);
-  m.track<Uniform>(tau_overdisp).dunif(zero,one_thousand);
-  m.track<Uniform>(tau_b_herd).dunif(zero,one_hundred);
-  m.track<Normal>(b_herd).dnorm(zero, tau_b_herd);
-  m.track<Normal>(overdisp).dnorm(zero,tau_overdisp);
-  m.track<ObservedBinomial>(incidence).dbinom(size,phi);
-  m.track<Deterministic>(sigma_overdisp);
-  m.track<Deterministic>(sigma_b_herd);
-  m.track<Deterministic>(phi);
-  m.sample(1e6,1e5,1e4,50);
+  m.link<Normal>(b,zero,one_e3);
+  m.link<Uniform>(tau_overdisp,zero,one_thousand);
+  m.link<Uniform>(tau_b_herd,zero,one_hundred);
+  m.link<Normal>(b_herd,zero, tau_b_herd);
+  m.link<Normal>(overdisp,zero,tau_overdisp);
+  m.link<ObservedBinomial>(incidence,size,phi);
+  m.link<Deterministic>(phi);
+  m.link<Deterministic>(sigma_overdisp);
+  m.link<Deterministic>(sigma_b_herd);
 
-  cout << "samples: " << m.getNode(b).history.size() << endl;
-  cout << "b: " << endl << m.getNode(b).mean() << endl;
-  cout << "tau_overdisp: " << m.getNode(tau_overdisp).mean() << endl;
-  cout << "tau_b_herd: " << m.getNode(tau_b_herd).mean() << endl;
-  cout << "sigma_overdisp: " << m.getNode(sigma_overdisp).mean() << endl;
-  cout << "sigma_b_herd: " << m.getNode(sigma_b_herd).mean() << endl;
-  cout << "b_herd: " << endl << m.getNode(b_herd).mean() << endl;
+  // things to track
+  std::vector<vec>& b_hist = m.track<std::vector>(b);
+  std::vector<vec>& b_herd_hist = m.track<std::vector>(b_herd);
+  std::vector<vec>& overdisp_hist = m.track<std::vector>(overdisp);
+
+  m.sample(1e6,1e5,1e4,50);
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
-  //cout << "overdisp" << endl << m.getNode(overdisp).mean() << endl;
-  //cout << "phi" << endl << m.getNode(phi).mean() << endl;
+  cout << "samples: " << b_hist.size() << endl;
+  cout << "b: " << endl << mean(b_hist.begin(),b_hist.end()) << endl;
+  cout << "b_herd: " << endl << mean(b_herd_hist.begin(),b_herd_hist.end()) << endl;
+  cout << "overdisp" << endl << mean(overdisp_hist.begin(),overdisp_hist.end()) << endl;
 
   return 0;
 }

@@ -22,7 +22,8 @@ int main() {
   const ivec y = conv_to<ivec>::from(size / (1+exp(-X*real_b)));
 
   vec b(randn<vec>(NC));
-  vec y_hat, p_hat;
+  vec p_hat = 1/(1+exp(-X*b));
+  vec y_hat = p_hat % size;
   double rsq;
 
   std::function<void ()> model = [&]() {
@@ -32,17 +33,23 @@ int main() {
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.track<Normal>(b).dnorm(zero, one_e3);
-  m.track<ObservedBinomial>(y).dbinom(size,p_hat);
-  m.track<Deterministic>(rsq);
+  m.link<Normal>(b, zero, one_e3);
+  m.link<Deterministic>(p_hat);
+  m.link<Deterministic>(y_hat);
+  m.link<ObservedBinomial>(y,size,p_hat);
+  m.link<Deterministic>(rsq);
+
+  // things to track
+  std::vector<vec>& b_hist = m.track<std::vector>(b);
+  std::vector<double>& rsq_hist = m.track<std::vector>(rsq);
 
   int iterations = 1e5;
   m.sample(iterations, 1e4, 1e4, 10);
 
   cout << "b (actual):" << endl << real_b;
-  cout << "b: " << endl << m.getNode(b).mean();
-  cout << "R^2: " << m.getNode(rsq).mean() << endl;
-  cout << "samples: " << m.getNode(b).history.size() << endl;
+  cout << "b: " << endl << mean(b_hist.begin(),b_hist.end());
+  cout << "R^2: " << mean(rsq_hist.begin(),rsq_hist.end()) << endl;
+  cout << "samples: " << b_hist.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
-};
+}

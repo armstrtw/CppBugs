@@ -378,6 +378,11 @@ namespace cppbugs {
     }
   }
 
+  template<typename T, typename U>
+  double exponential_logp(const T& x, const U& lambda) {
+    return arma::accu(log_approx(lambda) - arma::schur(lambda, x));
+  }
+
   // sigma denotes cov matrix rather than precision matrix
   double multivariate_normal_sigma_logp(const arma::rowvec& x, const arma::rowvec& mu, const arma::mat& sigma) {
     const double log_2pi = log(2 * arma::math::pi());

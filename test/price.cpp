@@ -6,6 +6,7 @@
 #include <cppbugs/cppbugs.hpp>
 #include <cppbugs/mcmc.model.hpp>
 
+
 using namespace arma;
 using namespace cppbugs;
 using std::cout;
@@ -42,6 +43,7 @@ int main() {
   m.link<Normal>(a, zero, one_e3);
   m.link<Normal>(b, zero, one_e3);
   m.link<Gamma>(tau, one_e1, one_e1);
+  m.link<Deterministic>(y_hat);
   m.link<ObservedNormal>(price, y_hat, tau);
 
   // things to track
@@ -55,9 +57,9 @@ int main() {
   cout << "err sd: " << stddev(err,0) << endl;;
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;
 
-  cout << "a: " << std::accumulate(a_hist.begin(),a_hist.end(),0.) / a_hist.size() << endl;
-  cout << "b: " << std::accumulate(b_hist.begin(),b_hist.end(),0.) / b_hist.size() << endl;
-  cout << "tau: " << std::accumulate(tau_hist.begin(),tau_hist.end(),0.) / tau_hist.size() << endl;
+  cout << "a: " << mean(a_hist.begin(),a_hist.end()) << endl;
+  cout << "b: " << mean(b_hist.begin(),b_hist.end()) << endl;
+  cout << "tau: " << mean(tau_hist.begin(),tau_hist.end()) << endl;
   cout << "samples: " << a_hist.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;

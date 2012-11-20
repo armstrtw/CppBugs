@@ -243,6 +243,20 @@ namespace cppbugs {
       return *node;
     }
 
+    // this is for deterministic nodes
+    template<template<typename> class MCTYPE, typename T>
+    MCTYPE<T>& link(T& x) {
+      MCTYPE<T>* node = new MCTYPE<T>(x);
+
+      // test object for traits
+      Dynamic<T>* dp = dynamic_cast<Dynamic<T>* >(node);
+      // only jump stochastics which are not observed
+      if(dp) dynamic_nodes.push_back(node);
+      data_node_map[(void*)(&x)] = node;
+
+      return *node;
+    }
+
     template<template<typename U,class Alloc = std::allocator<U> > class CONTAINER, typename T>
     CONTAINER<T>& track(const T& x) {
       MCMCTrackedT<T,CONTAINER>* node = new MCMCTrackedT<T,CONTAINER>(x);

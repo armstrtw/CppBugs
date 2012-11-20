@@ -25,42 +25,25 @@
 
 namespace cppbugs {
 
-  template <typename T,typename U>
-  class ExponentialLikelihiood : public Likelihiood {
-    const T& x_;
+  template<typename T, typename U>
+  class Exponential : public DynamicStochastic<T> {
+  private:
     const U& lambda_;
   public:
-    ExponentialLikelihiood(const T& x, const U& lambda): x_(x), lambda_(lambda) { dimension_check(x_, lambda_); }
-    inline double calc() const {
-      return arma::accu(log_approx(lambda_) - arma::schur(lambda_, x_));
-    }
-  };
-
-  template<typename T>
-  class Exponential : public DynamicStochastic<T> {
-  public:
-    Exponential(T& value): DynamicStochastic<T>(value) {}
+    Exponential(T& value, const U& lambda): DynamicStochastic<T>(value), lambda_(lambda) { dimension_check(value,lambda); }
 
     // modified jumper to only take positive jumps
     void jump(RngBase& rng) { positive_jump_impl(rng, DynamicStochastic<T>::value,DynamicStochastic<T>::scale_); }
-
-    template<typename U>
-    Exponential<T>& dexp(const U& lambda) {
-      Stochastic::likelihood_functor = new ExponentialLikelihiood<T,U>(DynamicStochastic<T>::value,lambda);
-      return *this;
-    }
+    const double loglik() const { return exponential_logp(DynamicStochastic<T>::value,lambda_); }
   };
 
-  template<typename T>
+  template<typename T, typename U>
   class ObservedExponential : public Observed<T> {
+  private:
+    const U& lambda_;
   public:
-    ObservedExponential(const T& value): Observed<T>(value) {}
-
-    template<typename U>
-    ObservedExponential<T>& dexp(const U& lambda) {
-      Stochastic::likelihood_functor = new ExponentialLikelihiood<T,U>(Observed<T>::value,lambda);
-      return *this;
-    }
+    ObservedExponential(const T& value, const U& lambda): Observed<T>(value), lambda_(lambda) { dimension_check(value,lambda); }
+    const double loglik() const { return exponential_logp(DynamicStochastic<T>::value,lambda_); }
   };
 
 } // namespace cppbugs

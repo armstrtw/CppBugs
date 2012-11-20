@@ -25,38 +25,21 @@
 namespace cppbugs {
 
   template <typename T,typename U>
-  class CategoricalLikelihiood : public Likelihiood {
-    const T& x_;
+  class Categorical : public DynamicStochastic<T> {
+  private:
     const U& p_;
   public:
-    CategoricalLikelihiood(const T& x,  const U& p): x_(x), p_(p) {}
-    inline double calc() const {
-      return categorical_logp(x_,p_);
-    }
+    Categorical(T& value, const U& p): DynamicStochastic<T>(value), p_(p) {}
+    const double loglik() const { return categorical_logp(DynamicStochastic<T>::value, p_); }
   };
 
-  template<typename T>
-  class Categorical : public DynamicStochastic<T> {
-  public:
-    Categorical(T& value): DynamicStochastic<T>(value) {}
-
-    template<typename U>
-    Categorical<T>& dcat(const U& p) {
-      Stochastic::likelihood_functor = new CategoricalLikelihiood<T,U>(DynamicStochastic<T>::value,p);
-      return *this;
-    }
-  };
-
-  template<typename T>
+  template <typename T,typename U>
   class ObservedCategorical : public Observed<T> {
+  private:
+    const U& p_;
   public:
-    ObservedCategorical(const T& value): Observed<T>(value) {}
-
-    template<typename U>
-    ObservedCategorical<T>& dcat(const U& p) {
-      Stochastic::likelihood_functor = new CategoricalLikelihiood<T,U>(Observed<T>::value, p);
-      return *this;
-    }
+    ObservedCategorical(const T& value, const U& p): Observed<T>(value), p_(p) {}
+    const double loglik() const { return categorical_logp(Observed<T>::value, p_); }
   };
 
 } // namespace cppbugs

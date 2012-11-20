@@ -24,43 +24,27 @@
 
 namespace cppbugs {
 
-  template <typename T,typename U, typename V>
-  class BetaLikelihiood : public Likelihiood {
-    const T& x_;
+  template<typename T, typename U, typename V>
+  class Beta : public DynamicStochastic<T> {
+  private:
     const U& alpha_;
     const V& beta_;
   public:
-    BetaLikelihiood(  const T& x,  const U& alpha,  const V& beta): x_(x), alpha_(alpha), beta_(beta) { dimension_check(x_, alpha_, beta_); }
-    inline double calc() const {
-      return beta_logp(x_,alpha_,beta_);
-    }
-  };
-
-  template<typename T>
-  class Beta : public DynamicStochastic<T> {
-  public:
-    Beta(T& value): DynamicStochastic<T>(value) {}
+    Beta(T& value, const U& alpha, const V& beta): DynamicStochastic<T>(value), alpha_(alpha), beta_(beta)  { dimension_check(value, alpha_, beta_); }
 
     // modified jumper to only take jumps on (0,1) interval
-    void jump(RngBase& rng) { bounded_jump_impl(rng, DynamicStochastic<T>::value,DynamicStochastic<T>::scale_, 0, 1); }
-
-    template<typename U, typename V>
-    Beta<T>& dbeta(const U& alpha, const V& beta) {
-      Stochastic::likelihood_functor = new BetaLikelihiood<T,U,V>(DynamicStochastic<T>::value,alpha,beta);
-      return *this;
-    }
+    void jump(RngBase& rng) { bounded_jump_impl(rng, DynamicStochastic<T>::value, DynamicStochastic<T>::scale_, 0, 1); }
+    const double loglik() const { return beta_logp(DynamicStochastic<T>::value, alpha_, beta_); }
   };
 
-  template<typename T>
+  template<typename T, typename U, typename V>
   class ObservedBeta : public Observed<T> {
+  private:
+    const U& alpha_;
+    const V& beta_;
   public:
-    ObservedBeta(const T& value): Observed<T>(value) {}
-
-    template<typename U, typename V>
-    ObservedBeta<T>& dbeta(const U& alpha, const V& beta) {
-      Stochastic::likelihood_functor = new BetaLikelihiood<T,U,V>(Observed<T>::value,alpha,beta);
-      return *this;
-    }
+    ObservedBeta(const T& value, const U& alpha, const V& beta): Observed<T>(value), alpha_(alpha), beta_(beta)  { dimension_check(value, alpha_, beta_); }
+    const double loglik() const { return beta_logp(Observed<T>::value, alpha_, beta_); }
   };
 
 } // namespace cppbugs
