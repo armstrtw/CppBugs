@@ -13,7 +13,6 @@ using std::cout;
 using std::endl;
 
 int main() {
-  const double zero(0), one_e1(0.1), one_e3(0.001);
 
   // setup data
   double ageraw[] = {13, 14, 14,12, 9, 15, 10, 14, 9, 14, 13, 12, 9, 10, 15, 11, 15, 11, 7,
@@ -26,23 +25,22 @@ int main() {
   const mat price(price_r/1000);
 
   // fit linear model
-  mat icept(NR,1); icept.fill(1);
-  const mat X = join_rows(icept,age);
+  const mat X = join_rows(ones<vec>(NR),age);
   vec coefs;
   solve(coefs, X, price);
   vec err = price - X*coefs;
 
 
-  double a, b, tau;
+  double a(coefs[0]), b(coefs[1]), tau(1);
   mat y_hat = a + b * age;
   std::function<void ()> model = [&]() {
     y_hat = a + b * age;
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.link<Normal>(a, zero, one_e3);
-  m.link<Normal>(b, zero, one_e3);
-  m.link<Gamma>(tau, one_e1, one_e1);
+  m.link<Normal>(a, 0, 0.001);
+  m.link<Normal>(b, 0, 0.001);
+  m.link<Gamma>(tau, 0.001, 0.001);
   m.link<Deterministic>(y_hat);
   m.link<ObservedNormal>(price, y_hat, tau);
 

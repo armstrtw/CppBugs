@@ -11,7 +11,6 @@ using std::cout;
 using std::endl;
 
 int main() {
-  const double zero(0),one_hundred(100),one_thousand(1000), one_e3(0.001);
 
   int incidence_raw[] = {2,3,4,0,3,1,1,8,2,0,2,2,0,2,0,5,0,0,1,3,0,0,1,8,1,3,0,12,2,0,0,0,1,1,0,2,0,5,3,1,2,1,0,0,1,2,0,0,11,0,0,0,1,1,1,0};
   int size_raw[] = {14,12,9,5,22,18,21,22,16,16,20,10,10,9,6,18,25,24,4,17,17,18,20,16,10,9,5,34,9,6,8,6,22,22,18,22,25,27,22,22,10,8,6,5,21,24,19,23,19,2,3,2,19,15,15,15};
@@ -48,12 +47,12 @@ int main() {
   };
 
   MCModel<boost::minstd_rand> m(model);
-  m.link<Normal>(b,zero,one_e3);
-  m.link<Uniform>(tau_overdisp,zero,one_thousand);
-  m.link<Uniform>(tau_b_herd,zero,one_hundred);
-  m.link<Normal>(b_herd,zero, tau_b_herd);
-  m.link<Normal>(overdisp,zero,tau_overdisp);
-  m.link<ObservedBinomial>(incidence,size,phi);
+  m.link<Normal>(b, 0, 0.001);
+  m.link<Uniform>(tau_overdisp, 0, 1000);
+  m.link<Uniform>(tau_b_herd, 0, 100);
+  m.link<Normal>(b_herd, 0, tau_b_herd);
+  m.link<Normal>(overdisp, 0, tau_overdisp);
+  m.link<ObservedBinomial>(incidence, size, phi);
   m.link<Deterministic>(phi);
   m.link<Deterministic>(sigma_overdisp);
   m.link<Deterministic>(sigma_b_herd);

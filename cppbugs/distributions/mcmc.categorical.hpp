@@ -28,8 +28,17 @@ namespace cppbugs {
   class Categorical : public DynamicStochastic<T> {
   private:
     const U& p_;
+    const bool destory_p_;
   public:
-    Categorical(T& value, const U& p): DynamicStochastic<T>(value), p_(p) {}
+    Categorical(T& value, const U& p): DynamicStochastic<T>(value), p_(p), destory_p_(false) {}
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    Categorical(T& value, const U&& p): DynamicStochastic<T>(value), p_(p), destory_p_(true) { dimension_check(value, p_); }
+#endif
+    ~Categorical() {
+      if(destory_p_) { delete &p_; }
+    }
+
     const double loglik() const { return categorical_logp(DynamicStochastic<T>::value, p_); }
   };
 
@@ -37,8 +46,17 @@ namespace cppbugs {
   class ObservedCategorical : public Observed<T> {
   private:
     const U& p_;
+    const bool destory_p_;
   public:
-    ObservedCategorical(const T& value, const U& p): Observed<T>(value), p_(p) {}
+    ObservedCategorical(const T& value, const U& p): Observed<T>(value), p_(p), destory_p_(false) {}
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    ObservedCategorical(T& value, const U&& p): Observed<T>(value), p_(p), destory_p_(true) { dimension_check(value, p_); }
+#endif
+    ~ObservedCategorical() {
+      if(destory_p_) { delete &p_; }
+    }
+
     const double loglik() const { return categorical_logp(Observed<T>::value, p_); }
   };
 

@@ -30,8 +30,19 @@ namespace cppbugs {
   private:
     const U& alpha_;
     const V& beta_;
+    const bool destory_alpha_, destory_beta_;
   public:
-    Gamma(T& value, const U& alpha, const V& beta): DynamicStochastic<T>(value), alpha_(alpha), beta_(beta) { dimension_check(value, alpha_, beta_); }
+    Gamma(T& value, const U& alpha, const V& beta): DynamicStochastic<T>(value), alpha_(alpha), beta_(beta), destory_alpha_(false), destory_beta_(false) { dimension_check(value, alpha_, beta_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    Gamma(T& value, const U&& alpha, const V& beta): DynamicStochastic<T>(value), alpha_(*(new U(alpha))), beta_(beta), destory_alpha_(true), destory_beta_(false) { dimension_check(value, alpha_, beta_); }
+    Gamma(T& value, const U& alpha, const V&& beta): DynamicStochastic<T>(value), alpha_(alpha), beta_(*(new V(beta))), destory_alpha_(false), destory_beta_(true) { dimension_check(value, alpha_, beta_); }
+    Gamma(T& value, const U&& alpha, const V&& beta): DynamicStochastic<T>(value),alpha_(*(new U(alpha))), beta_(*(new V(beta))), destory_alpha_(true), destory_beta_(true)   { dimension_check(value, alpha_, beta_); }
+#endif
+    ~Gamma() {
+      if(destory_alpha_) { delete &alpha_; }
+      if(destory_beta_) { delete &beta_; }
+    }
 
     // modified jumper to only take positive jumps
     void jump(RngBase& rng) { positive_jump_impl(rng, DynamicStochastic<T>::value, DynamicStochastic<T>::scale_); }
@@ -43,8 +54,20 @@ namespace cppbugs {
   private:
     const U& alpha_;
     const V& beta_;
+    const bool destory_alpha_, destory_beta_;
   public:
-    ObservedGamma(const T& value, const U& alpha, const V& beta): Observed<T>(value), alpha_(alpha), beta_(beta) { dimension_check(value, alpha_, beta_); }
+    ObservedGamma(const T& value, const U& alpha, const V& beta): Observed<T>(value), alpha_(alpha), beta_(beta), destory_alpha_(false), destory_beta_(false){ dimension_check(value, alpha_, beta_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    ObservedGamma(T& value, const U&& alpha, const V& beta): Observed<T>(value), alpha_(*(new U(alpha))), beta_(beta), destory_alpha_(true), destory_beta_(false) { dimension_check(value, alpha_, beta_); }
+    ObservedGamma(T& value, const U& alpha, const V&& beta): Observed<T>(value), alpha_(alpha), beta_(*(new V(beta))), destory_alpha_(false), destory_beta_(true) { dimension_check(value, alpha_, beta_); }
+    ObservedGamma(T& value, const U&& alpha, const V&& beta): Observed<T>(value),alpha_(*(new U(alpha))), beta_(*(new V(beta))), destory_alpha_(true), destory_beta_(true)   { dimension_check(value, alpha_, beta_); }
+#endif
+    ~ObservedGamma() {
+      if(destory_alpha_) { delete &alpha_; }
+      if(destory_beta_) { delete &beta_; }
+    }
+
     const double loglik() const { return gamma_logp(Observed<T>::value,alpha_,beta_); }
   };
 

@@ -29,8 +29,19 @@ namespace cppbugs {
   private:
     const U& n_;
     const V& p_;
+    const bool destory_n_, destory_p_;
   public:
-    Binomial(T& value, const U& n, const V& p): DynamicStochastic<T>(value), n_(n), p_(p) { dimension_check(value, n_, p_); }
+    Binomial(T& value, const U& n, const V& p): DynamicStochastic<T>(value), n_(n), p_(p), destory_n_(false), destory_p_(false) { dimension_check(value, n_, p_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    Binomial(T& value, const U&& mu, const V& tau): DynamicStochastic<T>(value), n_(*(new U(mu))), p_(tau), destory_n_(true), destory_p_(false) { dimension_check(value, n_, p_); }
+    Binomial(T& value, const U& mu, const V&& tau): DynamicStochastic<T>(value), n_(mu), p_(*(new V(tau))), destory_n_(false), destory_p_(true) { dimension_check(value, n_, p_); }
+    Binomial(T& value, const U&& mu, const V&& tau): DynamicStochastic<T>(value),n_(*(new U(mu))), p_(*(new V(tau))), destory_n_(true), destory_p_(true)   { dimension_check(value, n_, p_); }
+#endif
+    ~Binomial() {
+      if(destory_n_) { delete &n_; }
+      if(destory_p_) { delete &p_; }
+    }
     const double loglik() const { return binom_logp(DynamicStochastic<T>::value, n_, p_); }
   };
 
@@ -39,8 +50,19 @@ namespace cppbugs {
   private:
     const U& n_;
     const V& p_;
+    const bool destory_n_, destory_p_;
   public:
-    ObservedBinomial(const T& value, const U& n, const V& p): Observed<T>(value), n_(n), p_(p) { dimension_check(value, n_, p_); }
+    ObservedBinomial(const T& value, const U& n, const V& p): Observed<T>(value), n_(n), p_(p), destory_n_(false), destory_p_(false) { dimension_check(value, n_, p_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    ObservedBinomial(T& value, const U&& mu, const V& tau): Observed<T>(value), n_(*(new U(mu))), p_(tau), destory_n_(true), destory_p_(false) { dimension_check(value, n_, p_); }
+    ObservedBinomial(T& value, const U& mu, const V&& tau): Observed<T>(value), n_(mu), p_(*(new V(tau))), destory_n_(false), destory_p_(true) { dimension_check(value, n_, p_); }
+    ObservedBinomial(T& value, const U&& mu, const V&& tau): Observed<T>(value),n_(*(new U(mu))), p_(*(new V(tau))), destory_n_(true), destory_p_(true)   { dimension_check(value, n_, p_); }
+#endif
+    ~ObservedBinomial() {
+      if(destory_n_) { delete &n_; }
+      if(destory_p_) { delete &p_; }
+    }
     const double loglik() const { return binom_logp(Observed<T>::value, n_, p_); }
   };
 

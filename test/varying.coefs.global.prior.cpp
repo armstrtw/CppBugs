@@ -11,8 +11,6 @@ using std::cout;
 using std::endl;
 
 int main() {
-  const double zero(0),one_hundred(100),one_e3(0.001);
-
   const unsigned int NR = 100;
   const unsigned int NC = 2;
   const unsigned int J = 3;
@@ -68,9 +66,9 @@ int main() {
   MCModel<boost::minstd_rand> m(model);
 
   m.link<Normal>(b, b_mu_full_rnk, b_tau_full_rnk);
-  m.link<Normal>(b_mu, zero,one_e3);
-  m.link<Uniform>(b_tau, zero,one_hundred);
-  m.link<Uniform>(tau_y, zero,one_hundred);
+  m.link<Normal>(b_mu, 0, 0.001);
+  m.link<Uniform>(b_tau, 0, 100);
+  m.link<Uniform>(tau_y, 0, 100);
   m.link<Deterministic>(y_hat);
   m.link<Deterministic>(b_mu_full_rnk);
   m.link<Deterministic>(b_tau_full_rnk);

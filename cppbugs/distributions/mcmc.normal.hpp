@@ -21,6 +21,7 @@
 #include <armadillo>
 #include <cppbugs/mcmc.dynamic.stochastic.hpp>
 #include <cppbugs/mcmc.observed.hpp>
+#include <cppbugs/mcmc.gcc.version.hpp>
 
 namespace cppbugs {
 
@@ -29,8 +30,19 @@ namespace cppbugs {
   private:
     const U& mu_;
     const V& tau_;
+    const bool destory_mu_, destory_tau_;
   public:
-    Normal(T& value, const U& mu, const V& tau): DynamicStochastic<T>(value), mu_(mu), tau_(tau) { dimension_check(value, mu_, tau_); }
+    Normal(T& value, const U& mu, const V& tau): DynamicStochastic<T>(value), mu_(mu), tau_(tau), destory_mu_(false), destory_tau_(false) { dimension_check(value, mu_, tau_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    Normal(T& value, const U&& mu, const V& tau): DynamicStochastic<T>(value), mu_(*(new U(mu))), tau_(tau), destory_mu_(true), destory_tau_(false) { dimension_check(value, mu_, tau_); }
+    Normal(T& value, const U& mu, const V&& tau): DynamicStochastic<T>(value), mu_(mu), tau_(*(new V(tau))), destory_mu_(false), destory_tau_(true) { dimension_check(value, mu_, tau_); }
+    Normal(T& value, const U&& mu, const V&& tau): DynamicStochastic<T>(value),mu_(*(new U(mu))), tau_(*(new V(tau))), destory_mu_(true), destory_tau_(true)   { dimension_check(value, mu_, tau_); }
+#endif
+    ~Normal() {
+      if(destory_mu_) { delete &mu_; }
+      if(destory_tau_) { delete &tau_; }
+    }
     const double loglik() const { return normal_logp(DynamicStochastic<T>::value,mu_,tau_); }
   };
 
@@ -39,8 +51,19 @@ namespace cppbugs {
   private:
     const U& mu_;
     const V& tau_;
+    const bool destory_mu_, destory_tau_;
   public:
-    ObservedNormal(const T& value, const U& mu, const V& tau): Observed<T>(value), mu_(mu), tau_(tau) { dimension_check(value, mu_, tau_); }
+    ObservedNormal(const T& value, const U& mu, const V& tau): Observed<T>(value), mu_(mu), tau_(tau), destory_mu_(false), destory_tau_(false) { dimension_check(value, mu_, tau_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    ObservedNormal(T& value, const U&& mu, const V& tau): Observed<T>(value), mu_(*(new U(mu))), tau_(tau), destory_mu_(true), destory_tau_(false) { dimension_check(value, mu_, tau_); }
+    ObservedNormal(T& value, const U& mu, const V&& tau): Observed<T>(value), mu_(mu), tau_(*(new V(tau))), destory_mu_(false), destory_tau_(true) { dimension_check(value, mu_, tau_); }
+    ObservedNormal(T& value, const U&& mu, const V&& tau): Observed<T>(value),mu_(*(new U(mu))), tau_(*(new V(tau))), destory_mu_(true), destory_tau_(true)   { dimension_check(value, mu_, tau_); }
+#endif
+    ~ObservedNormal() {
+      if(destory_mu_) { delete &mu_; }
+      if(destory_tau_) { delete &tau_; }
+    }
     const double loglik() const { return normal_logp(Observed<T>::value,mu_,tau_); }
   };
 

@@ -29,8 +29,20 @@ namespace cppbugs {
   private:
     const U& alpha_;
     const V& beta_;
+    const bool destory_alpha_, destory_beta_;
   public:
-    Beta(T& value, const U& alpha, const V& beta): DynamicStochastic<T>(value), alpha_(alpha), beta_(beta)  { dimension_check(value, alpha_, beta_); }
+    Beta(T& value, const U& alpha, const V& beta): DynamicStochastic<T>(value), alpha_(alpha), beta_(beta), destory_alpha_(false), destory_beta_(false)  { dimension_check(value, alpha_, beta_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    Beta(T& value, const U&& alpha, const V& beta): DynamicStochastic<T>(value), alpha_(*(new U(alpha))), beta_(beta), destory_alpha_(true), destory_beta_(false) { dimension_check(value, alpha_, beta_); }
+    Beta(T& value, const U& alpha, const V&& beta): DynamicStochastic<T>(value), alpha_(alpha), beta_(*(new V(beta))), destory_alpha_(false), destory_beta_(true) { dimension_check(value, alpha_, beta_); }
+    Beta(T& value, const U&& alpha, const V&& beta): DynamicStochastic<T>(value),alpha_(*(new U(alpha))), beta_(*(new V(beta))), destory_alpha_(true), destory_beta_(true)   { dimension_check(value, alpha_, beta_); }
+#endif
+
+    ~Beta() {
+      if(destory_alpha_) { delete &alpha_; }
+      if(destory_beta_) { delete &beta_; }
+    }
 
     // modified jumper to only take jumps on (0,1) interval
     void jump(RngBase& rng) { bounded_jump_impl(rng, DynamicStochastic<T>::value, DynamicStochastic<T>::scale_, 0, 1); }
@@ -42,8 +54,19 @@ namespace cppbugs {
   private:
     const U& alpha_;
     const V& beta_;
+    const bool destory_alpha_, destory_beta_;
   public:
     ObservedBeta(const T& value, const U& alpha, const V& beta): Observed<T>(value), alpha_(alpha), beta_(beta)  { dimension_check(value, alpha_, beta_); }
+#if GCC_VERSION > 40700
+    ObservedBeta(T& value, const U&& alpha, const V& beta): Observed<T>(value), alpha_(*(new U(alpha))), beta_(beta), destory_alpha_(true), destory_beta_(false) { dimension_check(value, alpha_, beta_); }
+    ObservedBeta(T& value, const U& alpha, const V&& beta): Observed<T>(value), alpha_(alpha), beta_(*(new V(beta))), destory_alpha_(false), destory_beta_(true) { dimension_check(value, alpha_, beta_); }
+    ObservedBeta(T& value, const U&& alpha, const V&& beta): Observed<T>(value),alpha_(*(new U(alpha))), beta_(*(new V(beta))), destory_alpha_(true), destory_beta_(true)   { dimension_check(value, alpha_, beta_); }
+#endif
+    ~ObservedBeta() {
+      if(destory_alpha_) { delete &alpha_; }
+      if(destory_beta_) { delete &beta_; }
+    }
+
     const double loglik() const { return beta_logp(Observed<T>::value, alpha_, beta_); }
   };
 

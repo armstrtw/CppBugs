@@ -30,8 +30,19 @@ namespace cppbugs {
   private:
     const U& lower_;
     const V& upper_;
+    const bool destory_lower_, destory_upper_;
   public:
-    Uniform(T& value, const U& lower, const V& upper): DynamicStochastic<T>(value), lower_(lower), upper_(upper) { dimension_check(value, lower_, upper_); }
+    Uniform(T& value, const U& lower, const V& upper): DynamicStochastic<T>(value), lower_(lower), upper_(upper), destory_lower_(false), destory_upper_(false) { dimension_check(value, lower_, upper_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    Uniform(T& value, const U&& lower, const V& upper): DynamicStochastic<T>(value), lower_(*(new U(lower))), upper_(upper), destory_lower_(true), destory_upper_(false) { dimension_check(value, lower_, upper_); }
+    Uniform(T& value, const U& lower, const V&& upper): DynamicStochastic<T>(value), lower_(lower), upper_(*(new V(upper))), destory_lower_(false), destory_upper_(true) { dimension_check(value, lower_, upper_); }
+    Uniform(T& value, const U&& lower, const V&& upper): DynamicStochastic<T>(value),lower_(*(new U(lower))), upper_(*(new V(upper))), destory_lower_(true), destory_upper_(true)   { dimension_check(value, lower_, upper_); }
+#endif
+    ~Uniform() {
+      if(destory_lower_) { delete &lower_; }
+      if(destory_upper_) { delete &upper_; }
+    }
     const double loglik() const { return uniform_logp(DynamicStochastic<T>::value,lower_,upper_); }
   };
 
@@ -40,8 +51,19 @@ namespace cppbugs {
   private:
     const U& lower_;
     const V& upper_;
+    const bool destory_lower_, destory_upper_;
   public:
-    ObservedUniform(const T& value, const U& lower, const V& upper): Observed<T>(value), lower_(lower), upper_(upper) { dimension_check(value, lower_, upper_); }
+    ObservedUniform(const T& value, const U& lower, const V& upper): Observed<T>(value), lower_(lower), upper_(upper), destory_lower_(false), destory_upper_(false) { dimension_check(value, lower_, upper_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    ObservedUniform(T& value, const U&& lower, const V& upper): Observed<T>(value), lower_(*(new U(lower))), upper_(upper), destory_lower_(true), destory_upper_(false) { dimension_check(value, lower_, upper_); }
+    ObservedUniform(T& value, const U& lower, const V&& upper): Observed<T>(value), lower_(lower), upper_(*(new V(upper))), destory_lower_(false), destory_upper_(true) { dimension_check(value, lower_, upper_); }
+    ObservedUniform(T& value, const U&& lower, const V&& upper): Observed<T>(value),lower_(*(new U(lower))), upper_(*(new V(upper))), destory_lower_(true), destory_upper_(true)   { dimension_check(value, lower_, upper_); }
+#endif
+    ~ObservedUniform() {
+      if(destory_lower_) { delete &lower_; }
+      if(destory_upper_) { delete &upper_; }
+    }
     const double loglik() const { return uniform_logp(Observed<T>::value,lower_,upper_); }
   };
 

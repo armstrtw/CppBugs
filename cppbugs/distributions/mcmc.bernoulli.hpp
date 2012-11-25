@@ -29,7 +29,7 @@ namespace cppbugs {
   class Bernoulli : public DynamicStochastic<T> {
   private:
     const U& p_;
-
+    const bool destory_p_;
     template<typename V>
     void bernoulli_jump(RngBase& rng, V& value, const double scale) {
       double jump_probability = 1.0 - pow(0.5,scale);
@@ -54,7 +54,16 @@ namespace cppbugs {
     }
 
   public:
-    Bernoulli(T& value, const U& p): DynamicStochastic<T>(value), p_(p) { dimension_check(value, p_); }
+    Bernoulli(T& value, const U& p): DynamicStochastic<T>(value), p_(p), destory_p_(false) { dimension_check(value, p_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    Bernoulli(T& value, const U&& p): DynamicStochastic<T>(value), p_(p), destory_p_(true) { dimension_check(value, p_); }
+#endif
+
+    ~Bernoulli() {
+      if(destory_p_) { delete &p_; }
+    }
+
     void jump(RngBase& rng) {
       bernoulli_jump(rng, DynamicStochastic<T>::value, DynamicStochastic<T>::scale_);
     }
@@ -65,8 +74,17 @@ namespace cppbugs {
   class ObservedBernoulli : public Observed<T> {
   private:
     const U& p_;
+    const bool destory_p_;
   public:
-    ObservedBernoulli(const T& value, const U& p): Observed<T>(value), p_(p) { dimension_check(Observed<T>::value, p_); }
+    ObservedBernoulli(const T& value, const U& p): Observed<T>(value), p_(p), destory_p_(false) { dimension_check(Observed<T>::value, p_); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    ObservedBernoulli(T& value, const U&& p): Observed<T>(value), p_(p), destory_p_(true) { dimension_check(value, p_); }
+#endif
+
+    ~ObservedBernoulli() {
+      if(destory_p_) { delete &p_; }
+    }
     const double loglik() const { return bernoulli_logp(Observed<T>::value, p_); }
   };
 } // namespace cppbugs

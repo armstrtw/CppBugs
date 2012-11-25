@@ -29,8 +29,16 @@ namespace cppbugs {
   class Exponential : public DynamicStochastic<T> {
   private:
     const U& lambda_;
+    const bool destory_lambda_;
   public:
-    Exponential(T& value, const U& lambda): DynamicStochastic<T>(value), lambda_(lambda) { dimension_check(value,lambda); }
+    Exponential(T& value, const U& lambda): DynamicStochastic<T>(value), lambda_(lambda), destory_lambda_(false) { dimension_check(value,lambda); }
+    // special ifdef for const bug/feature introduced in gcc 4.7
+#if GCC_VERSION > 40700
+    Exponential(T& value, const U&& lambda): DynamicStochastic<T>(value), lambda_(lambda), destory_lambda_(true) { dimension_check(value, lambda_); }
+#endif
+    ~Exponential() {
+      if(destory_lambda_) { delete &lambda_; }
+    }
 
     // modified jumper to only take positive jumps
     void jump(RngBase& rng) { positive_jump_impl(rng, DynamicStochastic<T>::value,DynamicStochastic<T>::scale_); }
@@ -41,8 +49,15 @@ namespace cppbugs {
   class ObservedExponential : public Observed<T> {
   private:
     const U& lambda_;
+    const bool destory_lambda_;
   public:
-    ObservedExponential(const T& value, const U& lambda): Observed<T>(value), lambda_(lambda) { dimension_check(value,lambda); }
+    ObservedExponential(const T& value, const U& lambda): Observed<T>(value), lambda_(lambda), destory_lambda_(false) { dimension_check(value,lambda); }
+#if GCC_VERSION > 40700
+    ObservedExponential(T& value, const U&& lambda): Observed<T>(value), lambda_(lambda), destory_lambda_(true) { dimension_check(value, lambda_); }
+#endif
+    ~ObservedExponential() {
+      if(destory_lambda_) { delete &lambda_; }
+    }
     const double loglik() const { return exponential_logp(DynamicStochastic<T>::value,lambda_); }
   };
 
