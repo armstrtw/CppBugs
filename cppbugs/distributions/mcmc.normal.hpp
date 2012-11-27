@@ -56,9 +56,9 @@ namespace cppbugs {
     ObservedNormal(const T& value, const U& mu, const V& tau): Observed<T>(value), mu_(mu), tau_(tau), destory_mu_(false), destory_tau_(false) { dimension_check(value, mu_, tau_); }
     // special ifdef for const bug/feature introduced in gcc 4.7
 #if GCC_VERSION > 40700
-    ObservedNormal(T& value, const U&& mu, const V& tau): Observed<T>(value), mu_(*(new U(mu))), tau_(tau), destory_mu_(true), destory_tau_(false) { dimension_check(value, mu_, tau_); }
-    ObservedNormal(T& value, const U& mu, const V&& tau): Observed<T>(value), mu_(mu), tau_(*(new V(tau))), destory_mu_(false), destory_tau_(true) { dimension_check(value, mu_, tau_); }
-    ObservedNormal(T& value, const U&& mu, const V&& tau): Observed<T>(value),mu_(*(new U(mu))), tau_(*(new V(tau))), destory_mu_(true), destory_tau_(true)   { dimension_check(value, mu_, tau_); }
+    ObservedNormal(const T& value, const U&& mu, const V& tau): Observed<T>(value), mu_(*(new U(mu))), tau_(tau), destory_mu_(true), destory_tau_(false) { dimension_check(value, mu_, tau_); }
+    ObservedNormal(const T& value, const U& mu, const V&& tau): Observed<T>(value), mu_(mu), tau_(*(new V(tau))), destory_mu_(false), destory_tau_(true) { dimension_check(value, mu_, tau_); }
+    ObservedNormal(const T& value, const U&& mu, const V&& tau): Observed<T>(value),mu_(*(new U(mu))), tau_(*(new V(tau))), destory_mu_(true), destory_tau_(true)   { dimension_check(value, mu_, tau_); }
 #endif
     ~ObservedNormal() {
       if(destory_mu_) { delete &mu_; }
