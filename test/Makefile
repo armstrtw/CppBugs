@@ -9,7 +9,7 @@ LIBS = $(ARMADILLO_LIBS)
 all: linear.model.test varying.coefs.test price herd herd.fast radon1 varying.coefs.global.prior logistic.model.test
 
 clean:
-	rm -f linear.model.test varying.coefs.test price herd herd.fast radon1 varying.coefs.global.prior logistic.model.test
+	rm -f linear.model.test varying.coefs.test price herd herd.fast radon1 varying.coefs.global.prior logistic.model.test eight.schools
 
 benchmark:
 	rm -f ./benchmark.output
