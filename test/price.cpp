@@ -61,4 +61,4 @@ int main() {
   cout << "samples: " << a_hist.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;
-};
+}
