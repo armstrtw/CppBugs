@@ -23,7 +23,7 @@ benchmark:
 	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./logistic.model.test
 
 logistic.model.test: logistic.model.test.cpp
-	$(CC) $(CPPFLAGS) $(LIBS) logistic.model.test.cpp -o logistic.model.test
+	$(CC) $(CPPFLAGS) logistic.model.test.cpp -o logistic.model.test $(LIBS)
 
 linear.model.test: linear.model.test.cpp
 	$(CC) $(CPPFLAGS) linear.model.test.cpp -o linear.model.test $(LIBS)
