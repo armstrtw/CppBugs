@@ -7,6 +7,7 @@ const mat y = Rcpp::as<arma::mat>(yr);
 int iterations_ = as<int>(iterations);
 int burn_ = as<int>(burn);
 int adapt_ = as<int>(adapt);
+int adapt_interval_ = as<int>(adapt_interval);
 int thin_ = as<int>(thin);
 
 vec b = randn<vec>(X.n_cols);
@@ -31,7 +32,11 @@ std::vector<vec>& b_hist = m.track<std::vector>(b);
 std::vector<double>& rsq_hist = m.track<std::vector>(rsq);
 
 
-m.sample(iterations_, burn_, adapt_, thin_);
+  m.tune(adapt_,adapt_interval_);
+  m.tune_global(adapt_,adapt_interval_);
+  m.burn(burn_);
+  m.sample(iterations_, thin_);
+m.sample(, , , );
 
 return Rcpp::List::create(Rcpp::Named("b", mean(b_hist.begin(),b_hist.end())),
                           Rcpp::Named("rsq", mean(rsq_hist.begin(),rsq_hist.end())),

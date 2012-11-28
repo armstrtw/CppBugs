@@ -157,37 +157,17 @@ namespace cppbugs {
       }
     }
 
-    void run(int iterations, int burn, int thin) {
-      if(logp()==-std::numeric_limits<double>::infinity()) {
-        throw std::logic_error("ERROR: cannot start from a logp of -Inf.");
-      }
-
-      for(int i = 1; i <= (iterations + burn); i++) {
+    void burn(int iterations) {
+      for(int i = 0; i < iterations; i++) {
         step();
-        if(i > burn && (i % thin == 0)) { tally(); }
       }
     }
 
-    void sample(int iterations, int burn, int adapt, int thin) {
-
-
-      if(iterations % thin) {
-        std::cout << "ERROR: interations not a multiple of thin." << std::endl;
-        return;
+    void sample(int iterations, int thin) {
+      for(int i = 1; i <= iterations; i++) {
+        step();
+        if(i % thin == 0) { tally(); }
       }
-
-      update();
-
-      if(logp()==-std::numeric_limits<double>::infinity()) {
-        throw std::logic_error("ERROR: cannot start from a logp of -Inf.");
-      }
-
-      // tuning phase
-      tune(adapt,static_cast<int>(adapt/100));
-      if(true) { tune_global(adapt,static_cast<int>(adapt/100)); }
-
-      // sampling
-      run(iterations, burn, thin);
     }
 
     // push into specific lists here

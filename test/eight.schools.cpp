@@ -42,8 +42,10 @@ int main() {
   // things to track
   std::vector<vec>& theta_hist = m.track<std::vector>(theta);
 
-  int iterations = 1e5;
-  m.sample(iterations, 1e4, 1e4, 5);
+  m.tune(1e4,100);
+  m.tune_global(1e4,100);
+  m.burn(1e4);
+  m.sample(1e5, 5);
 
   cout << "theta:" << endl << mean(theta_hist.begin(),theta_hist.end()) << endl;
   cout << "samples: " << theta_hist.size() << endl;

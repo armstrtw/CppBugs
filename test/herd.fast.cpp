@@ -62,7 +62,11 @@ int main() {
   std::vector<vec>& b_herd_hist = m.track<std::vector>(b_herd);
   std::vector<vec>& overdisp_hist = m.track<std::vector>(overdisp);
 
-  m.sample(1e6,1e5,1e4,50);
+  m.tune(1e4,100);
+  m.tune_global(1e4,100);
+  m.burn(5e5);
+  m.sample(1e6, 50);
+
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   cout << "samples: " << b_hist.size() << endl;
   cout << "b: " << endl << mean(b_hist.begin(),b_hist.end()) << endl;

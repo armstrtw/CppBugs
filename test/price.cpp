@@ -49,8 +49,11 @@ int main() {
   std::vector<double>& b_hist = m.track<std::vector>(b);
   std::vector<double>& tau_hist = m.track<std::vector>(tau);
 
-  int iterations = 1e5;
-  m.sample(iterations, 1e4, 1e4, 5);
+  m.tune(1e4,100);
+  m.tune_global(1e4,100);
+  m.burn(1e4);
+  m.sample(1e5, 5);
+
   cout << "lm coefs" << endl << coefs;
   cout << "err sd: " << stddev(err,0) << endl;;
   cout << "err tau: " << pow(stddev(err,0),-2) << endl;

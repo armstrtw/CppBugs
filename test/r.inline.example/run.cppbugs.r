@@ -11,7 +11,7 @@ cppbugs.plugin <- getPlugin("RcppArmadillo")
 cppbugs.plugin$env$PKG_CXXFLAGS <- "-std=c++0x"
 cppbugs.plugin$env$PKG_LIBS <- paste(cppbugs.plugin$env$PKG_LIBS,"-larmadillo")
 
-linear.model <- cxxfunction(signature(XR="numeric", yr="numeric",iterations="integer",burn="integer",adapt="adapt",thin="integer"), includes="#include <cppbugs/cppbugs.hpp>",body=src,settings=cppbugs.plugin)
+linear.model <- cxxfunction(signature(XR="numeric", yr="numeric",iterations="integer",burn="integer",adapt="integer",adapt_interval="integer",thin="integer"), includes="#include <cppbugs/cppbugs.hpp>",body=src,settings=cppbugs.plugin)
 
 
 NR <- 1000

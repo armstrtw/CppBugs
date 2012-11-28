@@ -41,8 +41,10 @@ int main() {
   std::vector<vec>& b_hist = m.track<std::vector>(b);
   std::vector<double>& rsq_hist = m.track<std::vector>(rsq);
 
-  int iterations = 1e5;
-  m.sample(iterations, 1e4, 1e4, 10);
+  m.tune(1e4,100);
+  m.tune_global(1e4,100);
+  m.burn(1e4);
+  m.sample(1e5, 10);
 
   cout << "b (actual):" << endl << real_b;
   cout << "b: " << endl << mean(b_hist.begin(),b_hist.end());

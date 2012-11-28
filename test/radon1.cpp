@@ -129,7 +129,11 @@ int main() {
   std::vector<vec>& a_hist = m.track<std::vector>(a);
   std::vector<double>& b_hist = m.track<std::vector>(b);
 
-  m.sample(50e3, 10e3, 1e4, 5);
+  m.tune(1e4,100);
+  m.tune_global(1e4,100);
+  m.burn(1e4);
+  m.sample(50e3, 5);
+
   cout << "samples: " << a_hist.size() << endl;
   cout << "a: " << endl << mean(a_hist.begin(),a_hist.end()) << endl;
   cout << "b: " << mean(b_hist.begin(),b_hist.end()) << endl;
