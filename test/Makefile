@@ -45,3 +45,6 @@ herd.fast: herd.fast.cpp
 
 radon1: radon1.cpp
 	$(CC) $(CPPFLAGS) radon1.cpp -o radon1 $(LIBS)
+
+eight.schools: eight.schools.cpp
+	$(CC) $(CPPFLAGS) eight.schools.cpp -o eight.schools $(LIBS)
