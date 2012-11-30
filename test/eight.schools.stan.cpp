@@ -19,28 +19,28 @@ int main() {
   const vec tau_y = pow(sigma_y,-2);
   const vec y({28,  8, -3,  7, -1,  1, 18, 12});
 
-  double mu_theta(0);
-  double sigma_theta(1);
-  double tau_theta = pow(sigma_theta,-2);
-  vec theta = randn<vec>(J);
+  double mu(0);
+  double tau(100);
+  vec eta = randn<vec>(J);
+  vec theta = mu + tau * eta;
 
   std::function<void ()> model = [&]() {
-    tau_theta = pow(sigma_theta,-2);
+    theta = mu + tau * eta;
   };
 
   MCModel<boost::minstd_rand> m(model);
 
   // noninformative prior on mu
-  m.link<Normal>(mu_theta, 0.0, 1.0E-6);
+  m.link<Normal>(mu, 0.0, 1.0E-6);
 
-  // noninformative prior on sigma
-  m.link<Uniform>(sigma_theta, 0, 1000);
-
-  m.link<Deterministic>(tau_theta);
-  m.link<Normal>(theta,mu_theta,tau_theta);
-  m.link<ObservedNormal>(y, theta, tau_y);
+  // noninformative prior on tau
+  m.link<Uniform>(tau, 0, 1000);
+  m.link<Deterministic>(theta);
+  m.link<Normal>(eta, 0, 1);
+  m.link<ObservedNormal>(y, theta, tau_y); //*
 
   // things to track
+  std::vector<vec>& eta_hist = m.track<std::vector>(eta);
   std::vector<vec>& theta_hist = m.track<std::vector>(theta);
 
   m.tune(1e4,100);
@@ -48,6 +48,7 @@ int main() {
   m.burn(5e3);
   m.sample(1e4, 1);
 
+  cout << "eta:" << endl << mean(eta_hist.begin(),eta_hist.end()) << endl;
   cout << "theta:" << endl << mean(theta_hist.begin(),theta_hist.end()) << endl;
   cout << "samples: " << theta_hist.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;

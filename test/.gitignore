@@ -12,3 +12,4 @@ varying.coefs.global.prior
 logistic.model.test
 eight.schools
 benchmark.output*
+eight.schools.stan

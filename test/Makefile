@@ -48,3 +48,6 @@ radon1: radon1.cpp
 
 eight.schools: eight.schools.cpp
 	$(CC) $(CPPFLAGS) eight.schools.cpp -o eight.schools $(LIBS)
+
+eight.schools.stan: eight.schools.stan.cpp
+	$(CC) $(CPPFLAGS) eight.schools.stan.cpp -o eight.schools.stan $(LIBS)
