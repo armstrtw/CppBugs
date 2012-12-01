@@ -43,10 +43,10 @@ int main() {
   std::vector<vec>& eta_hist = m.track<std::vector>(eta);
   std::vector<vec>& theta_hist = m.track<std::vector>(theta);
 
-  m.tune(1e4,100);
-  m.tune_global(1e4,100);
-  m.burn(5e3);
-  m.sample(1e4, 1);
+  m.tune(1e3,100);
+  m.tune_global(1e3,100);
+  m.burn(1e5);
+  m.sample(1e5, 1);
 
   cout << "eta:" << endl << mean(eta_hist.begin(),eta_hist.end()) << endl;
   cout << "theta:" << endl << mean(theta_hist.begin(),theta_hist.end()) << endl;
