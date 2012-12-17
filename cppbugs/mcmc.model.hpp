@@ -32,8 +32,6 @@
 #include <cppbugs/mcmc.gcc.version.hpp>
 
 namespace cppbugs {
-  typedef std::map<void*,MCMCObject*> vmc_map;
-  typedef std::map<void*,MCMCObject*>::iterator vmc_map_iter;
 
   template<class RNG>
   class MCModel {
@@ -44,7 +42,6 @@ namespace cppbugs {
     std::vector<Stochastic*> stochastic_nodes;
     std::vector<MCMCTracked*> tracked_nodes;
     std::function<void ()> update;
-    vmc_map data_node_map;
 
     void jump() { for(auto v : jumping_nodes) { v->jump(rng_); } }
     void preserve() { for(auto v : dynamic_nodes) { v->preserve(); } }
@@ -55,11 +52,10 @@ namespace cppbugs {
   public:
     MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), logp_value_(-std::numeric_limits<double>::infinity()), old_logp_value_(-std::numeric_limits<double>::infinity()), update(update_) {}
     ~MCModel() {
-      // use data_node_map as delete list
       // only objects allocated by this class are inserted thre
       // addNode allows user allocated objects to enter the mcmcObjects vector
-      for(auto m : data_node_map) {
-        delete m.second;
+      for(auto m : mcmcObjects) {
+        delete m;
       }
     }
 
@@ -170,6 +166,26 @@ namespace cppbugs {
       }
     }
 
+    template<typename T>
+    void addNode(MCMCObject* node) {
+      mcmcObjects.push_back(node);
+      // test object for traits
+      Stochastic* sp = dynamic_cast<Stochastic*>(node);
+      Observed<T>* op = dynamic_cast<Observed<T>* >(node);
+      Dynamic<T>* dp = dynamic_cast<Dynamic<T>* >(node);
+
+      if(sp) {
+        stochastic_nodes.push_back(sp);
+        if(sp->loglik()==-std::numeric_limits<double>::infinity()) {
+          // throw
+        }
+      }
+
+      // only jump stochastics which are not observed
+      if(sp && op == NULL) jumping_nodes.push_back(node);
+      if(dp) dynamic_nodes.push_back(node);
+    }
+
     // push into specific lists here
     // b/c we can use this cast:
     // if(dynamic_cast<Observed<T>* >(node))
@@ -177,216 +193,66 @@ namespace cppbugs {
     template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
     MCTYPE<T, U, V>& link(T& x, const U& a, const V& b) {
       MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, a, b);
-
-      // test object for traits
-      Stochastic* sp = dynamic_cast<Stochastic*>(node);
-      Observed<T>* op = dynamic_cast<Observed<T>* >(node);
-      Dynamic<T>* dp = dynamic_cast<Dynamic<T>* >(node);
-
-      if(sp) {
-        stochastic_nodes.push_back(node);
-        if(node->loglik()==-std::numeric_limits<double>::infinity()) {
-          // throw
-        }
-      }
-
-      // only jump stochastics which are not observed
-      if(sp && op == NULL) jumping_nodes.push_back(node);
-      if(dp) dynamic_nodes.push_back(node);
-
-      data_node_map[(void*)(&x)] = node;
-
+      addNode<T>(node);
       return *node;
     }
 
     template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
     MCTYPE<T, U, V>& link(const T& x, const U& a, const V& b) {
       MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, a, b);
-
-      // test object for traits
-      Stochastic* sp = dynamic_cast<Stochastic*>(node);
-      Observed<T>* op = dynamic_cast<Observed<T>*>(node);
-      Dynamic<T>* dp = dynamic_cast<Dynamic<T>*>(node);
-
-      if(sp) {
-        stochastic_nodes.push_back(node);
-        if(sp->loglik()==-std::numeric_limits<double>::infinity()) {
-          // throw
-        }
-      }
-
-      // only jump stochastics which are not observed
-      if(sp && op == NULL) jumping_nodes.push_back(node);
-      if(dp) dynamic_nodes.push_back(node);
-
-      data_node_map[(void*)(&x)] = node;
-
+      addNode<T>(node);
       return *node;
     }
+
 #if GCC_VERSION > 40700
     template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
     MCTYPE<T, U, V>& link(T& x, const U&& a, const V& b) {
       MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, std::move(a), b);
-
-      // test object for traits
-      Stochastic* sp = dynamic_cast<Stochastic*>(node);
-      Observed<T>* op = dynamic_cast<Observed<T>* >(node);
-      Dynamic<T>* dp = dynamic_cast<Dynamic<T>* >(node);
-
-      if(sp) {
-        stochastic_nodes.push_back(node);
-        if(node->loglik()==-std::numeric_limits<double>::infinity()) {
-          // throw
-        }
-      }
-
-      // only jump stochastics which are not observed
-      if(sp && op == NULL) jumping_nodes.push_back(node);
-      if(dp) dynamic_nodes.push_back(node);
-
-      data_node_map[(void*)(&x)] = node;
-
+      addNode<T>(node);
       return *node;
     }
 
     template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
     MCTYPE<T, U, V>& link(T& x, const U& a, const V&& b) {
       MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, a, std::move(b));
-
-      // test object for traits
-      Stochastic* sp = dynamic_cast<Stochastic*>(node);
-      Observed<T>* op = dynamic_cast<Observed<T>* >(node);
-      Dynamic<T>* dp = dynamic_cast<Dynamic<T>* >(node);
-
-      if(sp) {
-        stochastic_nodes.push_back(node);
-        if(node->loglik()==-std::numeric_limits<double>::infinity()) {
-          // throw
-        }
-      }
-
-      // only jump stochastics which are not observed
-      if(sp && op == NULL) jumping_nodes.push_back(node);
-      if(dp) dynamic_nodes.push_back(node);
-
-      data_node_map[(void*)(&x)] = node;
-
+      addNode<T>(node);
       return *node;
     }
 
     template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
     MCTYPE<T, U, V>& link(T& x, const U&& a, const V&& b) {
       MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, std::move(a), std::move(b));
-
-      // test object for traits
-      Stochastic* sp = dynamic_cast<Stochastic*>(node);
-      Observed<T>* op = dynamic_cast<Observed<T>* >(node);
-      Dynamic<T>* dp = dynamic_cast<Dynamic<T>* >(node);
-
-      if(sp) {
-        stochastic_nodes.push_back(node);
-        if(node->loglik()==-std::numeric_limits<double>::infinity()) {
-          // throw
-        }
-      }
-
-      // only jump stochastics which are not observed
-      if(sp && op == NULL) jumping_nodes.push_back(node);
-      if(dp) dynamic_nodes.push_back(node);
-
-      data_node_map[(void*)(&x)] = node;
-
+      addNode<T>(node);
       return *node;
     }
 
     template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
     MCTYPE<T, U, V>& link(const T& x, const U&& a, const V& b) {
       MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, std::move(a), b);
-
-      // test object for traits
-      Stochastic* sp = dynamic_cast<Stochastic*>(node);
-      Observed<T>* op = dynamic_cast<Observed<T>*>(node);
-      Dynamic<T>* dp = dynamic_cast<Dynamic<T>*>(node);
-
-      if(sp) {
-        stochastic_nodes.push_back(node);
-        if(sp->loglik()==-std::numeric_limits<double>::infinity()) {
-          // throw
-        }
-      }
-
-      // only jump stochastics which are not observed
-      if(sp && op == NULL) jumping_nodes.push_back(node);
-      if(dp) dynamic_nodes.push_back(node);
-
-      data_node_map[(void*)(&x)] = node;
-
+      addNode<T>(node);
       return *node;
     }
 
     template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
     MCTYPE<T, U, V>& link(const T& x, const U& a, const V&& b) {
       MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, a, std::move(b));
-
-      // test object for traits
-      Stochastic* sp = dynamic_cast<Stochastic*>(node);
-      Observed<T>* op = dynamic_cast<Observed<T>*>(node);
-      Dynamic<T>* dp = dynamic_cast<Dynamic<T>*>(node);
-
-      if(sp) {
-        stochastic_nodes.push_back(node);
-        if(sp->loglik()==-std::numeric_limits<double>::infinity()) {
-          // throw
-        }
-      }
-
-      // only jump stochastics which are not observed
-      if(sp && op == NULL) jumping_nodes.push_back(node);
-      if(dp) dynamic_nodes.push_back(node);
-
-      data_node_map[(void*)(&x)] = node;
-
+      addNode<T>(node);
       return *node;
     }
 
     template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
     MCTYPE<T, U, V>& link(const T& x, const U&& a, const V&& b) {
       MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, std::move(a), std::move(b));
-
-      // test object for traits
-      Stochastic* sp = dynamic_cast<Stochastic*>(node);
-      Observed<T>* op = dynamic_cast<Observed<T>*>(node);
-      Dynamic<T>* dp = dynamic_cast<Dynamic<T>*>(node);
-
-      if(sp) {
-        stochastic_nodes.push_back(node);
-        if(sp->loglik()==-std::numeric_limits<double>::infinity()) {
-          // throw
-        }
-      }
-
-      // only jump stochastics which are not observed
-      if(sp && op == NULL) jumping_nodes.push_back(node);
-      if(dp) dynamic_nodes.push_back(node);
-
-      data_node_map[(void*)(&x)] = node;
-
+      addNode<T>(node);
       return *node;
     }
-
 #endif
 
     // this is for deterministic nodes
     template<template<typename> class MCTYPE, typename T>
     MCTYPE<T>& link(T& x) {
       MCTYPE<T>* node = new MCTYPE<T>(x);
-
-      // test object for traits
-      Dynamic<T>* dp = dynamic_cast<Dynamic<T>* >(node);
-      // only jump stochastics which are not observed
-      if(dp) dynamic_nodes.push_back(node);
-      data_node_map[(void*)(&x)] = node;
-
+      addNode<T>(node);
       return *node;
     }
 
