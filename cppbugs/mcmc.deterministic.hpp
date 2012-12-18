@@ -27,17 +27,17 @@ namespace cppbugs {
   public:
     Deterministic(T& value): Dynamic<T>(value) {}
     void jump(RngBase& rng) {}
-    void accept() {}
-    void reject(){}
-    void tune() {}
+    void accept() { throw std::logic_error("Cannot accept a deterministic."); }
+    void reject(){ throw std::logic_error("Cannot reject a deterministic."); }
+    void tune() { throw std::logic_error("Cannot tune a deterministic."); }
     // in Dynamic: void preserve()
     // in Dynamic: void revert()
     // in Dynamic: void tally()
     bool isDeterministc() const { return true; }
     bool isStochastic() const { return false; }
     bool isObserved() const { return false; }
-    void setScale(const double scale) {}
-    double getScale() const { return 0;}
+    void setScale(const double scale) { throw std::logic_error("Cannot setScale of a deterministic."); }
+    double getScale() const { throw std::logic_error("Cannot getScale of a deterministic."); return 0; }
   };
 
 } // namespace cppbugs

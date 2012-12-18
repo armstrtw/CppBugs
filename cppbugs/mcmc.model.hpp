@@ -28,6 +28,7 @@
 #include <cppbugs/mcmc.object.hpp>
 #include <cppbugs/mcmc.stochastic.hpp>
 #include <cppbugs/mcmc.observed.hpp>
+#include <cppbugs/mcmc.deterministic.hpp>
 #include <cppbugs/mcmc.tracked.hpp>
 #include <cppbugs/mcmc.gcc.version.hpp>
 
@@ -38,19 +39,20 @@ namespace cppbugs {
   private:
     double accepted_,rejected_,logp_value_,old_logp_value_;
     SpecializedRng<RNG> rng_;
-    std::vector<MCMCObject*> mcmcObjects, jumping_nodes, dynamic_nodes;
+    std::vector<MCMCObject*> mcmcObjects, jumping_nodes, dynamic_nodes, deterministic_nodes;
     std::vector<Stochastic*> stochastic_nodes;
     std::vector<MCMCTracked*> tracked_nodes;
-    std::function<void ()> update;
 
-    void jump() { for(auto v : jumping_nodes) { v->jump(rng_); } }
+    //void jump() { for(auto v : jumping_nodes) { v->jump(rng_); } }
+    void jump() { for(auto v : dynamic_nodes) { v->jump(rng_); } }
+    void jump_detrministics() { for(size_t i = 0; i < deterministic_nodes.size(); i++) { deterministic_nodes[i]->jump(rng_); } }
     void preserve() { for(auto v : dynamic_nodes) { v->preserve(); } }
     void revert() { for(auto v : dynamic_nodes) { v->revert(); } }
     void set_scale(const double scale) { for(auto v : jumping_nodes) { v->setScale(scale); } }
     void tally() { for(auto v : tracked_nodes) { v->track(); } }
     static bool bad_logp(const double value) { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCModel(std::function<void ()> update_): accepted_(0), rejected_(0), logp_value_(-std::numeric_limits<double>::infinity()), old_logp_value_(-std::numeric_limits<double>::infinity()), update(update_) {}
+    MCModel(): accepted_(0), rejected_(0), logp_value_(-std::numeric_limits<double>::infinity()), old_logp_value_(-std::numeric_limits<double>::infinity()) {}
     ~MCModel() {
       // only objects allocated by this class are inserted thre
       // addNode allows user allocated objects to enter the mcmcObjects vector
@@ -90,7 +92,8 @@ namespace cppbugs {
           old_logp_value = logp_value;
           it->preserve();
           it->jump(rng_);
-          update();
+          // has to be done after each stoch jump
+          jump_detrministics();
           logp_value = logp();
           if(reject(logp_value, old_logp_value)) {
             it->revert();
@@ -113,7 +116,6 @@ namespace cppbugs {
       old_logp_value_ = logp_value_;
       preserve();
       jump();
-      update();
       logp_value_ = logp();
       if(reject(logp_value_, old_logp_value_)) {
         revert();
@@ -173,17 +175,19 @@ namespace cppbugs {
       Stochastic* sp = dynamic_cast<Stochastic*>(node);
       Observed<T>* op = dynamic_cast<Observed<T>* >(node);
       Dynamic<T>* dp = dynamic_cast<Dynamic<T>* >(node);
+      Deterministic<T>* detp = dynamic_cast<Deterministic<T>* >(node);      
 
       if(sp) {
         stochastic_nodes.push_back(sp);
         if(sp->loglik()==-std::numeric_limits<double>::infinity()) {
-          // throw
+          throw std::logic_error("Cannot start from -Inf.");
         }
       }
 
       // only jump stochastics which are not observed
       if(sp && op == NULL) jumping_nodes.push_back(node);
       if(dp) dynamic_nodes.push_back(node);
+      if(detp) deterministic_nodes.push_back(detp);
     }
 
     // push into specific lists here
