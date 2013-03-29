@@ -5,6 +5,7 @@
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
 #include <cppbugs/mcmc.model.hpp>
+#include <cppbugs/deterministics/mcmc.inv.variance.hpp>
 
 
 using namespace arma;
@@ -24,11 +25,7 @@ int main() {
   double tau_theta = pow(sigma_theta,-2);
   vec theta = randn<vec>(J);
 
-  std::function<void ()> model = [&]() {
-    tau_theta = pow(sigma_theta,-2);
-  };
-
-  MCModel<boost::minstd_rand> m(model);
+  MCModel<boost::minstd_rand> m;
 
   // noninformative prior on mu
   m.link<Normal>(mu_theta, 0.0, 1.0E-6);
@@ -36,7 +33,7 @@ int main() {
   // noninformative prior on sigma
   m.link<Uniform>(sigma_theta, 0, 1000);
 
-  m.link<Deterministic>(tau_theta);
+  m.link<InvVariance>(tau_theta,sigma_theta);
   m.link<Normal>(theta,mu_theta,tau_theta);
   m.link<ObservedNormal>(y, theta, tau_y);
 

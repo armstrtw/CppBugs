@@ -15,34 +15,24 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_DETERMINISTIC_HPP
-#define MCMC_DETERMINISTIC_HPP
+#ifndef MCMC_RSQUARED_HPP
+#define MCMC_RSQUARED_HPP
 
 #include <cppbugs/mcmc.dynamic.hpp>
 
 namespace cppbugs {
 
-  template<typename T>
-  class Deterministic : public Dynamic<T> {
+  template<typename T, typename U, typename V>
+  class Rsquared : public Deterministic<T> {
+    const U& y_;
+    const V& y_hat_;
   public:
-    Deterministic(T& value): Dynamic<T>(value) {}
-    //void jump(RngBase& rng) {}
-    void accept() { throw std::logic_error("Cannot accept a deterministic."); }
-    void reject(){ throw std::logic_error("Cannot reject a deterministic."); }
-    void tune() { throw std::logic_error("Cannot tune a deterministic."); }
-    // in Dynamic: void preserve()
-    // in Dynamic: void revert()
-    // in Dynamic: void tally()
-    bool isDeterministc() const { return true; }
-    bool isStochastic() const { return false; }
-    bool isObserved() const { return false; }
-
-    //void setScale(const double scale) { throw std::logic_error("Cannot setScale of a deterministic."); }
-    //double getScale() const { throw std::logic_error("Cannot getScale of a deterministic."); return 0; }
-
-    void setScale(const double scale) {}
-    double getScale() const { return 0; }
+    Rsquared(T& x, const U& y, const V& y_hat): Deterministic<T>(x), y_(y), y_hat_(y_hat) {
+      Deterministic<T>::value = as_scalar(1 - var(y_ - y_hat_) / var(y_));
+    }
+    void jump(RngBase& rng) {
+      Deterministic<T>::value = as_scalar(1 - var(y_ - y_hat_) / var(y_));
+    }
   };
-
 } // namespace cppbugs
-#endif //MCMC_DETERMINISTIC_HPP
+#endif //MCMC_RSQUARED_HPP

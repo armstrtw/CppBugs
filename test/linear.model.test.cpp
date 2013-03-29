@@ -3,6 +3,7 @@
 #include <armadillo>
 #include <cppbugs/cppbugs.hpp>
 #include <cppbugs/deterministics/mcmc.linear.hpp>
+#include <cppbugs/deterministics/mcmc.rsquared.hpp>
 
 using namespace arma;
 using namespace cppbugs;
@@ -33,17 +34,18 @@ int main() {
   };
   */
 
-  MCModel<boost::minstd_rand> m(model);
+  //MCModel<boost::minstd_rand> m(model);
+  MCModel<boost::minstd_rand> m;
 
   m.link<Normal>(b, 0, 0.001);
   m.link<Uniform>(tau_y, 0, 100);
   m.link<Linear>(y_hat, X, b);
   m.link<ObservedNormal>(y, y_hat, tau_y);
-  //m.link<Deterministic>(rsq);
+  m.link<Rsquared>(rsq,y,y_hat);
 
   std::vector<vec>& b_hist = m.track<std::vector>(b);
   std::vector<double>& tau_y_hist = m.track<std::vector>(tau_y);
-  //std::vector<double>& rsq_hist = m.track<std::vector>(rsq);
+  std::vector<double>& rsq_hist = m.track<std::vector>(rsq);
 
   m.tune(1e4,100);
   m.tune_global(1e4,100);
@@ -56,7 +58,7 @@ int main() {
 
   cout << "b: " << endl << mean(b_hist.begin(),b_hist.end()) << endl;
   cout << "tau_y: " << mean(tau_y_hist.begin(),tau_y_hist.end()) << endl;
-  //cout << "R^2: " << mean(rsq_hist.begin(),rsq_hist.end()) << endl;
+  cout << "R^2: " << mean(rsq_hist.begin(),rsq_hist.end()) << endl;
   cout << "samples: " << b_hist.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
 

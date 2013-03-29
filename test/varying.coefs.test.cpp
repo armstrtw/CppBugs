@@ -4,6 +4,9 @@
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
 #include <cppbugs/mcmc.model.hpp>
+#include <cppbugs/deterministics/mcmc.linear.grouped.hpp>
+#include <cppbugs/deterministics/mcmc.rsquared.hpp>
+
 
 using namespace arma;
 using namespace cppbugs;
@@ -45,19 +48,14 @@ int main() {
 
   mat b(randn<mat>(J,NC));
   double tau_y(1), rsq(0);
-  mat y_hat = sum(X % b.rows(groups),1);
+  mat y_hat;
 
-  std::function<void ()> model = [&] {
-    y_hat = sum(X % b.rows(groups),1);
-    rsq = as_scalar(1 - var(y - y_hat) / var(y));
-  };
-
-  MCModel<boost::minstd_rand> m(model);
+  MCModel<boost::minstd_rand> m;
   m.link<Normal>(b, 0, 0.001);
   m.link<Uniform>(tau_y, 0, 100.);
-  m.link<Deterministic>(y_hat);
+  m.link<LinearGrouped>(y_hat, X, b, groups);
   m.link<ObservedNormal>(y_const, y_hat, tau_y);
-  m.link<Deterministic>(rsq);
+  m.link<Rsquared>(rsq,y,y_hat);
 
   // things to track
   std::vector<mat>& b_hist = m.track<std::vector>(b);

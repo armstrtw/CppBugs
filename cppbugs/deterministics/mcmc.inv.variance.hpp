@@ -15,34 +15,23 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_DETERMINISTIC_HPP
-#define MCMC_DETERMINISTIC_HPP
+#ifndef MCMC_INV_VARIANCE_HPP
+#define MCMC_INV_VARIANCE_HPP
 
 #include <cppbugs/mcmc.dynamic.hpp>
 
 namespace cppbugs {
 
-  template<typename T>
-  class Deterministic : public Dynamic<T> {
+  template<typename T, typename U>
+  class InvVariance : public Deterministic<T> {
+    const U& s_;
   public:
-    Deterministic(T& value): Dynamic<T>(value) {}
-    //void jump(RngBase& rng) {}
-    void accept() { throw std::logic_error("Cannot accept a deterministic."); }
-    void reject(){ throw std::logic_error("Cannot reject a deterministic."); }
-    void tune() { throw std::logic_error("Cannot tune a deterministic."); }
-    // in Dynamic: void preserve()
-    // in Dynamic: void revert()
-    // in Dynamic: void tally()
-    bool isDeterministc() const { return true; }
-    bool isStochastic() const { return false; }
-    bool isObserved() const { return false; }
-
-    //void setScale(const double scale) { throw std::logic_error("Cannot setScale of a deterministic."); }
-    //double getScale() const { throw std::logic_error("Cannot getScale of a deterministic."); return 0; }
-
-    void setScale(const double scale) {}
-    double getScale() const { return 0; }
+    InvVariance(T& x, const U& s): Deterministic<T>(x), s_(s) {
+      Deterministic<T>::value = 1/(s_*s_);
+    }
+    void jump(RngBase& rng) {
+      Deterministic<T>::value = 1/(s_*s_);
+    }
   };
-
 } // namespace cppbugs
-#endif //MCMC_DETERMINISTIC_HPP
+#endif //MCMC_INV_VARIANCE_HPP

@@ -15,34 +15,25 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_DETERMINISTIC_HPP
-#define MCMC_DETERMINISTIC_HPP
+#ifndef MCMC_LINEAR_GROUPED_HPP
+#define MCMC_LINEAR_GROUPED_HPP
 
 #include <cppbugs/mcmc.dynamic.hpp>
 
 namespace cppbugs {
 
-  template<typename T>
-  class Deterministic : public Dynamic<T> {
+  template<typename T, typename U, typename V, typename W>
+  class LinearGrouped : public Deterministic<T> {
+    const U& X_;
+    const V& b_;
+    const W& groups_;
   public:
-    Deterministic(T& value): Dynamic<T>(value) {}
-    //void jump(RngBase& rng) {}
-    void accept() { throw std::logic_error("Cannot accept a deterministic."); }
-    void reject(){ throw std::logic_error("Cannot reject a deterministic."); }
-    void tune() { throw std::logic_error("Cannot tune a deterministic."); }
-    // in Dynamic: void preserve()
-    // in Dynamic: void revert()
-    // in Dynamic: void tally()
-    bool isDeterministc() const { return true; }
-    bool isStochastic() const { return false; }
-    bool isObserved() const { return false; }
-
-    //void setScale(const double scale) { throw std::logic_error("Cannot setScale of a deterministic."); }
-    //double getScale() const { throw std::logic_error("Cannot getScale of a deterministic."); return 0; }
-
-    void setScale(const double scale) {}
-    double getScale() const { return 0; }
+    LinearGrouped(T& x, const U& X, const V& b, const W& groups): Deterministic<T>(x), X_(X), b_(b), groups_(groups) {
+      Deterministic<T>::value = sum(X_ % b_.rows(groups_),1);
+    }
+    void jump(RngBase& rng) {
+      Deterministic<T>::value = sum(X_ % b_.rows(groups_),1);
+    }
   };
-
 } // namespace cppbugs
-#endif //MCMC_DETERMINISTIC_HPP
+#endif //MCMC_LINEAR_GROUPED_HPP

@@ -3,12 +3,16 @@
 #include <armadillo>
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/deterministics/mcmc.linear.grouped.hpp>
+#include <cppbugs/deterministics/mcmc.rsquared.hpp>
 #include <cppbugs/mcmc.model.hpp>
 
 using namespace arma;
 using namespace cppbugs;
 using std::cout;
 using std::endl;
+
+typedef arma::subview_elem2<double, arma::Mat<unsigned int>, arma::Mat<unsigned int> > replicatedT;
 
 int main() {
   const unsigned int NR = 100;
@@ -43,37 +47,27 @@ int main() {
   solve(coefs, X, y);
   vec err = y - X*coefs;
 
-  vec rowdup(ones<vec>(J));
+  //vec rowdup(ones<vec>(J));
+  uvec rowdup(zeros<uvec>(J));
 
-  mat b(randn<mat>(J,NC));
   mat b_mu(randn<mat>(1,NC));
   mat b_tau(randu<mat>(1,NC));
-  mat b_mu_full_rnk = rowdup * b_mu;
-  mat b_tau_full_rnk = rowdup * b_tau;
+  mat b(randn<mat>(J,NC));
   double tau_y(1);
-  mat y_hat = sum(X % b.rows(groups),1);
+  mat y_hat;
   double rsq;
+  replicatedT b_mu_full_rnk = b_mu.rows(rowdup);
+  replicatedT b_tau_full_rnk = b_tau.rows(rowdup);
 
+  MCModel<boost::minstd_rand> m;
 
-  std::function<void ()> model = [&]() {
-    y_hat = sum(X % b.rows(groups),1);
-    rsq = as_scalar(1 - var(y - y_hat) / var(y));
-
-    b_mu_full_rnk = rowdup * b_mu;
-    b_tau_full_rnk = rowdup * b_tau;
-  };
-
-  MCModel<boost::minstd_rand> m(model);
-
-  m.link<Normal>(b, b_mu_full_rnk, b_tau_full_rnk);
   m.link<Normal>(b_mu, 0, 0.001);
   m.link<Uniform>(b_tau, 0, 100);
+  m.link<Normal>(b, b_mu_full_rnk, b_tau_full_rnk);
   m.link<Uniform>(tau_y, 0, 100);
-  m.link<Deterministic>(y_hat);
-  m.link<Deterministic>(b_mu_full_rnk);
-  m.link<Deterministic>(b_tau_full_rnk);
+  m.link<LinearGrouped>(y_hat, X, b, groups);
   m.link<ObservedNormal>(y_const, y_hat, tau_y);
-  m.link<Deterministic>(rsq);
+  m.link<Rsquared>(rsq,y,y_hat);
 
   // things to track
   std::vector<mat>& b_hist = m.track<std::vector>(b);

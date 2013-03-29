@@ -8,6 +8,8 @@
 #include <boost/random.hpp>
 #include <boost/algorithm/string.hpp>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/deterministics/mcmc.linear.with.const.hpp>
+#include <cppbugs/deterministics/mcmc.inv.variance.hpp>
 
 using namespace arma;
 using namespace cppbugs;
@@ -16,6 +18,8 @@ using std::string;
 using std::cout;
 using std::endl;
 using std::ifstream;
+
+typedef arma::subview_elem1<double, arma::Mat<unsigned int> > replicatedT;
 
 /*
 # Bugs code for multilevel model for radon
@@ -107,24 +111,24 @@ int main() {
 
   vec a(randn<vec>(group.max() + 1));
   double b, tau_y(1), sigma_y(1), mu_a, tau_a(1), sigma_a(1);
-  vec y_hat = a.elem(group) + b * basement;
+  replicatedT a_full = a.elem(group);
+  mat y_hat;
 
-  std::function<void ()> model = [&]() {
-    y_hat = a.elem(group) + b * basement;
-    tau_y = pow(sigma_y, -2.0);
-    tau_a = pow(sigma_a, -2.0);
-  };
+  MCModel<boost::minstd_rand> m;
 
-  MCModel<boost::minstd_rand> m(model);
-  m.link<Normal>(a, mu_a, tau_a);
-  m.link<Normal>(b, 0, 0.001);
-  m.link<Normal>(mu_a, 0, 0.001);
-  m.link<Uniform>(sigma_y, 0, 100);
   m.link<Uniform>(sigma_a, 0, 100);
-  m.link<Deterministic>(y_hat);
+  m.link<InvVariance>(tau_a,sigma_a);
+  m.link<Normal>(mu_a, 0, 0.001);
+  m.link<Normal>(a, mu_a, tau_a);
+
+  m.link<Normal>(b, 0, 0.001);
+
+  m.link<LinearWithConst>(y_hat,basement,a_full,b);
+
+  m.link<Uniform>(sigma_y, 0, 100);
+  m.link<InvVariance>(tau_y,sigma_y);
+
   m.link<ObservedNormal>(level_const, y_hat, tau_y);
-  m.link<Deterministic>(tau_y);
-  m.link<Deterministic>(tau_a);
 
   std::vector<vec>& a_hist = m.track<std::vector>(a);
   std::vector<double>& b_hist = m.track<std::vector>(b);
@@ -138,6 +142,7 @@ int main() {
   cout << "a: " << endl << mean(a_hist.begin(),a_hist.end()) << endl;
   cout << "b: " << mean(b_hist.begin(),b_hist.end()) << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
+
   return 0;
 };
 

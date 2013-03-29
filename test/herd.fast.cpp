@@ -10,6 +10,23 @@ using namespace cppbugs;
 using std::cout;
 using std::endl;
 
+typedef arma::subview_elem1<double, arma::Mat<unsigned int> > replicatedT;
+
+template<typename T, typename U, typename V, typename W, typename X>
+class LogisticWithConstAndOverdispersion : public Deterministic<T> {
+  const U& A_;
+  const V& a_;
+  const W& b_;
+  const X& overdisp_;
+public:
+  LogisticWithConstAndOverdispersion(T& x, const U& A, const V& a, const W& b, const X& overdisp): Deterministic<T>(x), A_(A), a_(a), b_(b), overdisp_(overdisp) {
+    Deterministic<T>::value = 1/(1+exp(-(a_ + A_ * b_ + overdisp_)));
+  }
+  void jump(RngBase& rng) {
+    Deterministic<T>::value = 1/(1+exp(-(a_ + A_ * b_ + overdisp_)));
+  }
+};
+
 int main() {
 
   int incidence_raw[] = {2,3,4,0,3,1,1,8,2,0,2,2,0,2,0,5,0,0,1,3,0,0,1,8,1,3,0,12,2,0,0,0,1,1,0,2,0,5,3,1,2,1,0,0,1,2,0,0,11,0,0,0,1,1,1,0};
@@ -38,24 +55,23 @@ int main() {
   vec b(randn<vec>(4));
   vec b_herd(randn<vec>(N_herd));
   vec overdisp(randn<vec>(N));
-  vec phi(1/(1+exp(-(fixed*b + b_herd.elem(herd) + overdisp))));
-  double tau_overdisp(1), tau_b_herd(1), sigma_overdisp(1), sigma_b_herd(1);
+  vec phi;
+  double tau_overdisp(1), tau_b_herd(1);
+  replicatedT b_herd_full = b_herd.elem(herd);
 
-  std::function<void ()> model = [&]() {
-    phi = fixed*b + b_herd.elem(herd) + overdisp;
-    phi = 1/(1+exp(-phi));
-  };
+  // std::function<void ()> model = [&]() {
+  //   phi = b_herd.elem(herd) + fixed*b + overdisp;
+  //   phi = 1/(1+exp(-phi));
+  // };
 
-  MCModel<boost::minstd_rand> m(model);
+  MCModel<boost::minstd_rand> m;
   m.link<Normal>(b, 0, 0.001);
   m.link<Uniform>(tau_overdisp, 0, 1000);
   m.link<Uniform>(tau_b_herd, 0, 100);
   m.link<Normal>(b_herd, 0, tau_b_herd);
   m.link<Normal>(overdisp, 0, tau_overdisp);
+  m.link<LogisticWithConstAndOverdispersion>(phi,fixed,b_herd_full,b,overdisp);
   m.link<ObservedBinomial>(incidence, size, phi);
-  m.link<Deterministic>(phi);
-  m.link<Deterministic>(sigma_overdisp);
-  m.link<Deterministic>(sigma_b_herd);
 
   // things to track
   std::vector<vec>& b_hist = m.track<std::vector>(b);

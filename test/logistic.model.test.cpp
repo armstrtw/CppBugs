@@ -2,7 +2,7 @@
 #include <vector>
 #include <armadillo>
 #include <cppbugs/cppbugs.hpp>
-#include <algorithm>
+#include <cppbugs/deterministics/mcmc.logistic.hpp>
 
 using namespace arma;
 using namespace cppbugs;
@@ -22,24 +22,15 @@ int main() {
   vec b(randn<vec>(NC));
   vec p_hat = 1/(1+exp(-X*b));
   vec y_hat = p_hat % size;
-  double rsq;
 
-  std::function<void ()> model = [&]() {
-    p_hat = 1/(1+exp(-X*b));
-    y_hat = p_hat % size;
-    rsq = as_scalar(1 - var(y - y_hat) / var(y));
-  };
-
-  MCModel<boost::minstd_rand> m(model);
+  MCModel<boost::minstd_rand> m;
   m.link<Normal>(b, 0, 0.001);
-  m.link<Deterministic>(p_hat);
-  m.link<Deterministic>(y_hat);
+  m.link<Logistic>(p_hat, X, b);
   m.link<ObservedBinomial>(y, size, p_hat);
-  m.link<Deterministic>(rsq);
+
 
   // things to track
   std::vector<vec>& b_hist = m.track<std::vector>(b);
-  std::vector<double>& rsq_hist = m.track<std::vector>(rsq);
 
   m.tune(1e4,100);
   m.tune_global(1e4,100);
@@ -48,7 +39,6 @@ int main() {
 
   cout << "b (actual):" << endl << real_b;
   cout << "b: " << endl << mean(b_hist.begin(),b_hist.end());
-  cout << "R^2: " << mean(rsq_hist.begin(),rsq_hist.end()) << endl;
   cout << "samples: " << b_hist.size() << endl;
   cout << "acceptance_ratio: " << m.acceptance_ratio() << endl;
   return 0;

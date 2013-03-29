@@ -190,13 +190,31 @@ namespace cppbugs {
       if(detp) deterministic_nodes.push_back(detp);
     }
 
-    // push into specific lists here
-    // b/c we can use this cast:
-    // if(dynamic_cast<Observed<T>* >(node))
-    // as a proxy for the old isObserved() function
+
+    template<template<typename,typename> class MCTYPE, typename T, typename U>
+    MCTYPE<T, U>& link(T& x, const U& a) {
+      MCTYPE<T, U>* node = new MCTYPE<T, U>(x, a);
+      addNode<T>(node);
+      return *node;
+    }
+
     template<template<typename,typename,typename> class MCTYPE, typename T, typename U, typename V>
     MCTYPE<T, U, V>& link(T& x, const U& a, const V& b) {
       MCTYPE<T, U, V>* node = new MCTYPE<T, U, V>(x, a, b);
+      addNode<T>(node);
+      return *node;
+    }
+
+    template<template<typename,typename,typename,typename> class MCTYPE, typename T, typename U, typename V, typename W>
+    MCTYPE<T, U, V, W>& link(T& x, const U& a, const V& b, const W& c) {
+      MCTYPE<T, U, V, W>* node = new MCTYPE<T, U, V, W>(x, a, b, c);
+      addNode<T>(node);
+      return *node;
+    }
+
+    template<template<typename,typename,typename,typename,typename> class MCTYPE, typename T, typename U, typename V, typename W, typename X>
+    MCTYPE<T, U, V, W, X>& link(T& x, const U& a, const V& b, const W& c, const X& d) {
+      MCTYPE<T, U, V, W, X>* node = new MCTYPE<T, U, V, W, X>(x, a, b, c, d);
       addNode<T>(node);
       return *node;
     }

@@ -6,17 +6,16 @@ ARMADILLO_LIBS = -larmadillo
 ##ARMADILLO_LIBS = -lgoto2 -lpthread -lgfortran
 LIBS = $(ARMADILLO_LIBS)
 
-all: linear.model.test varying.coefs.test price herd herd.fast radon1 varying.coefs.global.prior logistic.model.test
+all: linear.model.test varying.coefs.test price herd.fast radon1 varying.coefs.global.prior logistic.model.test eight.schools eight.schools.stan
 
 clean:
-	rm -f linear.model.test varying.coefs.test price herd herd.fast radon1 varying.coefs.global.prior logistic.model.test eight.schools
+	rm -f linear.model.test varying.coefs.test price herd.fast radon1 varying.coefs.global.prior logistic.model.test eight.schools eight.schools.stan
 
 benchmark:
 	rm -f ./benchmark.output
 	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./linear.model.test
 	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./varying.coefs.test
 	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./price
-	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./herd
 	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./herd.fast
 	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./radon1
 	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./varying.coefs.global.prior
@@ -36,9 +35,6 @@ varying.coefs.global.prior: varying.coefs.global.prior.cpp
 
 price: price.cpp
 	$(CC) $(CPPFLAGS) price.cpp -o price $(LIBS)
-
-herd: herd.cpp
-	$(CC) $(CPPFLAGS) herd.cpp -o herd $(LIBS)
 
 herd.fast: herd.fast.cpp
 	$(CC) $(CPPFLAGS) herd.fast.cpp -o herd.fast $(LIBS)

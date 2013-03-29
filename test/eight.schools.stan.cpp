@@ -5,6 +5,7 @@
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
 #include <cppbugs/mcmc.model.hpp>
+#include <cppbugs/deterministics/mcmc.linear.with.const.hpp>
 
 
 using namespace arma;
@@ -24,19 +25,15 @@ int main() {
   vec eta = randn<vec>(J);
   vec theta = mu + tau * eta;
 
-  std::function<void ()> model = [&]() {
-    theta = mu + tau * eta;
-  };
-
-  MCModel<boost::minstd_rand> m(model);
+  MCModel<boost::minstd_rand> m;
 
   // noninformative prior on mu
   m.link<Normal>(mu, 0.0, 1.0E-6);
 
   // noninformative prior on tau
   m.link<Uniform>(tau, 0, 1000);
-  m.link<Deterministic>(theta);
   m.link<Normal>(eta, 0, 1);
+  m.link<LinearWithConst>(theta,eta,mu,tau);
   m.link<ObservedNormal>(y, theta, tau_y); //*
 
   // things to track
