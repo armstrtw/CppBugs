@@ -389,6 +389,15 @@ namespace cppbugs {
   }
 
   template<typename T, typename U>
+  double poisson_logp(const T& x, const U& mu) {
+    if( any(mu < 0 ) || any(x < 0) ) {
+      return -std::numeric_limits<double>::infinity();
+    } else {
+      return arma::accu(x*log_approx(mu) - mu - factln(x));
+    }
+  }
+
+  template<typename T, typename U>
   double exponential_logp(const T& x, const U& lambda) {
     return arma::accu(log_approx(lambda) - arma::schur(lambda, x));
   }
@@ -415,6 +424,27 @@ namespace cppbugs {
 
     // otherwise calc logp
     return -arma::accu(x.n_elem * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
+  }
+
+  double wishart_logp(const arma::mat& X, const arma::mat& tau, const size_t n) {
+    if(X.n_cols != X.n_rows || tau.n_cols != tau.n_rows || X.n_cols != tau.n_rows || X.n_cols > n) { return -std::numeric_limits<double>::infinity(); }
+    const double lg2 = log(2.0);
+    const int k = X.n_cols;
+    double dx = arma::det(X);
+    double db = arma::det(tau);
+    arma::mat bx(X * tau);
+    double tbx = arma::trace(bx);
+    if(dx <= 0 || db <= 0) { return -std::numeric_limits<double>::infinity(); }
+
+    double cum_lgamma;
+    for(size_t i = 0; i < X.n_rows; ++i) {
+      cum_lgamma += lgamma((n + 1)/2.0);
+    }
+    return (n - k - 1)/2 * log(dx) + (n/2.0)*log(db) - 0.5*tbx - (n*k/2.0)*lg2 - cum_lgamma;
+  }
+
+  double mvcar_logp(const arma::mat& X, const arma::vec& adj, const arma::vec& weight, const arma::vec& numNeigh, const arma::mat& tau) {
+    return 0;
   }
 
   template<typename T, typename U, typename V>
