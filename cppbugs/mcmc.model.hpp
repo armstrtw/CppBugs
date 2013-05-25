@@ -22,6 +22,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <functional>
 #include <exception>
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.hpp>
@@ -31,6 +32,7 @@
 #include <cppbugs/mcmc.deterministic.hpp>
 #include <cppbugs/mcmc.tracked.hpp>
 #include <cppbugs/mcmc.gcc.version.hpp>
+#include <cppbugs/deterministics/mcmc.lambda1.hpp>
 
 namespace cppbugs {
 
@@ -188,6 +190,13 @@ namespace cppbugs {
       if(sp && op == NULL) jumping_nodes.push_back(node);
       if(dp) dynamic_nodes.push_back(node);
       if(detp) deterministic_nodes.push_back(detp);
+    }
+
+    template<typename T, typename U>
+    Lambda1<T, U>& lambda(T& x, std::function<const T(const U&)> f, const U& a) {
+      Lambda1<T, U>* node = new Lambda1<T, U>(x, f, a);
+      addNode<T>(node);
+      return *node;
     }
 
 
