@@ -48,7 +48,6 @@ namespace cppbugs {
     }
   };
 
-
   template<typename T, typename U, typename V, typename W, typename X>
   class Lambda4 : public Deterministic<T> {
     const U& a_;

@@ -199,6 +199,14 @@ namespace cppbugs {
       return *node;
     }
 
+    template<typename T, typename U, typename V>
+    Lambda2<T, U, V>& lambda(T& x, std::function<const T(const U&,const V&)> f, const U& a, const V& b) {
+      Lambda2<T, U, V>* node = new Lambda2<T, U, V>(x, f, a, b);
+      addNode<T>(node);
+      return *node;
+    }
+
+
     template<typename T, typename U, typename V, typename W, typename X>
     Lambda4<T, U, V, W, X>& lambda(T& x, std::function<const T(const U&,const V&,const W&, const X&)> f, const U& a, const V& b, const W& c, const X& d) {
       Lambda4<T, U, V, W, X>* node = new Lambda4<T, U, V, W, X>(x, f, a, b, c, d);
