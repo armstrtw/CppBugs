@@ -204,7 +204,46 @@ namespace arma {
 
 
 namespace arma {
+  // cube
 
+  //! element-wise multiplication of BaseCube objects with same element type
+  template<typename T1, typename T2>
+  arma_inline
+  const eGlueCube<T1, T2, eglue_schur>
+  schur
+  (
+   const BaseCube<typename T1::elem_type,T1>& X,
+   const BaseCube<typename T1::elem_type,T2>& Y
+   )
+  {
+    arma_extra_debug_sigprint();
+    return eGlueCube<T1, T2, eglue_schur>(X.get_ref(), Y.get_ref());
+  }
+
+  //! element-wise multiplication of BaseCube objects with different element types
+  template<typename T1, typename T2>
+  inline
+  const mtGlueCube<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, glue_mixed_schur>
+  schur
+  (
+   const BaseCube< typename force_different_type<typename T1::elem_type, typename T2::elem_type>::T1_result, T1>& X,
+   const BaseCube< typename force_different_type<typename T1::elem_type, typename T2::elem_type>::T2_result, T2>& Y
+   )
+  {
+    arma_extra_debug_sigprint();
+    typedef typename T1::elem_type eT1;
+    typedef typename T2::elem_type eT2;
+    typedef typename promote_type<eT1,eT2>::result out_eT;
+    promote_type<eT1,eT2>::check();
+    return mtGlueCube<out_eT, T1, T2, glue_mixed_schur>( X.get_ref(), Y.get_ref() );
+  }
+
+
+
+//! @}
+
+
+  // matrix
   template<typename T1, typename T2>
   arma_inline
   const eGlue<T1, T2, eglue_schur>
@@ -261,6 +300,89 @@ namespace arma {
 
 }
 
+
+// any
+namespace arma {
+
+  template<typename T1>
+  arma_hot
+  arma_warn_unused
+  inline
+  bool
+  any(const Base<typename T1::elem_type,T1>& X)
+  {
+    arma_extra_debug_sigprint();
+    typedef typename T1::elem_type          eT;
+    typedef typename Proxy<T1>::ea_type ea_type;
+    const Proxy<T1> A(X.get_ref());
+
+    if(Proxy<T1>::prefer_at_accessor == false) {
+      ea_type P      = A.get_ea();
+      const uword   n_elem = A.get_n_elem();
+      uword i,j;
+
+      for(i=0, j=1; j<n_elem; i+=2, j+=2) {
+	if(P[i] > 0) { return true; }
+	if(P[j] > 0) { return true; }
+      }
+      if(i < n_elem) {
+	if(P[i] > 0) { return true; }
+      }
+      return false;
+    } else {
+      const uword n_rows   = A.get_n_rows();
+      const uword n_cols   = A.get_n_cols();
+
+      for(uword col=0; col<n_cols; ++col)
+	for(uword row=0; row<n_rows; ++row) {
+	  if(A.at(row,col) > 0) { return true; }
+	}
+
+      return false;
+    }
+  }
+
+  template<typename T1>
+  arma_hot
+  arma_warn_unused
+  inline
+  bool
+  any(const BaseCube<typename T1::elem_type,T1>& X)
+  {
+    arma_extra_debug_sigprint();
+    typedef typename T1::elem_type          eT;
+    typedef typename ProxyCube<T1>::ea_type ea_type;
+    const ProxyCube<T1> A(X.get_ref());
+
+    if(ProxyCube<T1>::prefer_at_accessor == false) {
+      ea_type P      = A.get_ea();
+      const uword   n_elem = A.get_n_elem();
+      uword i,j;
+
+      for(i=0, j=1; j<n_elem; i+=2, j+=2) {
+	if(P[i] > 0) { return true; }
+	if(P[j] > 0) { return true; }
+      }
+      if(i < n_elem) {
+	if(P[i] > 0) { return true; }
+      }
+      return false;
+    } else {
+      const uword n_rows   = A.get_n_rows();
+      const uword n_cols   = A.get_n_cols();
+      const uword n_slices = A.get_n_slices();
+
+      for(uword slice=0; slice<n_slices; ++slice)
+	for(uword col=0; col<n_cols; ++col)
+	  for(uword row=0; row<n_rows; ++row) {
+	    if(A.at(row,col,slice) > 0) { return true; }
+	  }
+
+      return false;
+    }
+  }
+}
+
 // Stochastic/Math related functions
 namespace cppbugs {
 
@@ -293,11 +415,6 @@ namespace cppbugs {
 
   bool any(const bool x) {
     return x;
-  }
-
-  bool any(const arma::umat& x) {
-    const arma::umat ans(arma::find(x,1));
-    return ans.n_elem > 0;
   }
 
   static inline double square(double x) {
@@ -393,7 +510,7 @@ namespace cppbugs {
     if( any(mu < 0 ) || any(x < 0) ) {
       return -std::numeric_limits<double>::infinity();
     } else {
-      return arma::accu(x*log_approx(mu) - mu - factln(x));
+      return arma::accu(schur(x,log_approx(mu)) - mu - factln(x));
     }
   }
 
