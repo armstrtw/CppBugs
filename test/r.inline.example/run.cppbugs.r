@@ -5,15 +5,13 @@ get.model <- function(model.file) {
     do.call(paste,as.list(paste(readLines(model.file),"\n")))
 }
 
-src <- get.model("run.model.cpp")
+src <- get.model("cppbugs.model.cpp")
 
 cppbugs.plugin <- getPlugin("RcppArmadillo")
 cppbugs.plugin$env$PKG_CXXFLAGS <- "-std=c++0x"
 cppbugs.plugin$env$PKG_LIBS <- paste(cppbugs.plugin$env$PKG_LIBS,"-larmadillo")
 
-##linear.model <- cxxfunction(signature(XR="numeric", yr="numeric",iterations="integer",burn="integer",adapt="integer",adapt_interval="integer",thin="integer"), includes="#include <cppbugs/cppbugs.hpp>",body=src,settings=cppbugs.plugin)
 includes <- c("#include <cppbugs/cppbugs.hpp>","#include <cppbugs/deterministics/mcmc.linear.hpp>","#include <cppbugs/deterministics/mcmc.rsquared.hpp>")
-
 linear.model <- cxxfunction(signature(XR="numeric", yr="numeric",iterations="integer",burn="integer",adapt="integer",adapt_interval="integer",thin="integer"), includes=includes,body=src,settings=cppbugs.plugin)
 
 
