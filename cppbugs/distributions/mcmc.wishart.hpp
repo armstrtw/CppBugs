@@ -17,7 +17,7 @@
 
 #ifndef MCMC_WISHART_HPP
 #define MCMC_WISHART_HPP
-
+#include <iostream>
 #include <armadillo>
 #include <cppbugs/mcmc.dynamic.stochastic.hpp>
 #include <cppbugs/mcmc.observed.hpp>
@@ -37,8 +37,8 @@ namespace cppbugs {
 
     // scratch space for cholesky and aux vecs
     arma::mat LL;
-    arma::vec R_log_diag;
-    arma::vec R_offdiag;
+    arma::vec R_log_diag, R_log_diag_old;
+    arma::vec R_offdiag, R_offdiag_old;
 
     const arma::uvec lower_diag(const size_t n) {
       arma::uvec ans(n*(n-1)/2);
@@ -73,8 +73,8 @@ namespace cppbugs {
       if(chol(R_tau,tau) == false) {
         throw std::logic_error("ERROR: tau is not positive definite.");
       }
-      
-      arma::mat R_value = R.t();
+      // force lower diag
+      R = R.t();
       R_log_diag = log(diagvec(R));
       R_offdiag = R.elem(ld_elems_);
 
@@ -82,8 +82,21 @@ namespace cppbugs {
       LL.diag() = exp(R_log_diag);
       LL.elem(ld_elems_) = R_offdiag;
       arma::mat value_recovered(LL * LL.t());
-      arma::umat ne(find(value !=value_recovered));
-      if(ne.n_elem) { throw std::logic_error("did not recover original value."); }
+      if(any(arma::vectorise(abs(value-value_recovered)) > arma::datum::eps * 10)) {
+        throw std::logic_error("did not recover original value.");
+      }
+    }
+
+    // modified revert so that it can revert, R components
+    void preserve() {
+      R_log_diag_old = R_log_diag;
+      R_offdiag_old = R_offdiag;
+      DynamicStochastic<T>::preserve();
+    }
+    void revert() {
+      R_log_diag = R_log_diag_old;
+      R_offdiag = R_offdiag_old;
+      DynamicStochastic<T>::revert();
     }
 
     // modified jumper to preserve symetric positive definite
