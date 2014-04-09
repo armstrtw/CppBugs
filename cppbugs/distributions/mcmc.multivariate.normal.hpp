@@ -24,48 +24,46 @@
 
 namespace cppbugs {
 
-  template <typename T,typename U>
-  class MultivariateNormalLikelihiood : public Likelihiood {
-    const T& x_;
-    const U& mu_;
-    const arma::mat& sigma_;
-  public:
-    MultivariateNormalLikelihiood(const T& x,  const U& mu,  const arma::mat& sigma): x_(x), mu_(mu), sigma_(sigma)
-    {
-      // need a modified dimension check
-      dimension_check(x_, mu_);
-      if(x_.n_elem != sigma_.n_rows || x_.n_elem != sigma_.n_cols) {
-        throw std::logic_error("ERROR: dimensions of x do not match sigma");
-      }
-    }
-    inline double calc() const {
-      return multivariate_normal_sigma_logp(x_,mu_,sigma_);
-    }
-  };
-
-  template<typename T>
+  template<typename T, typename U, typename V>
   class MultivariateNormal : public DynamicStochastic<T> {
+  private:
+    const U& mu_;
+    const V& sigma_;
+    const bool destory_mu_, destory_sigma_;
   public:
-    MultivariateNormal(T& value): DynamicStochastic<T>(value) {}
-
-    template<typename U>
-    MultivariateNormal<T>& dmvnorm(const U& mu, const arma::mat& sigma) {
-      Stochastic::likelihood_functor = new MultivariateNormalLikelihiood<T,U>(DynamicStochastic<T>::value,mu,sigma);
-      return *this;
+    MultivariateNormal(T& value, const U& mu, const V& sigma): DynamicStochastic<T>(value), mu_(mu), sigma_(sigma), destory_mu_(false), destory_sigma_(false) { dimension_check(value, mu_, sigma_); }
+    ~MultivariateNormal() {
+      if(destory_mu_) { delete &mu_; }
+      if(destory_sigma_) { delete &sigma_; }
     }
+    const double loglik() const { return multivariate_normal_sigma_logp(DynamicStochastic<T>::value,mu_,sigma_); }
   };
 
-  template<typename T>
+  template<typename T, typename U, typename V>
   class ObservedMultivariateNormal : public Observed<T> {
+  private:
+    const U& mu_;
+    const V& sigma_;
+    const bool destory_mu_, destory_sigma_;
   public:
-    ObservedMultivariateNormal(const T& value): Observed<T>(value) {}
-
-    template<typename U>
-    ObservedMultivariateNormal<T>& dmvnorm(const U& mu, const arma::mat& sigma) {
-      Stochastic::likelihood_functor = new MultivariateNormalLikelihiood<T,U>(Observed<T>::value,mu,sigma);
-      return *this;
+    ObservedMultivariateNormal(const T& value, const U& mu, const V& sigma): Observed<T>(value), mu_(mu), sigma_(sigma), destory_mu_(false), destory_sigma_(false) { dimension_check(value, mu_, sigma_); }
+    ~ObservedMultivariateNormal() {
+      if(destory_mu_) { delete &mu_; }
+      if(destory_sigma_) { delete &sigma_; }
     }
+    const double loglik() const { return multivariate_normal_sigma_logp(Observed<T>::value,mu_,sigma_); }
   };
+
+  template<typename T, typename U, typename V>
+  class ObservedMultivariateNormalChol : public Observed<T> {
+  private:
+    const U& mu_;
+    const V& R_;
+  public:
+    ObservedMultivariateNormalChol(const T& value, const U& mu, const V& R): Observed<T>(value), mu_(mu), R_(R) {}
+    const double loglik() const { return multivariate_normal_chol_logp(Observed<T>::value,mu_,R_); }
+  };
+
 
 } // namespace cppbugs
 #endif // MCMC_MULTIVARIATE_NORMAL_HPP
