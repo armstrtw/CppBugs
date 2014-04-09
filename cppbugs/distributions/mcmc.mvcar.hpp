@@ -35,8 +35,13 @@ namespace cppbugs {
     // b1[1:2,1:X]  ~ mv.car(adj_b1[], weight_b1[], numNeigh_b1[], tau_b1[,] )
     MvCar(T& value, const U& adj, const V& weight, const W& numNeigh, const X& tau):
       DynamicStochastic<T>(value), adj_(adj), weight_(weight), numNeigh_(numNeigh), tau_(tau) {
-      if(value.n_elem != adj_.n_elem || adj_.n_elem != weight_.n_elem || weight_.n_elem != numNeigh_.n_elem || value.n_elem != tau_.n_elem) {
-        throw std::logic_error("dims do not match.");
+
+      if(value.n_elem != adj_.n_elem || adj_.n_elem != weight_.n_elem || weight_.n_elem != numNeigh_.n_elem || value.n_elem != tau_.n_rows) {
+        throw std::logic_error("MvCar: dims do not match.");
+      }
+
+      if(tau_.n_rows != tau_.n_cols) {
+        throw std::logic_error("MvCar: tau is not diagonal.");
       }
     }
 
