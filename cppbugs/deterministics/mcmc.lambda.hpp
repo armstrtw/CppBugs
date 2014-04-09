@@ -48,6 +48,21 @@ namespace cppbugs {
     }
   };
 
+  template<typename T, typename U, typename V, typename W>
+  class Lambda3 : public Deterministic<T> {
+    const U& a_;
+    const V& b_;
+    const W& c_;
+    std::function<T(const U&,const V&,const W&)> f_;
+  public:
+    Lambda3(T& value, std::function<T(const U&,const V&,const W&)> f, const U& a,const V& b,const W& c): Deterministic<T>(value), f_(f), a_(a), b_(b), c_(c) {
+      Deterministic<T>::value = f_(a_,b_,c_);
+    }
+    void jump(RngBase& rng) {
+      Deterministic<T>::value = f_(a_,b_,c_);
+    }
+  };
+
   template<typename T, typename U, typename V, typename W, typename X>
   class Lambda4 : public Deterministic<T> {
     const U& a_;
