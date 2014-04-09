@@ -300,86 +300,14 @@ namespace arma {
 
 }
 
-
-// any
+// insert an 'any' function for bools into the arma namespace
 namespace arma {
-
-  template<typename T1>
-  arma_hot
-  arma_warn_unused
-  inline
-  bool
-  any(const Base<typename T1::elem_type,T1>& X)
-  {
-    arma_extra_debug_sigprint();
-    typedef typename T1::elem_type          eT;
-    typedef typename Proxy<T1>::ea_type ea_type;
-    const Proxy<T1> A(X.get_ref());
-
-    if(Proxy<T1>::prefer_at_accessor == false) {
-      ea_type P      = A.get_ea();
-      const uword   n_elem = A.get_n_elem();
-      uword i,j;
-
-      for(i=0, j=1; j<n_elem; i+=2, j+=2) {
-	if(P[i] > 0) { return true; }
-	if(P[j] > 0) { return true; }
-      }
-      if(i < n_elem) {
-	if(P[i] > 0) { return true; }
-      }
-      return false;
-    } else {
-      const uword n_rows   = A.get_n_rows();
-      const uword n_cols   = A.get_n_cols();
-
-      for(uword col=0; col<n_cols; ++col)
-	for(uword row=0; row<n_rows; ++row) {
-	  if(A.at(row,col) > 0) { return true; }
-	}
-
-      return false;
-    }
+  const bool any(const bool x) {
+    return x;
   }
 
-  template<typename T1>
-  arma_hot
-  arma_warn_unused
-  inline
-  bool
-  any(const BaseCube<typename T1::elem_type,T1>& X)
-  {
-    arma_extra_debug_sigprint();
-    typedef typename T1::elem_type          eT;
-    typedef typename ProxyCube<T1>::ea_type ea_type;
-    const ProxyCube<T1> A(X.get_ref());
-
-    if(ProxyCube<T1>::prefer_at_accessor == false) {
-      ea_type P      = A.get_ea();
-      const uword   n_elem = A.get_n_elem();
-      uword i,j;
-
-      for(i=0, j=1; j<n_elem; i+=2, j+=2) {
-	if(P[i] > 0) { return true; }
-	if(P[j] > 0) { return true; }
-      }
-      if(i < n_elem) {
-	if(P[i] > 0) { return true; }
-      }
-      return false;
-    } else {
-      const uword n_rows   = A.get_n_rows();
-      const uword n_cols   = A.get_n_cols();
-      const uword n_slices = A.get_n_slices();
-
-      for(uword slice=0; slice<n_slices; ++slice)
-	for(uword col=0; col<n_cols; ++col)
-	  for(uword row=0; row<n_rows; ++row) {
-	    if(A.at(row,col,slice) > 0) { return true; }
-	  }
-
-      return false;
-    }
+  const bool vectorise(bool x) {
+    return x;
   }
 }
 
@@ -413,16 +341,16 @@ namespace cppbugs {
     return x.n_elem;
   }
 
-  bool any(const bool x) {
-    return x;
-  }
-
   static inline double square(double x) {
     return x*x;
   }
 
   static inline int square(int x) {
     return x*x;
+  }
+
+  double cholesky_determinant(const arma::mat& R) {
+    return arma::prod(square(R.diag()));
   }
 
   double mahalanobis(const arma::vec& x, const arma::vec& mu, const arma::mat& sigma) {
@@ -435,6 +363,12 @@ namespace cppbugs {
     return arma::as_scalar(err * sigma.i() * err.t());
   }
 
+  double mahalanobis_chol(const arma::rowvec& x, const arma::rowvec& mu, const arma::mat& R) {
+    const arma::rowvec err = x - mu;
+    const arma::mat Rinv(inv(trimatl(R)));
+    return arma::as_scalar(err * Rinv * Rinv.t() * err.t());
+  }
+
   template<typename T, typename U, typename V>
   double normal_logp(const T& x, const U& mu, const V& tau) {
     return arma::accu(0.5*log_approx(0.5*tau/arma::math::pi()) - 0.5 * arma::schur(tau, square(x - mu)));
@@ -442,12 +376,12 @@ namespace cppbugs {
 
   template<typename T, typename U, typename V>
   double uniform_logp(const T& x, const U& lower, const V& upper) {
-    return (any(x < lower) || any(x > upper)) ? -std::numeric_limits<double>::infinity() : -arma::accu(log_approx(upper - lower));
+    return (arma::any(arma::vectorise(x < lower)) || arma::any(arma::vectorise(x > upper))) ? -std::numeric_limits<double>::infinity() : -arma::accu(log_approx(upper - lower));
   }
 
   template<typename T, typename U, typename V>
   double gamma_logp(const T& x, const U& alpha, const V& beta) {
-    return any(x < 0 ) ?
+    return arma::any(arma::vectorise(x < 0)) ?
       -std::numeric_limits<double>::infinity() :
       arma::accu(arma::schur((alpha - 1.0),log_approx(x)) - arma::schur(beta,x) - lgamma(alpha) + arma::schur(alpha,log_approx(beta)));
   }
@@ -455,13 +389,13 @@ namespace cppbugs {
   template<typename T, typename U, typename V>
   double beta_logp(const T& x, const U& alpha, const V& beta) {
     const double one = 1.0;
-    return any(x <= 0 ) || any(x >= 1 ) || any(alpha <= 0) || any(beta <= 0) ?
+    return arma::any(arma::vectorise(x <= 0)) || arma::any(arma::vectorise(x >= 1)) || arma::any(arma::vectorise(alpha <= 0)) || arma::any(arma::vectorise(beta <= 0)) ?
       -std::numeric_limits<double>::infinity() :
       arma::accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + arma::schur((alpha-one),log_approx(x)) + arma::schur((beta-one),log_approx(one-x)));
   }
 
   double categorical_logp(const arma::ivec& x, const arma::mat& p) {
-    if(any(p <= 0) || any(p >= 1) || any(x < 0) || any(x >= p.n_cols)) {
+    if(arma::any(arma::vectorise(p <= 0)) || arma::any(arma::vectorise(p >= 1)) || arma::any(arma::vectorise(x < 0)) || arma::any(arma::vectorise(x >= p.n_cols))) {
       return -std::numeric_limits<double>::infinity();
     }
     // replace w/ call to p.elems later
@@ -473,7 +407,7 @@ namespace cppbugs {
   }
 
   double categorical_logp(const arma::ivec& x, const arma::vec& p) {
-    if(any(p <= 0) || any(p >= 1) || any(x < 0) || any(x >= p.n_elem)) {
+    if(arma::any(arma::vectorise(p <= 0)) || arma::any(arma::vectorise(p >= 1)) || arma::any(arma::vectorise(x < 0)) || arma::any(arma::vectorise(x >= p.n_elem))) {
       return -std::numeric_limits<double>::infinity();
     }
     // replace w/ call to p.elems later
@@ -490,7 +424,7 @@ namespace cppbugs {
 
   template<typename T, typename U, typename V>
   double binom_logp(const T& x, const U& n, const V& p) {
-    if(any(p <= 0) || any(p >= 1) || any(x < 0)  || any(x > n)) {
+    if(arma::any(arma::vectorise(p <= 0)) || arma::any(arma::vectorise(p >= 1)) || arma::any(arma::vectorise(x < 0))  || arma::any(arma::vectorise(x > n))) {
       return -std::numeric_limits<double>::infinity();
     }
     return arma::accu(arma::schur(x,log_approx(p)) + arma::schur((n-x),log_approx(1-p)) + arma::factln(n) - arma::factln(x) - arma::factln(n-x));
@@ -498,7 +432,7 @@ namespace cppbugs {
 
   template<typename T, typename U>
   double bernoulli_logp(const T& x, const U& p) {
-    if( any(p <= 0 ) || any(p >= 1) || any(x < 0)  || any(x > 1) ) {
+    if( arma::any(arma::vectorise(p <= 0)) || arma::any(arma::vectorise(p >= 1)) || arma::any(arma::vectorise(x < 0))  || arma::any(arma::vectorise(x > 1)) ) {
       return -std::numeric_limits<double>::infinity();
     } else {
       return arma::accu(arma::schur(x,log_approx(p)) + arma::schur((1-x), log_approx(1-p)));
@@ -507,7 +441,7 @@ namespace cppbugs {
 
   template<typename T, typename U>
   double poisson_logp(const T& x, const U& mu) {
-    if( any(mu < 0 ) || any(x < 0) ) {
+    if( arma::any(arma::vectorise(mu < 0)) || arma::any(arma::vectorise(x < 0))) {
       return -std::numeric_limits<double>::infinity();
     } else {
       return arma::accu(schur(x,log_approx(mu)) - mu - factln(x));
@@ -519,45 +453,63 @@ namespace cppbugs {
     return arma::accu(log_approx(lambda) - arma::schur(lambda, x));
   }
 
-  // sigma denotes cov matrix rather than precision matrix
-  double multivariate_normal_sigma_logp(const arma::rowvec& x, const arma::rowvec& mu, const arma::mat& sigma) {
-    const double log_2pi = log(2 * arma::math::pi());
-    arma::mat R(arma::zeros<arma::mat>(sigma.n_cols,sigma.n_cols));
-
-    // non-positive definite test via chol
-    if(chol(R,sigma) == false) { return -std::numeric_limits<double>::infinity(); }
-
-    // otherwise calc logp
-    return -arma::accu(x.n_elem * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
+  template<typename T, typename U>
+  double multivariate_normal_chol_logp(const T& x, const U& mu, const arma::mat& R) {
+    static double log_2pi = log(2 * arma::math::pi());
+    double ldet = log(cholesky_determinant(R));
+    return -0.5 * (x.n_elem * log_2pi + ldet + mahalanobis_chol(x,mu,R));
   }
 
   // sigma denotes cov matrix rather than precision matrix
-  double multivariate_normal_sigma_logp(const arma::vec& x, const arma::vec& mu, const arma::mat& sigma) {
-    const double log_2pi = log(2 * arma::math::pi());
-    arma::mat R(arma::zeros<arma::mat>(sigma.n_cols,sigma.n_cols));
+  template<typename T, typename U>
+  double multivariate_normal_sigma_logp(const T& x, const U& mu, const arma::mat& sigma) {
+    arma::mat R;
+    bool chol_succeeded = chol(R,sigma);
+    if(!chol_succeeded) { return -std::numeric_limits<double>::infinity(); }
 
-    // non-positive definite test via chol
-    if(chol(R,sigma) == false) { return -std::numeric_limits<double>::infinity(); }
-
-    // otherwise calc logp
-    return -arma::accu(x.n_elem * log_2pi + log_approx(arma::det(sigma)) + mahalanobis(x,mu,sigma))/2;
+    return multivariate_normal_chol_logp(x, mu, R);
   }
 
-  double wishart_logp(const arma::mat& X, const arma::mat& tau, const size_t n) {
+  // sigma denotes cov matrix rather than precision matrix
+  double multivariate_normal_sigma_logp(const arma::mat& x, const arma::vec& mu, const arma::mat& sigma) {
+    arma::mat R;
+    bool chol_succeeded = chol(R,sigma);
+    if(!chol_succeeded) { return -std::numeric_limits<double>::infinity(); }
+    const arma::rowvec mu_r = mu.t();
+    double ans(0);
+    for(size_t i = 0; i < x.n_rows; i++) {
+      ans += multivariate_normal_chol_logp(x.row(i), mu_r, R);
+    }
+    return ans;
+  }
+
+  double multivariate_normal_chol_logp(const arma::mat& x, const arma::vec& mu, const arma::mat& R) {
+    const arma::rowvec mu_r = mu.t();
+    double ans(0);
+    for(size_t i = 0; i < x.n_rows; i++) {
+      ans += multivariate_normal_chol_logp(x.row(i), mu_r, R);
+    }
+    return ans;
+  }
+
+  double wishart_logp(const arma::mat& X, const arma::mat& tau, const int n) {
     if(X.n_cols != X.n_rows || tau.n_cols != tau.n_rows || X.n_cols != tau.n_rows || X.n_cols > n) { return -std::numeric_limits<double>::infinity(); }
     const double lg2 = log(2.0);
     const int k = X.n_cols;
-    double dx = arma::det(X);
-    double db = arma::det(tau);
-    arma::mat bx(X * tau);
-    double tbx = arma::trace(bx);
+    const double dx(arma::det(X));
+    const double db(arma::det(tau));
     if(dx <= 0 || db <= 0) { return -std::numeric_limits<double>::infinity(); }
 
-    double cum_lgamma;
+    const double ldx(log(dx));
+    const double ldb(log(db));
+    const arma::mat bx(X * tau);
+    const double tbx = arma::trace(bx);
+
+    double cum_lgamma(0);
     for(size_t i = 0; i < X.n_rows; ++i) {
       cum_lgamma += lgamma((n + 1)/2.0);
     }
-    return (n - k - 1)/2 * log(dx) + (n/2.0)*log(db) - 0.5*tbx - (n*k/2.0)*lg2 - cum_lgamma;
+    return (n - k - 1)/2 * ldx + (n/2.0)*ldb - 0.5*tbx - (n*k/2.0)*lg2 - cum_lgamma;
   }
 
   double mvcar_logp(const arma::mat& X, const arma::vec& adj, const arma::vec& weight, const arma::vec& numNeigh, const arma::mat& tau) {
