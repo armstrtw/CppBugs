@@ -1,7 +1,7 @@
 
 CC = g++
 ##CPPFLAGS = -I.. -Wall -g
-CPPFLAGS = -I.. -Wall -O2 -std=c++0x
+CPPFLAGS = -I.. -Wall -O2 -std=c++11
 ARMADILLO_LIBS = -larmadillo
 ##ARMADILLO_LIBS = -lgoto2 -lpthread -lgfortran
 LIBS = $(ARMADILLO_LIBS)
