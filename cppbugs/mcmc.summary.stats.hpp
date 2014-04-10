@@ -18,6 +18,7 @@
 #ifndef MCMC_SUMMARY_STATS_HPP
 #define MCMC_SUMMARY_STATS_HPP
 
+#include <exception>
 #include <armadillo>
 
 namespace cppbugs {
