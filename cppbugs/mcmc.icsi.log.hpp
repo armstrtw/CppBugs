@@ -40,41 +40,44 @@
 
 namespace cppbugs {
 
+  namespace ICSIlog {
 
-  // ICSIlog V 2.0
-  const std::vector<float> fill_icsi_log_table2(const unsigned int precision) {
-    std::vector<float> pTable(static_cast<size_t>(pow(2,precision)));
+    // ICSIlog V 2.0
+    const std::vector<float> fill_icsi_log_table2(const unsigned int precision) {
+      std::vector<float> pTable(static_cast<size_t>(pow(2,precision)));
 
-    // step along table elements and x-axis positions
-    // (start with extra half increment, so the steps intersect at their midpoints.)
-    float oneToTwo = 1.0f + (1.0f / (float)( 1 <<(precision + 1) ));
-    for(int i = 0;  i < (1 << precision);  ++i ) {
-      // make y-axis value for table element
-      pTable[i] = logf(oneToTwo) / 0.69314718055995f;
-      oneToTwo += 1.0f / (float)( 1 << precision );
+      // step along table elements and x-axis positions
+      // (start with extra half increment, so the steps intersect at their midpoints.)
+      float oneToTwo = 1.0f + (1.0f / (float)( 1 <<(precision + 1) ));
+      for(int i = 0;  i < (1 << precision);  ++i ) {
+        // make y-axis value for table element
+        pTable[i] = logf(oneToTwo) / 0.69314718055995f;
+        oneToTwo += 1.0f / (float)( 1 << precision );
+      }
+      return pTable;
     }
-    return pTable;
-  }
 
-  // ICSIlog v2.0
-  inline double icsi_log(const double vald) {
-    const float val = static_cast<float>(vald);
-    const unsigned int precision(10);
-    static std::vector<float> pTable = fill_icsi_log_table2(precision);
+    // ICSIlog v2.0
+    inline double icsi_log(const double vald) {
+      const float val = static_cast<float>(vald);
+      const unsigned int precision(10);
+      static std::vector<float> pTable = fill_icsi_log_table2(precision);
 
-    // get access to float bits
-    const int* const pVal = (const int*)(&val);
+      // get access to float bits
+      static_assert(sizeof(int)==sizeof(float),"int and float are not the same size.");
+      const int* const pVal = reinterpret_cast<const int*>(&val);
 
-    // extract exponent and mantissa (quantized)
-    const int exp = ((*pVal >> 23) & 255) - 127;
-    const int man = (*pVal & 0x7FFFFF) >> (23 - precision);
+      // extract exponent and mantissa (quantized)
+      const int exp = ((*pVal >> 23) & 255) - 127;
+      const int man = (*pVal & 0x7FFFFF) >> (23 - precision);
 
-    // exponent plus lookup refinement
-    return static_cast<double>(((float)(exp) + pTable[man]) * 0.69314718055995f);
-  }
+      // exponent plus lookup refinement
+      return static_cast<double>(((float)(exp) + pTable[man]) * 0.69314718055995f);
+    }
+  } // namespace ICSIlog
 
   inline double log_approx(const double x) {
-    return x <= 0 ? -std::numeric_limits<double>::infinity() : icsi_log(x);
+    return x <= 0 ? -std::numeric_limits<double>::infinity() : ICSIlog::icsi_log(x);
   }
 
 } // namespace cppbugs
