@@ -82,10 +82,9 @@ namespace cppbugs {
   template<typename T>
   typename initValue< typename std::iterator_traits<T>::value_type >::ansT mean(T beg, T end) {
     typedef typename initValue< typename std::iterator_traits<T>::value_type >::ansT ansT;
-    ansT ans = 0;
-    const double len = static_cast<double>(std::distance(beg,end));    
-    if(len==0) { return ans; }
-    ans = initValue< typename std::iterator_traits<T>::value_type >::init(*beg);
+    const double len = static_cast<double>(std::distance(beg,end));
+    if(len==0) { throw std::logic_error("mean: no observations."); }
+    ansT ans(initValue< typename std::iterator_traits<T>::value_type >::init(*beg));
 
     while(beg != end) {
       ans += *beg;
@@ -97,8 +96,9 @@ namespace cppbugs {
   template<typename T>
   typename initValue< typename std::iterator_traits<T>::value_type >::ansT sd(T beg, T end) {
     typedef typename initValue< typename std::iterator_traits<T>::value_type >::ansT ansT;
-    const double n1 = static_cast<double>(std::distance(beg,end) - 1);
-    if(n1==0) { return ansT(); }
+    const size_t n = std::distance(beg,end);
+    if(n < 2) { throw std::logic_error("sd: need more than 1 observation."); }
+    const double n1 = static_cast<double>(n - 1);
     ansT x_mean = mean(beg,end);
     ansT sum_squares = initValue< typename std::iterator_traits<T>::value_type >::init(*beg);
 
