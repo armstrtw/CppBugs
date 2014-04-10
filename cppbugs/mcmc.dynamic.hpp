@@ -18,9 +18,8 @@
 #ifndef MCMC_DYNAMIC_HPP
 #define MCMC_DYNAMIC_HPP
 
-#include <list>
 #include <cppbugs/mcmc.specialized.hpp>
-#include <cppbugs/mcmc.math.hpp>
+#include <cppbugs/mcmc.utils.hpp>
 
 namespace cppbugs {
 
