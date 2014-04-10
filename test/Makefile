@@ -1,5 +1,5 @@
 
-CC = g++
+CC = clang++
 ##CPPFLAGS = -I.. -Wall -g
 CPPFLAGS = -I.. -Wall -O2 -std=c++11
 ARMADILLO_LIBS = -larmadillo
@@ -13,13 +13,13 @@ clean:
 
 benchmark:
 	rm -f ./benchmark.output
-	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./linear.model.test
-	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./varying.coefs.test
-	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./price
-	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./herd.fast
-	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./radon1
-	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./varying.coefs.global.prior
-	/usr/bin/time -o ./benchmark.output --append --format="%e %U %S" ./logistic.model.test
+	time -o ./benchmark.output --append --format="%e %U" ./linear.model.test
+	time -o ./benchmark.output --append --format="%e %U" ./varying.coefs.test
+	time -o ./benchmark.output --append --format="%e %U" ./price
+	time -o ./benchmark.output --append --format="%e %U" ./herd.fast
+	time -o ./benchmark.output --append --format="%e %U" ./radon1
+	time -o ./benchmark.output --append --format="%e %U" ./varying.coefs.global.prior
+	time -o ./benchmark.output --append --format="%e %U" ./logistic.model.test
 
 logistic.model.test: logistic.model.test.cpp
 	$(CC) $(CPPFLAGS) logistic.model.test.cpp -o logistic.model.test $(LIBS)
