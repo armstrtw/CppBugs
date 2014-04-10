@@ -82,7 +82,7 @@ namespace cppbugs {
   template<typename T>
   typename initValue< typename std::iterator_traits<T>::value_type >::ansT mean(T beg, T end) {
     typedef typename initValue< typename std::iterator_traits<T>::value_type >::ansT ansT;
-    ansT ans;
+    ansT ans = 0;
     const double len = static_cast<double>(std::distance(beg,end));    
     if(len==0) { return ans; }
     ans = initValue< typename std::iterator_traits<T>::value_type >::init(*beg);
