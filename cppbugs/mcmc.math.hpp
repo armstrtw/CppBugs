@@ -423,7 +423,7 @@ namespace cppbugs {
   }
 
   template<typename T, typename U, typename V>
-  double binom_logp(const T& x, const U& n, const V& p) {
+  double binomial_logp(const T& x, const U& n, const V& p) {
     if(arma::any(arma::vectorise(p <= 0)) || arma::any(arma::vectorise(p >= 1)) || arma::any(arma::vectorise(x < 0))  || arma::any(arma::vectorise(x > n))) {
       return -std::numeric_limits<double>::infinity();
     }
