@@ -71,7 +71,7 @@ namespace cppbugs {
       return bad_logp(value) || log(rng_.uniform()) > (value - old_logp) ? true : false;
     }
 
-    const double logp() const {
+    double logp() const {
       double ans(0);
       for(auto node : stochastic_nodes) {
         ans += node->loglik();

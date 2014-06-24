@@ -27,7 +27,7 @@ namespace cppbugs {
   public:
     Stochastic() {}
     ~Stochastic() {}
-    virtual const double loglik() const = 0;
+    virtual double loglik() const = 0;
   };
 
 } // namespace cppbugs

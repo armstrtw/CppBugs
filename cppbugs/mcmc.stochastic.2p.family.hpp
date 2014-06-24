@@ -41,7 +41,7 @@ namespace cppbugs {
       if(destory_p1_) { delete &p1_; }
       if(destory_p2_) { delete &p2_; }
     }
-    const double loglik() const { return LOGLIKFUN(DynamicStochastic<T>::value,p1_,p2_); }
+    double loglik() const { return LOGLIKFUN(DynamicStochastic<T>::value,p1_,p2_); }
   };
 
   template<typename T, typename U, typename V, double LOGLIKFUN(const T&, const U&, const V&)>
@@ -61,7 +61,7 @@ namespace cppbugs {
       if(destory_p1_) { delete &p1_; }
       if(destory_p2_) { delete &p2_; }
     }
-    const double loglik() const { return LOGLIKFUN(Observed<T>::value,p1_,p2_); }
+    double loglik() const { return LOGLIKFUN(Observed<T>::value,p1_,p2_); }
   };
 
 } // namespace cppbugs

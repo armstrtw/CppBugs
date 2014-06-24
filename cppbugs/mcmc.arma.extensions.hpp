@@ -205,17 +205,17 @@ namespace arma {
     return eOp<T1, eop_scalar_times>(X.get_ref(),k);  // NOTE: order is swapped
   }
 
-  const double schur(const int x, const double y) { return x * y; }
-  const double schur(const double x, const int y) { return x * y; }
-  const double schur(const double& x, const double& y) { return x * y; }
-  const double schur(const int& x, const int& y) { return x * y; }
+  double schur(const int x, const double y) { return x * y; }
+  double schur(const double x, const int y) { return x * y; }
+  double schur(const double& x, const double& y) { return x * y; }
+  double schur(const int& x, const int& y) { return x * y; }
 
   // insert an 'any' function for bools into the arma namespace
-  const bool any(const bool x) {
+  bool any(const bool x) {
     return x;
   }
 
-  const bool vectorise(bool x) {
+  bool vectorise(bool x) {
     return x;
   }
 } // namespace arma
