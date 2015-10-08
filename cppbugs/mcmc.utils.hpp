@@ -35,12 +35,12 @@ namespace cppbugs {
     return 1;
   }
 
-  double dim_size(const arma::subview_elem2<double, arma::Mat<unsigned int>, arma::Mat<unsigned int> >& x) {
+  double dim_size(const arma::subview_elem2<double, arma::Mat<arma::uword>, arma::Mat<arma::uword> >& x) {
     arma::mat m(x);
     return m.n_elem;
   }
 
-  double dim_size(const arma::subview_elem1<double, arma::Mat<unsigned int> >& x) {
+  double dim_size(const arma::subview_elem1<double, arma::Mat<arma::uword> >& x) {
     arma::mat m(x);
     return m.n_elem;
   }
