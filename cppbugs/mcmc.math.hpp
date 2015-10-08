@@ -177,7 +177,7 @@ namespace cppbugs {
     return ans;
   }
 
-  double wishart_logp(const arma::mat& X, const arma::mat& tau, const int n) {
+  double wishart_logp(const arma::mat& X, const arma::mat& tau, const unsigned int n) {
     if(X.n_cols != X.n_rows || tau.n_cols != tau.n_rows || X.n_cols != tau.n_rows || X.n_cols > n) { return -std::numeric_limits<double>::infinity(); }
     const double lg2 = log(2.0);
     const int k = X.n_cols;
