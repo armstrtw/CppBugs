@@ -12,12 +12,12 @@ using namespace cppbugs;
 using std::cout;
 using std::endl;
 
-typedef arma::subview_elem2<double, arma::Mat<unsigned int>, arma::Mat<unsigned int> > replicatedT;
+typedef arma::subview_elem2<double, arma::Mat<uword>, arma::Mat<uword> > replicatedT;
 
 int main() {
-  const unsigned int NR = 100;
-  const unsigned int NC = 2;
-  const unsigned int J = 3;
+  const uword NR = 100;
+  const uword NC = 2;
+  const uword J = 3;
 
   mat X = randn<mat>(NR,NC);
   mat y = randn<mat>(NR,1);
@@ -27,7 +27,7 @@ int main() {
 
   // create fake groups
   uvec groups(NR);
-  for(unsigned int i = 0; i < NR; i++) {
+  for(uword i = 0; i < NR; i++) {
     groups[i] = i % J;
   }
 
@@ -39,7 +39,7 @@ int main() {
   cout << "group_shift" << endl << group_shift;
 
   // do the shift on the data
-  for(unsigned int i = 0; i < NR; i++) {
+  for(uword i = 0; i < NR; i++) {
     y[i] += group_shift[ groups[i] ];
   }
 

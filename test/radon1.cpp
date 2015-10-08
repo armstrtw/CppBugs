@@ -19,7 +19,7 @@ using std::cout;
 using std::endl;
 using std::ifstream;
 
-typedef arma::subview_elem1<double, arma::Mat<unsigned int> > replicatedT;
+typedef arma::subview_elem1<double, arma::Mat<uword> > replicatedT;
 
 /*
 # Bugs code for multilevel model for radon
