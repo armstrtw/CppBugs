@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_DYNAMIC_HPP
-#define MCMC_DYNAMIC_HPP
+#pragma once
 
 #include <cppbugs/mcmc.specialized.hpp>
 #include <cppbugs/mcmc.utils.hpp>
@@ -36,4 +35,3 @@ namespace cppbugs {
   };
 
 } // namespace cppbugs
-#endif //MCMC_DYNAMIC_HPP

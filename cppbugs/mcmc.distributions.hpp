@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_DISTRIBUTIONS_HPP
-#define MCMC_DISTRIBUTIONS_HPP
+#pragma once
 
 #include <cppbugs/mcmc.stochastic.1p.family.hpp>
 #include <cppbugs/mcmc.stochastic.2p.family.hpp>
@@ -65,4 +64,3 @@ template <class T,class U> using ObservedCategorical = ObservedStochastic1p<T,U,
 
 
 } // namespace cppbugs
-#endif // MCMC_DISTRIBUTIONS_HPP

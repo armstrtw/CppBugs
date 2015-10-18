@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_RNG_BASE_HPP
-#define MCMC_RNG_BASE_HPP
+#pragma once
 
 
 namespace cppbugs {
@@ -31,4 +30,3 @@ namespace cppbugs {
   };
 
 } // namespace cppbugs
-#endif // MCMC_RNG_BASE_HPP

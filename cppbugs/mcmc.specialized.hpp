@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_SPECIALIZED_HPP
-#define MCMC_SPECIALIZED_HPP
+#pragma once
 
 #include <list>
 #include <armadillo>
@@ -30,4 +29,3 @@ namespace cppbugs {
     MCMCSpecialized(): MCMCObject() {}
   };
 } // namespace cppbugs
-#endif //MCMC_SPECIALIZED_HPP

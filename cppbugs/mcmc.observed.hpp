@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_OBSERVED_HPP
-#define MCMC_OBSERVED_HPP
+#pragma once
 
 #include <cppbugs/mcmc.specialized.hpp>
 #include <cppbugs/mcmc.stochastic.hpp>
@@ -41,4 +40,3 @@ namespace cppbugs {
   };
 
 } // namespace cppbugs
-#endif //MCMC_OBSERVED_HPP

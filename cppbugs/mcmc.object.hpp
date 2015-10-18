@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_OBJECT_HPP
-#define MCMC_OBJECT_HPP
+#pragma once
 
 #include <cppbugs/mcmc.rng.base.hpp>
 
@@ -41,4 +40,3 @@ namespace cppbugs {
   };
 
 } // namespace cppbugs
-#endif // MCMC_OBJECT_HPP

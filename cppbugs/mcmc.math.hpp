@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_MATH_HPP
-#define MCMC_MATH_HPP
+#pragma once
 
 #include <stdexcept>
 #include <armadillo>
@@ -202,4 +201,3 @@ namespace cppbugs {
   }
 
 } // namespace cppbugs
-#endif // MCMC_STOCHASTIC_HPP

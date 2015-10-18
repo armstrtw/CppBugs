@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_ARMA_EXTENSIONS_HPP
-#define MCMC_ARMA_EXTENSIONS_HPP
+#pragma once
 
 #include <armadillo>
 #include <boost/math/special_functions/gamma.hpp>
@@ -220,4 +219,3 @@ namespace arma {
   }
 } // namespace arma
 
-#endif // MCMC_ARMA_EXTENSIONS_HPP

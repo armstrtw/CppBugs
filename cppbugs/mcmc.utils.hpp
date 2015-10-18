@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_UTILS_HPP
-#define MCMC_UTILS_HPP
+#pragma once
 
 #include <stdexcept>
 #include <armadillo>
@@ -65,4 +64,3 @@ namespace cppbugs {
   }
 
 } // namespace cppbugs
-#endif // MCMC_UTILS_HPP

@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_RNG_HPP
-#define MCMC_RNG_HPP
+#pragma once
 
 #include <boost/random.hpp>
 #include <cppbugs/mcmc.rng.base.hpp>
@@ -40,4 +39,3 @@ namespace cppbugs {
   };
 
 } // namespace cppbugs
-#endif // MCMC_RNG_HPP

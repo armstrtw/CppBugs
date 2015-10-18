@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_TRACKED_HPP
-#define MCMC_TRACKED_HPP
+#pragma once
 
 
 namespace cppbugs {
@@ -35,4 +34,3 @@ namespace cppbugs {
     void track() { history.push_back(value_); }
   };
 } // namespace cppbugs
-#endif //MCMC_TRACKED_HPP

@@ -35,8 +35,7 @@
 // doubled the accuracy.                                                          //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_ICSI_LOG_HPP
-#define MCMC_ICSI_LOG_HPP
+#pragma once
 
 namespace cppbugs {
 
@@ -82,4 +81,3 @@ namespace cppbugs {
 
 } // namespace cppbugs
 
-#endif // MCMC_ICSI_LOG_HPP

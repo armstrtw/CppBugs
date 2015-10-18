@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_MODEL_HPP
-#define MCMC_MODEL_HPP
+#pragma once
 
 #include <cmath>
 #include <iostream>
@@ -321,4 +320,3 @@ namespace cppbugs {
     // }
   };
 } // namespace cppbugs
-#endif // MCMC_MODEL_HPP

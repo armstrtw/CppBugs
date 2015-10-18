@@ -16,12 +16,10 @@
 ///////////////////////////////////////////////////////////////////////////
 //http://gcc.gnu.org/onlinedocs/gcc-3.4.6/cpp/Common-Predefined-Macros.html
 
-#ifndef MCMC_GCC_VERSION_HPP
-#define MCMC_GCC_VERSION_HPP
+#pragma once
 
 #define GCC_VERSION (__GNUC__ * 10000                   \
                      + __GNUC_MINOR__ * 100             \
                      + __GNUC_PATCHLEVEL__)
 
-#endif // MCMC_GCC_VERSION_HPP
 

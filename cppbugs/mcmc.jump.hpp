@@ -17,8 +17,7 @@
 
 #include <cppbugs/mcmc.rng.base.hpp>
 
-#ifndef MCMC_JUMP_HPP
-#define MCMC_JUMP_HPP
+#pragma once
 
 namespace cppbugs {
 
@@ -39,4 +38,3 @@ namespace cppbugs {
   }
 
 } // namespace cppbugs
-#endif // MCMC_JUMP_HPP

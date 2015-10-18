@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_SUMMARY_STATS_HPP
-#define MCMC_SUMMARY_STATS_HPP
+#pragma once
 
 #include <exception>
 #include <armadillo>
@@ -111,4 +110,3 @@ namespace cppbugs {
   }
 
 } // namespace cppbugs
-#endif // MCMC_STOCHASTIC_HPP

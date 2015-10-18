@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_DYNAMIC_STOCHASTIC_HPP
-#define MCMC_DYNAMIC_STOCHASTIC_HPP
+#pragma once
 
 #include <armadillo>
 #include <cppbugs/mcmc.dynamic.hpp>
@@ -70,4 +69,3 @@ namespace cppbugs {
   };
 
 } // namespace cppbugs
-#endif // MCMC_DYNAMIC_STOCHASTIC_HPP
