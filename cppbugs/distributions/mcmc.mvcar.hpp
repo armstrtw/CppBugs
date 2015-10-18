@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_MVCAR_HPP
-#define MCMC_MVCAR_HPP
+#pragma once
 
 #include <armadillo>
 #include <cppbugs/mcmc.dynamic.stochastic.hpp>
@@ -54,4 +53,3 @@ namespace cppbugs {
   };
 
 } // namespace cppbugs
-#endif // MCMC_MVCAR_HPP

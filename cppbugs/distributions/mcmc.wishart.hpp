@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_WISHART_HPP
-#define MCMC_WISHART_HPP
+#pragma once
 #include <iostream>
 #include <armadillo>
 #include <cppbugs/mcmc.dynamic.stochastic.hpp>
@@ -121,4 +120,3 @@ namespace cppbugs {
   };
 
 } // namespace cppbugs
-#endif // MCMC_WISHART_HPP

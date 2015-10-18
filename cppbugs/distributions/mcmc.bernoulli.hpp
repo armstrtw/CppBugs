@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_BERNOULLI_HPP
-#define MCMC_BERNOULLI_HPP
+#pragma once
 
 
 #include <cmath>
@@ -88,4 +87,3 @@ namespace cppbugs {
     const double loglik() const { return bernoulli_logp(Observed<T>::value, p_); }
   };
 } // namespace cppbugs
-#endif // MCMC_BERNOULLI_HPP

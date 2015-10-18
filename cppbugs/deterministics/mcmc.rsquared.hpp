@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_RSQUARED_HPP
-#define MCMC_RSQUARED_HPP
+#pragma once
 
 #include <cppbugs/mcmc.dynamic.hpp>
 
@@ -35,4 +34,3 @@ namespace cppbugs {
     }
   };
 } // namespace cppbugs
-#endif //MCMC_RSQUARED_HPP

@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_EXPONENTIAL_CENSORED_HPP
-#define MCMC_EXPONENTIAL_CENSORED_HPP
+#pragma once
 
 
 #include <cmath>
@@ -50,4 +49,3 @@ namespace cppbugs {
   };
 
 } // namespace cppbugs
-#endif // MCMC_EXPONENTIAL_CENSORED_HPP

@@ -15,8 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>. //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef MCMC_DISCRETE_HPP
-#define MCMC_DISCRETE_HPP
+#pragma once
 
 
 #include <cmath>
@@ -63,4 +62,3 @@ namespace cppbugs {
     }
   };
 } // namespace cppbugs
-#endif // MCMC_BERNOULLI_HPP
