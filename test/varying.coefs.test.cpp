@@ -3,6 +3,7 @@
 #include <armadillo>
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.boost.rng.hpp>
 #include <cppbugs/mcmc.model.hpp>
 #include <cppbugs/deterministics/mcmc.linear.grouped.hpp>
 #include <cppbugs/deterministics/mcmc.rsquared.hpp>
@@ -50,7 +51,8 @@ int main() {
   double tau_y(1), rsq(0);
   mat y_hat;
 
-  MCModel<boost::minstd_rand> m;
+  BoostRng<boost::minstd_rand> rng;
+  MCModel m(rng);
   m.link<Normal>(b, 0, 0.001);
   m.link<Uniform>(tau_y, 0, 100.);
   m.link<LinearGrouped>(y_hat, X, b, groups);

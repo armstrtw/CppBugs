@@ -2,6 +2,7 @@
 #include <vector>
 #include <armadillo>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.boost.rng.hpp>
 #include <cppbugs/deterministics/mcmc.linear.hpp>
 #include <cppbugs/deterministics/mcmc.rsquared.hpp>
 
@@ -34,8 +35,8 @@ int main() {
   };
   */
 
-  //MCModel<boost::minstd_rand> m(model);
-  MCModel<boost::minstd_rand> m;
+  BoostRng<boost::minstd_rand> rng;
+  MCModel m(rng);
 
   m.link<Normal>(b, 0, 0.001);
   m.link<Uniform>(tau_y, 0, 100);

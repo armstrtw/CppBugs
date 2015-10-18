@@ -24,7 +24,7 @@
 #include <functional>
 #include <exception>
 #include <boost/random.hpp>
-#include <cppbugs/mcmc.rng.hpp>
+#include <cppbugs/mcmc.rng.base.hpp>
 #include <cppbugs/mcmc.object.hpp>
 #include <cppbugs/mcmc.stochastic.hpp>
 #include <cppbugs/mcmc.observed.hpp>
@@ -35,11 +35,10 @@
 
 namespace cppbugs {
 
-  template<class RNG>
   class MCModel {
   private:
+    RngBase& rng_;
     double accepted_,rejected_,logp_value_,old_logp_value_;
-    SpecializedRng<RNG> rng_;
     std::vector<MCMCObject*> mcmcObjects, jumping_nodes, dynamic_nodes, deterministic_nodes;
     std::vector<Stochastic*> stochastic_nodes;
     std::vector<MCMCTracked*> tracked_nodes;
@@ -53,7 +52,7 @@ namespace cppbugs {
     void tally() { for(auto v : tracked_nodes) { v->track(); } }
     static bool bad_logp(const double value) { return std::isnan(value) || value == -std::numeric_limits<double>::infinity() ? true : false; }
   public:
-    MCModel(): accepted_(0), rejected_(0), logp_value_(-std::numeric_limits<double>::infinity()), old_logp_value_(-std::numeric_limits<double>::infinity()) {}
+    MCModel(RngBase& rng): rng_(rng), accepted_(0), rejected_(0), logp_value_(-std::numeric_limits<double>::infinity()), old_logp_value_(-std::numeric_limits<double>::infinity()) {}
     ~MCModel() {
       // only objects allocated by this class are inserted thre
       // addNode allows user allocated objects to enter the mcmcObjects vector

@@ -4,6 +4,7 @@
 #include <armadillo>
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.boost.rng.hpp>
 #include <cppbugs/mcmc.model.hpp>
 #include <cppbugs/deterministics/mcmc.inv.variance.hpp>
 
@@ -25,7 +26,8 @@ int main() {
   double tau_theta = pow(sigma_theta,-2);
   vec theta = randn<vec>(J);
 
-  MCModel<boost::minstd_rand> m;
+  BoostRng<boost::minstd_rand> rng;
+  MCModel m(rng);
 
   // noninformative prior on mu
   m.link<Normal>(mu_theta, 0.0, 1.0E-6);

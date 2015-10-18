@@ -8,6 +8,7 @@
 #include <boost/random.hpp>
 #include <boost/algorithm/string.hpp>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.boost.rng.hpp>
 #include <cppbugs/deterministics/mcmc.linear.with.const.hpp>
 #include <cppbugs/deterministics/mcmc.inv.variance.hpp>
 
@@ -114,7 +115,8 @@ int main() {
   replicatedT a_full = a.elem(group);
   mat y_hat;
 
-  MCModel<boost::minstd_rand> m;
+  BoostRng<boost::minstd_rand> rng;
+  MCModel m(rng);
 
   m.link<Uniform>(sigma_a, 0, 100);
   m.link<InvVariance>(tau_a,sigma_a);

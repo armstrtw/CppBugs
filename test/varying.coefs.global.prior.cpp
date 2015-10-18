@@ -3,6 +3,7 @@
 #include <armadillo>
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.boost.rng.hpp>
 #include <cppbugs/deterministics/mcmc.linear.grouped.hpp>
 #include <cppbugs/deterministics/mcmc.rsquared.hpp>
 #include <cppbugs/mcmc.model.hpp>
@@ -59,7 +60,8 @@ int main() {
   replicatedT b_mu_full_rnk = b_mu.rows(rowdup);
   replicatedT b_tau_full_rnk = b_tau.rows(rowdup);
 
-  MCModel<boost::minstd_rand> m;
+  BoostRng<boost::minstd_rand> rng;
+  MCModel m(rng);
 
   m.link<Normal>(b_mu, 0, 0.001);
   m.link<Uniform>(b_tau, 0, 100);

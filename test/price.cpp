@@ -4,6 +4,7 @@
 #include <armadillo>
 #include <boost/random.hpp>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.boost.rng.hpp>
 #include <cppbugs/mcmc.model.hpp>
 #include <cppbugs/deterministics/mcmc.linear.with.const.hpp>
 
@@ -31,7 +32,8 @@ int main() {
   double a(coefs[0]), b(coefs[1]), tau(1);
   mat y_hat;
 
-  MCModel<boost::minstd_rand> m;
+  BoostRng<boost::minstd_rand> rng;
+  MCModel m(rng);
   m.link<Normal>(a, 0, 0.001);
   m.link<Normal>(b, 0, 0.001);
   m.link<Gamma>(tau, 0.001, 0.001);

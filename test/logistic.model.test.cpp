@@ -2,6 +2,7 @@
 #include <vector>
 #include <armadillo>
 #include <cppbugs/cppbugs.hpp>
+#include <cppbugs/mcmc.boost.rng.hpp>
 #include <cppbugs/deterministics/mcmc.logistic.hpp>
 
 using namespace arma;
@@ -23,7 +24,8 @@ int main() {
   vec p_hat = 1/(1+exp(-X*b));
   vec y_hat = p_hat % size;
 
-  MCModel<boost::minstd_rand> m;
+  BoostRng<boost::minstd_rand> rng;
+  MCModel m(rng);
   m.link<Normal>(b, 0, 0.001);
   m.link<Logistic>(p_hat, X, b);
   m.link<ObservedBinomial>(y, size, p_hat);

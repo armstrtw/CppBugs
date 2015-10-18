@@ -23,14 +23,14 @@
 namespace cppbugs {
 
   template<typename T>
-  class SpecializedRng : public RngBase {
+  class BoostRng : public RngBase {
     T generator_;
     boost::normal_distribution<double> normal_rng_dist_;
     boost::uniform_real<double> uniform_rng_dist_;
     boost::variate_generator<T&, boost::normal_distribution<double> > normal_rng_;
     boost::variate_generator<T&, boost::uniform_real<double> > uniform_rng_;
   public:
-    SpecializedRng(): RngBase(),
+    BoostRng(): RngBase(),
                       normal_rng_dist_(0, 1), uniform_rng_dist_(0, 1),
                       normal_rng_(generator_, normal_rng_dist_),
                       uniform_rng_(generator_, uniform_rng_dist_) {}
