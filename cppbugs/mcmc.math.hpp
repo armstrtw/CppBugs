@@ -25,6 +25,37 @@
 // Stochastic/Math related functions
 namespace cppbugs {
 
+  template<typename T, typename U>
+  inline
+  auto schur_product(T&& x, U&& y) ->
+    decltype (arma::operator%(std::forward<T>(x), std::forward<U>(y))){
+    return arma::operator%(std::forward<T>(x), std::forward<U>(y));
+  }
+
+  template<typename T>
+  inline
+  auto schur_product(const typename T::elem_type& x, T&& y) ->
+    decltype (arma::operator*(x, std::forward<T>(y))){
+    return arma::operator*(x, std::forward<T>(y));
+  }
+
+  template<typename T>
+  inline
+  auto schur_product(T&& x, const typename T::elem_type& y) ->
+    decltype (arma::operator*(std::forward<T>(x), y)){
+    return arma::operator*(std::forward<T>(x), y);
+  }
+
+  double schur_product(const int x, const double y) { return x * y; }
+  double schur_product(const double x, const int y) { return x * y; }
+  double schur_product(const double x, const double y) { return x * y; }
+  double schur_product(const float x, const double y) { return x * y; }
+  double schur_product(const double x, const float y) { return x * y; }
+  float schur_product(const int x, const float y) { return x * y; }
+  float schur_product(const float x, const int y) { return x * y; }
+  float schur_product(const float x, const float y) { return x * y; }
+  int schur_product(const int x, const int y) { return x * y; }
+
   static inline double square(double x) {
     return x*x;
   }
@@ -55,7 +86,7 @@ namespace cppbugs {
 
   template<typename T, typename U, typename V>
   double normal_logp(const T& x, const U& mu, const V& tau) {
-    return arma::accu(0.5*log_approx(0.5*tau/arma::math::pi()) - 0.5 * arma::schur(tau, square(x - mu)));
+    return arma::accu(0.5*log_approx(0.5*tau/arma::math::pi()) - 0.5 * schur_product(tau, square(x - mu)));
   }
 
   template<typename T, typename U, typename V>
@@ -67,7 +98,7 @@ namespace cppbugs {
   double gamma_logp(const T& x, const U& alpha, const V& beta) {
     return arma::any(arma::vectorise(x < 0)) ?
       -std::numeric_limits<double>::infinity() :
-      arma::accu(arma::schur((alpha - 1.0),log_approx(x)) - arma::schur(beta,x) - lgamma(alpha) + arma::schur(alpha,log_approx(beta)));
+      arma::accu(schur_product((alpha - 1.0),log_approx(x)) - schur_product(beta,x) - lgamma(alpha) + schur_product(alpha,log_approx(beta)));
   }
 
   template<typename T, typename U, typename V>
@@ -75,7 +106,7 @@ namespace cppbugs {
     const double one = 1.0;
     return arma::any(arma::vectorise(x <= 0)) || arma::any(arma::vectorise(x >= 1)) || arma::any(arma::vectorise(alpha <= 0)) || arma::any(arma::vectorise(beta <= 0)) ?
       -std::numeric_limits<double>::infinity() :
-      arma::accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + arma::schur((alpha-one),log_approx(x)) + arma::schur((beta-one),log_approx(one-x)));
+      arma::accu(lgamma(alpha+beta) - lgamma(alpha) - lgamma(beta) + schur_product((alpha-one),log_approx(x)) + schur_product((beta-one),log_approx(one-x)));
   }
 
   double categorical_logp(const arma::ivec& x, const arma::mat& p) {
@@ -111,7 +142,7 @@ namespace cppbugs {
     if(arma::any(arma::vectorise(p <= 0)) || arma::any(arma::vectorise(p >= 1)) || arma::any(arma::vectorise(x < 0))  || arma::any(arma::vectorise(x > n))) {
       return -std::numeric_limits<double>::infinity();
     }
-    return arma::accu(arma::schur(x,log_approx(p)) + arma::schur((n-x),log_approx(1-p)) + arma::factln(n) - arma::factln(x) - arma::factln(n-x));
+    return arma::accu(schur_product(x,log_approx(p)) + schur_product((n-x),log_approx(1-p)) + arma::factln(n) - arma::factln(x) - arma::factln(n-x));
   }
 
   template<typename T, typename U>
@@ -119,7 +150,7 @@ namespace cppbugs {
     if( arma::any(arma::vectorise(p <= 0)) || arma::any(arma::vectorise(p >= 1)) || arma::any(arma::vectorise(x < 0))  || arma::any(arma::vectorise(x > 1)) ) {
       return -std::numeric_limits<double>::infinity();
     } else {
-      return arma::accu(arma::schur(x,log_approx(p)) + arma::schur((1-x), log_approx(1-p)));
+      return arma::accu(schur_product(x,log_approx(p)) + schur_product((1-x), log_approx(1-p)));
     }
   }
 
@@ -134,7 +165,7 @@ namespace cppbugs {
 
   template<typename T, typename U>
   double exponential_logp(const T& x, const U& lambda) {
-    return arma::accu(log_approx(lambda) - arma::schur(lambda, x));
+    return arma::accu(log_approx(lambda) - schur_product(lambda, x));
   }
 
   template<typename T, typename U>
