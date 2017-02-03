@@ -27,7 +27,7 @@ namespace arma {
   // log_approx
   class eop_log_approx : public eop_core<eop_log_approx> {};
 
-  template<> template<typename eT> arma_hot arma_pure arma_inline eT
+  template<> template<typename eT> arma_hot arma_inline eT
   eop_core<eop_log_approx>::process(const eT val, const eT  ) {
     return cppbugs::log_approx(val);
   }
@@ -47,35 +47,6 @@ namespace arma {
     arma_extra_debug_sigprint();
     return eOpCube<T1, eop_log_approx>(A.get_ref());
   }
-
-
-
-  // lgamma
-  class eop_lgamma : public eop_core<eop_lgamma> {};
-
-  template<> template<typename eT> arma_hot arma_pure arma_inline eT
-  eop_core<eop_lgamma>::process(const eT val, const eT  ) {
-    return boost::math::lgamma(val);
-  }
-
-  // Base
-  template<typename T1>
-  arma_inline
-  const eOp<T1, eop_lgamma> lgamma(const Base<typename T1::elem_type,T1>& A) {
-    arma_extra_debug_sigprint();
-    return eOp<T1, eop_lgamma>(A.get_ref());
-  }
-
-  // BaseCube
-  template<typename T1>
-  arma_inline
-  const eOpCube<T1, eop_lgamma> lgamma(const BaseCube<typename T1::elem_type,T1>& A) {
-    arma_extra_debug_sigprint();
-    return eOpCube<T1, eop_lgamma>(A.get_ref());
-  }
-
-
-
 
   // factln
   double factln(const int i) {
@@ -100,7 +71,7 @@ namespace arma {
 
   class eop_factln : public eop_core<eop_factln> {};
 
-  template<> template<typename eT> arma_hot arma_pure arma_inline eT
+  template<> template<typename eT> arma_hot arma_inline eT
   eop_core<eop_factln>::process(const eT val, const eT  ) {
     return factln(val);
   }
