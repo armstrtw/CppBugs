@@ -48,7 +48,6 @@ void read_csv(string fname, vector< vector<string> >& rows) {
   ifstream fin;
   string buf;
   vector<string> splitbuf;
-  typedef vector< boost::iterator_range<string::iterator> > find_vector_type;
   fin.open(fname.c_str());
 
   if(!fin.is_open()) {
