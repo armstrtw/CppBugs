@@ -2,7 +2,7 @@
 
 CppBugs is a c++ library designed for MCMC sampling.
 
-* CppBugs is now depricated in favor of [stan (http://mc-stan.org)].
+* CppBugs is now depricated in favor of [stan](http://mc-stan.org).
 
 
 ### Features
@@ -18,7 +18,7 @@ from both WinBugs and PyMC and requires users only to implment an update method 
 
 ### Usage
 
-Starting with a bugs model::
+Starting with a bugs model:
 ```{.bug}
 model {
     for (j in 1:J){
