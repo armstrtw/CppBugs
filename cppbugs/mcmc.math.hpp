@@ -55,7 +55,7 @@ namespace cppbugs {
 
   template<typename T, typename U, typename V>
   double normal_logp(const T& x, const U& mu, const V& tau) {
-    return arma::accu(0.5*log_approx(0.5*tau/arma::math::pi()) - 0.5 * arma::schur(tau, square(x - mu)));
+    return arma::accu(0.5*log_approx(0.5*tau/arma::datum::pi) - 0.5 * arma::schur(tau, square(x - mu)));
   }
 
   template<typename T, typename U, typename V>
@@ -141,7 +141,7 @@ namespace cppbugs {
 
   template<typename T, typename U>
   double multivariate_normal_chol_logp(const T& x, const U& mu, const arma::mat& R) {
-    static double log_2pi = log(2 * arma::math::pi());
+    static double log_2pi = log(2 * arma::datum::pi);
     double ldet = log(cholesky_determinant(R));
     return -0.5 * (x.n_elem * log_2pi + ldet + mahalanobis_chol(x,mu,R));
   }
